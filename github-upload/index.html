@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每日運動紀錄</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --plane:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4;
+  --good:#0ca30c; --warning:#fab219; --critical:#d03b3b; --success-text:#006300;
+  --seq-200:#9ec5f4; --seq-450:#2a78d6; --seq-600:#184f95;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --surface-1:#1a1a19; --plane:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+    --success-text:#0ca30c;
+    --seq-200:#184f95; --seq-450:#3987e5; --seq-600:#9ec5f4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --surface-1:#1a1a19; --plane:#0d0d0d;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+  --success-text:#0ca30c;
+  --seq-200:#184f95; --seq-450:#3987e5; --seq-600:#9ec5f4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--plane); color:var(--text-primary);
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  font-size:15px; line-height:1.55;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:16px 16px 72px}
+header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+header.top h1{font-size:20px;margin:0;letter-spacing:.02em}
+.spacer{flex:1}
+.pill{font-size:12px;color:var(--text-secondary);background:var(--surface-1);border:1px solid var(--border);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.pill b{color:var(--text-primary);font-variant-numeric:tabular-nums}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;transition:.12s}
+.btn:hover{border-color:var(--axis)}
+.btn.primary{background:var(--s1);border-color:transparent;color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--critical)}
+.btn.sm{padding:4px 9px;font-size:13px;border-radius:8px}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px}
+nav.tabs button{background:transparent;border:1px solid transparent;border-radius:10px;padding:7px 14px;cursor:pointer;color:var(--text-secondary)}
+nav.tabs button[aria-selected="true"]{background:var(--surface-1);border-color:var(--border);color:var(--text-primary);font-weight:600}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 12px;letter-spacing:.02em}
+.card h3{font-size:13px;margin:18px 0 8px;color:var(--text-secondary);font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--text-secondary)}
+.field input,.field select,.field textarea{
+  background:var(--plane);border:1px solid var(--border);border-radius:9px;padding:8px 10px;min-width:0;width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
+.w6{width:86px}.w8{width:110px}.w12{width:160px}.w16{width:210px}.grow{flex:1 1 200px}
+.sports{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;margin-bottom:4px}
+.sport{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border:1px solid var(--border);border-radius:11px;background:var(--plane);cursor:pointer;transition:.12s}
+.sport .ico{font-size:20px;line-height:1}
+.sport .nm{font-size:12.5px;color:var(--text-secondary)}
+.sport[aria-pressed="true"]{border-color:var(--s1);background:color-mix(in srgb,var(--s1) 12%,var(--surface-1));}
+.sport[aria-pressed="true"] .nm{color:var(--text-primary);font-weight:600}
+.ex-card{border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:10px;background:var(--plane)}
+.ex-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.ex-head .name{font-weight:600}
+.tag{font-size:11px;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--s1) 14%,transparent);color:var(--text-secondary)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font-size:11.5px;color:var(--muted);font-weight:600;text-align:left;padding:2px 6px}
+td{padding:3px 6px}
+td input{width:100%;background:var(--surface-1);border:1px solid var(--border);border-radius:7px;padding:5px 7px;text-align:center}
+.ex-card table{max-width:520px}
+.ex-card td input{max-width:120px}
+.setno{color:var(--muted);font-size:12px;text-align:center;width:32px}
+.hint{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.kpi .lab{font-size:12px;color:var(--text-secondary)}
+.kpi .val{font-size:26px;font-weight:650;letter-spacing:-.01em;margin-top:2px}
+.kpi .sub{font-size:12px;color:var(--muted)}
+.entry{border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:10px;background:var(--surface-1)}
+.entry .eh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.entry .date{font-variant-numeric:tabular-nums;font-weight:600}
+.entry .meta{font-size:12.5px;color:var(--text-secondary)}
+.entry details{margin-top:8px}
+.entry summary{cursor:pointer;font-size:13px;color:var(--text-secondary)}
+.entry .body{font-size:13.5px;color:var(--text-secondary);margin-top:8px}
+.entry .body table{margin-top:4px;font-size:13px}
+.entry .body td{border-top:1px solid var(--grid)}
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.vid{border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--plane);display:flex;flex-direction:column;gap:6px}
+.vid .t{font-weight:600;font-size:14px}
+.vid .c{font-size:12px;color:var(--text-secondary)}
+.vid .d{font-size:12.5px;color:var(--muted);flex:1}
+.vid a{font-size:13px;color:var(--s1);text-decoration:none;font-weight:600}
+.vid a:hover{text-decoration:underline}
+.chart-wrap{position:relative}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.tip{position:fixed;pointer-events:none;background:var(--surface-1);border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:12.5px;box-shadow:0 4px 16px rgba(0,0,0,.14);z-index:50;opacity:0;transition:opacity .1s;max-width:230px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text-secondary);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.empty{color:var(--muted);font-size:13.5px;padding:14px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);background:var(--text-primary);color:var(--plane);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:99;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.warnbar{background:color-mix(in srgb,var(--warning) 22%,var(--surface-1));border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px}
+.tblview{font-size:13px;margin-top:10px}
+.tblview td{border-top:1px solid var(--grid)}
+details.tbl summary{font-size:12.5px;color:var(--text-secondary);cursor:pointer;margin-top:8px}
+@media (max-width:560px){
+  .wrap{padding:12px 12px 64px}
+  .w12,.w16{width:100%}
+  .kpi .val{font-size:22px}
+  .gate-card{padding:24px 20px}
+}
+/* 登入閘門 */
+.gate{position:fixed;inset:0;background:var(--plane);display:flex;align-items:center;justify-content:center;padding:20px;z-index:80;overflow:auto}
+.gate[hidden]{display:none}
+.acct[hidden],.sync[hidden]{display:none}
+.gate-card{background:var(--surface-1);border:1px solid var(--border);border-radius:18px;padding:34px 34px 28px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.10)}
+.gate-card h1{font-size:23px;margin:0 0 6px}
+.gate-card p.lead{color:var(--text-secondary);font-size:14px;margin:0 0 18px}
+.gate-card ul{color:var(--text-secondary);font-size:13.5px;padding-left:20px;margin:0 0 20px}
+.gate-card li{margin-bottom:5px}
+.gbtn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:10px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;transition:.12s}
+.gbtn:hover{background:#f7f8f8;box-shadow:0 1px 3px rgba(60,64,67,.25)}
+.gbtn svg{width:19px;height:19px;flex:none}
+.gate-note{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
+.setupbox{border:1px solid var(--border);border-radius:11px;padding:14px;background:var(--plane);margin-bottom:18px}
+.setupbox h3{margin:0 0 8px;font-size:13.5px}
+.setupbox ol{margin:0 0 10px;padding-left:20px;font-size:13px;color:var(--text-secondary)}
+.setupbox li{margin-bottom:4px}
+.setupbox code{background:var(--surface-1);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:12px}
+/* 帳號區 */
+.acct{display:flex;align-items:center;gap:8px}
+.acct img{width:28px;height:28px;border-radius:50%;border:1px solid var(--border)}
+.acct .nm{font-size:13px;color:var(--text-secondary);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync{font-size:12px;color:var(--text-secondary);display:inline-flex;align-items:center;gap:6px}
+.sync .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sync[data-state="ok"] .dot{background:var(--good)}
+.sync[data-state="saving"] .dot{background:var(--warning);animation:pulse 1s infinite}
+.sync[data-state="err"] .dot{background:var(--critical)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>每日運動紀錄</h1>
+    <p class="lead">重量訓練逐組追蹤 · 九種運動 · 精選教學影片 · 進步曲線</p>
+    <ul>
+      <li>用 Google 帳號登入，紀錄自動存到<b>你自己的</b> Google 雲端硬碟</li>
+      <li>換電腦、換手機登入同一個帳號就看得到全部紀錄</li>
+      <li>資料放在雲端硬碟的 App 專用隱藏區，只有這個工具讀得到，其他人（包含開發者）看不到</li>
+    </ul>
+    <div id="gate-setup"></div>
+    <button class="gbtn" id="btn-signin">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      使用 Google 帳號登入
+    </button>
+    <p class="gate-note" id="gate-note">首次登入時 Google 會詢問是否允許存取「App 專用資料」，這是雲端硬碟裡一塊只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+<header class="top">
+  <h1>每日運動紀錄</h1>
+  <span class="pill" id="pill-streak">連續 <b>0</b> 天</span>
+  <span class="pill" id="pill-week">本週 <b>0</b> 次</span>
+  <div class="spacer"></div>
+  <span class="sync" id="sync-badge" data-state="idle"><span class="dot"></span><span class="txt">尚未同步</span></span>
+  <div class="acct" id="acct"></div>
+  <button class="btn sm" id="theme-btn" title="切換深色 / 淺色">◐ 主題</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-view="log" aria-selected="true">記錄訓練</button>
+  <button role="tab" data-view="history" aria-selected="false">歷史紀錄</button>
+  <button role="tab" data-view="stats" aria-selected="false">統計分析</button>
+  <button role="tab" data-view="videos" aria-selected="false">影片庫</button>
+  <button role="tab" data-view="data" aria-selected="false">資料備份</button>
+</nav>
+
+<section id="view-log">
+  <div class="card">
+    <h2>1 · 選擇運動類型</h2>
+    <div class="sports" id="sport-picker"></div>
+  </div>
+
+  <div class="card">
+    <h2>2 · 基本資訊</h2>
+    <div class="row">
+      <div class="field w12"><label for="f-date">日期</label><input type="date" id="f-date"></div>
+      <div class="field w8"><label for="f-dur">時長（分鐘）</label><input type="number" id="f-dur" min="0" step="1" placeholder="60"></div>
+      <div class="field w8"><label for="f-rpe">主觀強度 RPE 1–10</label><input type="number" id="f-rpe" min="1" max="10" step="0.5" placeholder="7"></div>
+      <div class="field grow"><label for="f-note">備註 / 身體感受</label><input type="text" id="f-note" placeholder="睡眠不足、狀態不錯…"></div>
+    </div>
+  </div>
+
+  <div class="card" id="detail-card">
+    <h2 id="detail-title">3 · 訓練內容</h2>
+    <div id="detail-body"></div>
+  </div>
+
+  <div class="row" style="justify-content:flex-end;margin-bottom:8px">
+    <button class="btn ghost" id="btn-reset">清空表單</button>
+    <button class="btn primary" id="btn-save">儲存這筆紀錄</button>
+  </div>
+</section>
+
+<section id="view-history" hidden>
+  <div class="card">
+    <h2>歷史紀錄</h2>
+    <div class="filters">
+      <div class="field w12"><label for="h-sport">運動類型</label><select id="h-sport"></select></div>
+      <div class="field w12"><label for="h-range">時間範圍</label>
+        <select id="h-range">
+          <option value="30">最近 30 天</option>
+          <option value="90">最近 90 天</option>
+          <option value="365">最近一年</option>
+          <option value="0" selected>全部</option>
+        </select>
+      </div>
+      <div class="field grow"><label for="h-search">搜尋（動作、地點、備註）</label><input type="text" id="h-search" placeholder="例：臥推、玉山"></div>
+    </div>
+    <div id="history-list"></div>
+  </div>
+</section>
+
+<section id="view-stats" hidden>
+  <div class="kpis" id="kpi-row"></div>
+  <div class="card">
+    <h2>近 12 週訓練時長</h2>
+    <div class="chart-wrap" id="chart-weeks"></div>
+  </div>
+  <div class="card">
+    <h2>運動類型分布（次數）</h2>
+    <div class="chart-wrap" id="chart-sports"></div>
+  </div>
+  <div class="card">
+    <h2>重訓部位訓練量分布（kg·次）</h2>
+    <div class="chart-wrap" id="chart-parts"></div>
+  </div>
+  <div class="card">
+    <h2>單一動作進步曲線</h2>
+    <div class="row" style="margin-bottom:10px">
+      <div class="field w16"><label for="s-ex">選擇動作</label><select id="s-ex"></select></div>
+      <div class="field w12"><label for="s-metric">指標</label>
+        <select id="s-metric">
+          <option value="e1rm">預估 1RM（Epley）</option>
+          <option value="top">當日最重組</option>
+          <option value="vol">當日總訓練量</option>
+        </select>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chart-progress"></div>
+  </div>
+  <div class="card">
+    <h2>個人紀錄 PR</h2>
+    <div id="pr-table"></div>
+  </div>
+</section>
+
+<section id="view-videos" hidden>
+  <div class="card">
+    <h2>精選訓練影片庫</h2>
+    <p class="hint" style="margin-top:-4px">按運動或部位篩選。「搜尋教學」按鈕會用指定的高評價創作者名稱直接開啟 YouTube 搜尋，不會失效；「直接觀看」為已收錄的特定影片。</p>
+    <div class="filters">
+      <div class="field w16"><label for="v-cat">分類</label><select id="v-cat"></select></div>
+      <div class="field grow"><label for="v-search">搜尋影片庫</label><input type="text" id="v-search" placeholder="例：深蹲、間歇、配速"></div>
+    </div>
+    <div class="vid-grid" id="vid-grid"></div>
+  </div>
+  <div class="card">
+    <h2>加入自己的影片</h2>
+    <div class="row">
+      <div class="field w16"><label for="cv-title">標題</label><input type="text" id="cv-title" placeholder="影片名稱"></div>
+      <div class="field w12"><label for="cv-cat">分類</label><select id="cv-cat"></select></div>
+      <div class="field grow"><label for="cv-url">YouTube 網址</label><input type="url" id="cv-url" placeholder="https://www.youtube.com/watch?v=..."></div>
+      <button class="btn" id="cv-add">加入</button>
+    </div>
+    <div id="cv-list" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section id="view-data" hidden>
+  <div class="card">
+    <h2>雲端同步</h2>
+    <p class="hint">紀錄會自動存到你自己 Google 雲端硬碟的 App 專用隱藏區，這台裝置另外保留一份離線快取。</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="btn-sync">立即同步</button>
+      <button class="btn" id="btn-switch">切換 Google 帳號</button>
+      <button class="btn" id="btn-signout">登出</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>備份與還原</h2>
+    <p class="hint">雲端已自動保存；若想額外留一份檔案或搬到其他工具，可在這裡匯出。</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="btn-export">匯出 JSON 備份</button>
+      <button class="btn" id="btn-csv">匯出 CSV（表格）</button>
+      <button class="btn" id="btn-csv-sets">匯出 CSV（重訓逐組）</button>
+      <label class="btn" style="cursor:pointer">匯入 JSON<input type="file" id="file-import" accept="application/json" hidden></label>
+      <button class="btn danger" id="btn-clear">清除所有資料</button>
+    </div>
+    <div id="storage-note" class="hint" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>自訂動作</h2>
+    <p class="hint">自訂動作會出現在對應部位的下拉選單裡。</p>
+    <div class="row" style="margin-top:8px">
+      <div class="field w12"><label for="ce-part">部位</label><select id="ce-part"></select></div>
+      <div class="field grow"><label for="ce-name">動作名稱</label><input type="text" id="ce-name" placeholder="例：地雷管划船"></div>
+      <button class="btn" id="ce-add">新增</button>
+    </div>
+    <div id="ce-list" style="margin-top:12px"></div>
+  </div>
+</section>
+
+</div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ============================================================
+   每日運動紀錄 — 單一檔案離線工具
+   資料儲存：localStorage（key: fitnessRecord.v1）+ JSON / CSV 匯出
+   ============================================================ */
+
+/* ---------- 運動類型定義 ---------- */
+const SPORTS = {
+  strength: { name:"重量訓練", icon:"🏋️", color:"var(--s1)" },
+  hiit:     { name:"高強度間歇", icon:"⏱️", color:"var(--s2)" },
+  crossfit: { name:"混合健身", icon:"🤸", color:"var(--s3)" },
+  climb:    { name:"爬山", icon:"⛰️", color:"var(--s4)" },
+  hike:     { name:"健行", icon:"🥾", color:"var(--s5)" },
+  run:      { name:"跑步", icon:"🏃", color:"var(--s1)" },
+  bike:     { name:"騎自行車", icon:"🚴", color:"var(--s2)" },
+  swim:     { name:"游泳", icon:"🏊", color:"var(--s3)" },
+  badminton:{ name:"打羽球", icon:"🏸", color:"var(--s4)" }
+};
+const SPORT_KEYS = Object.keys(SPORTS);
+
+/* ---------- 重訓部位與動作資料庫 ---------- */
+const PARTS = {
+  chest:    { name:"胸", q:"chest" },
+  back:     { name:"背", q:"back" },
+  shoulder: { name:"肩", q:"shoulder" },
+  biceps:   { name:"二頭", q:"biceps" },
+  triceps:  { name:"三頭", q:"triceps" },
+  legs:     { name:"腿", q:"legs" },
+  glutes:   { name:"臀", q:"glutes" },
+  core:     { name:"核心", q:"core" },
+  full:     { name:"全身 / 爆發", q:"olympic weightlifting" }
+};
+
+// en：用於組出 YouTube 搜尋字串；tip：動作重點提示
+const EXERCISES = {
+  chest:[
+    ["槓鈴臥推","Barbell Bench Press","肩胛後收下壓、槓路碰下胸、手肘約 45–70 度"],
+    ["上斜啞鈴臥推","Incline Dumbbell Press","椅背 30 度左右，過高會變成肩推"],
+    ["平板啞鈴臥推","Dumbbell Bench Press","底部感覺胸口被拉開再推起"],
+    ["雙槓撐體（胸）","Chest Dip","身體前傾、手肘不外翻，肩痛就先跳過"],
+    ["伏地挺身","Push-Up","身體一直線，肩胛能收能開"],
+    ["蝴蝶機夾胸","Pec Deck Fly","收縮頂點停一拍，離心慢放"],
+    ["滑輪飛鳥","Cable Fly","畫弧線而不是推，手肘角度固定"],
+    ["史密斯上斜推","Smith Incline Press","軌道固定，適合力竭時安全補強"]
+  ],
+  back:[
+    ["引體向上","Pull-Up","先沉肩再拉，胸口靠向單槓"],
+    ["滑輪下拉","Lat Pulldown","不要用身體晃動帶，拉到鎖骨附近"],
+    ["槓鈴划船","Barbell Row","背打直不圓背，拉向肚臍"],
+    ["單臂啞鈴划船","One-Arm Dumbbell Row","軀幹不旋轉，肩胛先動"],
+    ["坐姿划船","Seated Cable Row","胸挺住，手肘貼身往後"],
+    ["T 槓划船","T-Bar Row","核心穩定，全程控制不甩"],
+    ["直臂下壓","Straight-Arm Pulldown","專門練闊背伸展與收縮"],
+    ["傳統硬舉","Conventional Deadlift","槓貼腿、髖主導、背部中立"],
+    ["槓鈴聳肩","Barbell Shrug","往上聳不是往後繞肩"]
+  ],
+  shoulder:[
+    ["站姿肩推","Overhead Press","夾臀收核心，頭讓槓過再前伸"],
+    ["啞鈴肩推","Dumbbell Shoulder Press","手肘略前方，不要過度外展"],
+    ["側平舉","Lateral Raise","小重量、慢離心，別用甩的"],
+    ["反向飛鳥","Reverse Fly","練後三角，胸靠椅背更穩"],
+    ["臉拉","Face Pull","肩健康必備，拉到耳朵旁外旋"],
+    ["前平舉","Front Raise","前三角通常已足夠，補強用"],
+    ["阿諾推舉","Arnold Press","旋轉過程慢，避免代償"]
+  ],
+  biceps:[
+    ["槓鈴彎舉","Barbell Curl","手肘固定在體側，不要靠腰帶"],
+    ["啞鈴彎舉","Dumbbell Curl","頂點稍微外旋更有感"],
+    ["錘式彎舉","Hammer Curl","練肱肌與前臂，手掌相對"],
+    ["斜托彎舉","Incline Dumbbell Curl","長頭被拉長，伸展刺激最好"],
+    ["牧師椅彎舉","Preacher Curl","底部不要完全放鬆彈上來"],
+    ["滑輪彎舉","Cable Curl","全程張力一致"]
+  ],
+  triceps:[
+    ["窄握臥推","Close-Grip Bench Press","握距約與肩同寬，手肘收"],
+    ["滑輪下壓","Triceps Pushdown","上臂不動，只有前臂動"],
+    ["過頭三頭伸展","Overhead Triceps Extension","長頭伸展位，慢慢放到底"],
+    ["顱骨粉碎","Skull Crusher","手肘不外開，落點在額頭上方"],
+    ["雙槓撐體（三頭）","Triceps Dip","身體保持直立版本"],
+    ["繩索過頭下壓","Rope Overhead Extension","頂點打直握把往外分"]
+  ],
+  legs:[
+    ["背蹲舉","Back Squat","蹲到髖低於膝、膝蓋順著腳尖方向"],
+    ["前蹲舉","Front Squat","手肘抬高保持上背直立"],
+    ["腿推","Leg Press","不要圓下背（骨盆後傾）"],
+    ["保加利亞分腿蹲","Bulgarian Split Squat","單腳穩定與臀腿的性價比之王"],
+    ["弓箭步","Lunge","前膝穩定不內夾"],
+    ["羅馬尼亞硬舉","Romanian Deadlift","髖鉸鏈，感覺膕繩肌被拉緊"],
+    ["腿彎舉","Leg Curl","收縮頂點停住一秒"],
+    ["腿伸展","Leg Extension","股四頭補強，膝痛者減重量"],
+    ["站姿提踵","Standing Calf Raise","全幅度、底部確實伸展"],
+    ["六角槓硬舉","Trap Bar Deadlift","腰部負擔較低的硬舉版本"]
+  ],
+  glutes:[
+    ["槓鈴臀推","Barbell Hip Thrust","收下巴、肋骨下壓，頂點夾臀"],
+    ["臀橋","Glute Bridge","徒手熱身或高次數收操"],
+    ["相撲硬舉","Sumo Deadlift","站距寬、膝外推、上身較直立"],
+    ["滑輪後踢","Cable Kickback","單邊臀部針對性刺激"],
+    ["側走彈力帶","Banded Lateral Walk","臀中肌啟動，跑者護膝必備"]
+  ],
+  core:[
+    ["棒式","Plank","夾臀收肋，不塌腰不翹臀"],
+    ["側棒式","Side Plank","練腹斜肌與側線穩定"],
+    ["懸垂舉腿","Hanging Leg Raise","骨盆後捲才是腹肌在做功"],
+    ["死蟲","Dead Bug","下背貼地，對側手腳伸展"],
+    ["滑輪捲腹","Cable Crunch","可加重量的腹部訓練"],
+    ["農夫走路","Farmer's Carry","全身抗側屈穩定"],
+    ["鳥狗","Bird Dog","脊椎中立下的抗旋轉"]
+  ],
+  full:[
+    ["爆發上膊","Power Clean","三關節伸展再接槓，先學技術"],
+    ["抓舉","Snatch","技術門檻高，建議教練帶"],
+    ["挺舉","Clean & Jerk","從掛式分解開始練"],
+    ["壺鈴擺盪","Kettlebell Swing","髖爆發不是手臂抬"],
+    ["土耳其起立","Turkish Get-Up","肩穩定與全身協調"],
+    ["波比跳","Burpee","體能與代謝訓練常客"]
+  ]
+};
+
+/* ---------- 精選影片庫 ----------
+   type: "search" → 用可信創作者名稱開 YouTube 搜尋（永不失效）
+         "link"   → 已收錄的特定影片網址
+------------------------------------------------------------ */
+const YT = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+
+const VIDEO_LIB = [
+  // 重訓 · 總論
+  {cat:"strength", title:"科學化增肌訓練全指南", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard science based hypertrophy training guide", desc:"以研究為基礎講解組數、頻率、動作選擇，健身族群評價最高的英文頻道之一。"},
+  {cat:"strength", title:"肌肥大訓練原理（Dr. Mike）", creator:"Renaissance Periodization", type:"search",
+   q:"Renaissance Periodization Dr Mike Israetel hypertrophy training", desc:"運動科學博士講解訓練量、接近力竭程度、週期化。"},
+  {cat:"strength", title:"中文科學化健身教學", creator:"營養健身葛格 Peeta", type:"link",
+   url:"https://www.youtube.com/channel/UCSSjn1X6yMBC3AyJ2azeG7A", desc:"中文圈長期經營的健身頻道，動作教學與飲食觀念並重。"},
+  {cat:"strength", title:"肌力與體能訓練觀念（中文）", creator:"山姆伯伯工作坊", type:"search",
+   q:"山姆伯伯工作坊 肌力與體能 訓練 教學", desc:"偏重運動表現、動作品質與訓練前準備的中文資源。"},
+  {cat:"strength", title:"實證醫學看健身（中文）", creator:"一分鐘健身教室 史考特醫師", type:"search",
+   q:"一分鐘健身教室 史考特醫師 重訓", desc:"醫師角度拆解健身迷思，適合建立正確觀念。"},
+
+  // 重訓 · 各部位
+  {cat:"chest", title:"完美臥推技術（修正常見錯誤）", creator:"Jeff Nippard", type:"link",
+   url:"https://www.youtube.com/watch?v=vcBig73ojpE", desc:"從握距、肩胛、槓路到腳部發力逐項拆解。"},
+  {cat:"chest", title:"科學化胸部訓練菜單", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard science based chest workout", desc:"上中下胸的動作選擇與安排邏輯。"},
+  {cat:"back", title:"最有效的拉系列訓練（背 + 二頭 + 後三角）", creator:"Jeff Nippard", type:"link",
+   url:"https://www.youtube.com/watch?v=f2JDJV0AnyY", desc:"完整 Pull Day 課表與每個動作的執行細節。"},
+  {cat:"back", title:"硬舉技術教學", creator:"Alan Thrall", type:"search",
+   q:"Alan Thrall how to deadlift tutorial", desc:"力量訓練圈公認清楚的硬舉教學，重點在起始位置與背部中立。"},
+  {cat:"shoulder", title:"最好與最差的肩部動作", creator:"Jeff Nippard", type:"link",
+   url:"https://www.youtube.com/watch?v=SgyUoY0IZ7A", desc:"逐一評比常見肩推與側平舉變化式。"},
+  {cat:"shoulder", title:"肩膀健康與旋轉肌訓練", creator:"Squat University", type:"search",
+   q:"Squat University shoulder health rotator cuff exercises", desc:"物理治療角度的肩部保養與熱身。"},
+  {cat:"legs", title:"深蹲技術完整教學", creator:"Squat University", type:"link",
+   url:"https://www.youtube.com/watch?v=SbgHegC6lEs", desc:"站距、腳掌三點、呼吸與核心壓力的建立。"},
+  {cat:"legs", title:"科學化腿部訓練菜單", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard science based leg workout quads hamstrings", desc:"股四頭、膕繩肌、小腿的完整安排。"},
+  {cat:"glutes", title:"臀推與臀部訓練科學", creator:"Bret Contreras", type:"search",
+   q:"Bret Contreras hip thrust glute training tutorial", desc:"被稱為 The Glute Guy 的研究者，臀部訓練權威。"},
+  {cat:"biceps", title:"手臂訓練（二頭 + 三頭）完整解析", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard science based arm workout biceps triceps", desc:"長頭短頭的動作分工與訓練量建議。"},
+  {cat:"triceps", title:"三頭肌訓練動作排行", creator:"Renaissance Periodization", type:"search",
+   q:"Renaissance Periodization triceps exercises ranked", desc:"依刺激效果排序常見三頭動作。"},
+  {cat:"core", title:"核心訓練與腹肌動作評比", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard science based abs core workout", desc:"抗伸展、抗旋轉與屈曲動作的取捨。"},
+  {cat:"full", title:"舉重動作技術（上膊 / 抓舉）", creator:"Catalyst Athletics", type:"search",
+   q:"Catalyst Athletics snatch clean technique tutorial", desc:"奧林匹克舉重技術分解，教練級教學。"},
+
+  // HIIT
+  {cat:"hiit", title:"30 分鐘全身 HIIT（無器材跟練）", creator:"Heather Robertson", type:"link",
+   url:"https://www.youtube.com/watch?v=zBTz636KeMA", desc:"人氣極高的跟練影片，含計時與動作示範，在家就能做。"},
+  {cat:"hiit", title:"HIIT 的科學：多長、多硬才有效", creator:"Jeff Nippard", type:"search",
+   q:"Jeff Nippard HIIT cardio science how much", desc:"HIIT 與穩態有氧的取捨、對肌肉的干擾效應。"},
+  {cat:"hiit", title:"徒手高強度訓練", creator:"THENX", type:"search",
+   q:"THENX calisthenics HIIT workout", desc:"徒手動作組成的高強度課表。"},
+  {cat:"hiit", title:"Tabata 四分鐘間歇跟練", creator:"跟練影片", type:"search",
+   q:"tabata workout 4 minutes follow along timer", desc:"20 秒工作 / 10 秒休息 × 8 回合的經典協定。"},
+
+  // CrossFit
+  {cat:"crossfit", title:"CrossFit 官方動作教學", creator:"CrossFit", type:"search",
+   q:"CrossFit official movement tutorial air squat kipping pull up", desc:"官方頻道的基礎動作標準與分解。"},
+  {cat:"crossfit", title:"經典 WOD 解析與策略", creator:"Buttery Bros", type:"search",
+   q:"Buttery Bros crossfit benchmark wod strategy", desc:"賽事選手視角的 WOD 配速與分割策略。"},
+  {cat:"crossfit", title:"Benchmark WOD 標準（Fran / Murph / Cindy）", creator:"CrossFit", type:"search",
+   q:"CrossFit benchmark workouts Fran Murph Cindy standards", desc:"經典課表的動作標準與計分方式。"},
+
+  // 爬山 / 健行
+  {cat:"climb", title:"登山體能訓練菜單", creator:"Uphill Athlete", type:"search",
+   q:"Uphill Athlete training for mountaineering hiking strength", desc:"專門為登山者設計的耐力與肌力訓練方法。"},
+  {cat:"climb", title:"台灣百岳登山準備與行程規劃", creator:"中文登山頻道", type:"search",
+   q:"台灣百岳 登山 準備 裝備 體能訓練", desc:"高山行程的裝備、天氣與體能準備。"},
+  {cat:"hike", title:"健行技巧：上下坡步法與登山杖", creator:"REI", type:"search",
+   q:"REI hiking technique uphill downhill trekking poles", desc:"省力步法與登山杖使用，保護膝蓋。"},
+  {cat:"hike", title:"下坡護膝與腿部訓練", creator:"Squat University", type:"search",
+   q:"knee pain hiking downhill strengthening exercises", desc:"下坡最傷膝，靠離心肌力與臀中肌保護。"},
+
+  // 跑步
+  {cat:"run", title:"跑姿與跑步技術教學", creator:"The Run Experience", type:"search",
+   q:"The Run Experience running form technique drills", desc:"步頻、落地位置與常見跑姿問題矯正。"},
+  {cat:"run", title:"馬拉松 / 半馬訓練計畫觀念", creator:"Global Triathlon Network", type:"search",
+   q:"Global Triathlon Network running training plan easy runs intervals", desc:"輕鬆跑、間歇、長跑的比例與週期安排。"},
+  {cat:"run", title:"跑者肌力訓練", creator:"Runner's World", type:"search",
+   q:"strength training for runners exercises routine", desc:"減少受傷、提升經濟性的肌力課表。"},
+  {cat:"run", title:"中文跑步訓練教學", creator:"中文跑步頻道", type:"search",
+   q:"跑步 訓練 教學 配速 心率 中文", desc:"配速區間、心率訓練的中文說明。"},
+
+  // 自行車
+  {cat:"bike", title:"自行車踩踏技巧與訓練", creator:"Global Cycling Network", type:"search",
+   q:"Global Cycling Network GCN cycling training pedaling technique", desc:"GCN 為最大自行車教學頻道，涵蓋技術與訓練。"},
+  {cat:"bike", title:"FTP 測試與功率訓練入門", creator:"Global Cycling Network", type:"search",
+   q:"GCN FTP test power training zones cycling", desc:"用功率計量化訓練強度的入門。"},
+  {cat:"bike", title:"公路車 Fitting 與騎乘姿勢", creator:"Global Cycling Network", type:"search",
+   q:"GCN bike fit road bike position saddle height", desc:"座高、把手位置對舒適與效率的影響。"},
+
+  // 游泳
+  {cat:"swim", title:"自由式技術完整教學", creator:"Effortless Swimming", type:"search",
+   q:"Effortless Swimming freestyle technique tutorial", desc:"以技術分析聞名的游泳教學頻道。"},
+  {cat:"swim", title:"游泳換氣與身體位置", creator:"Global Triathlon Network", type:"search",
+   q:"Global Triathlon Network swimming breathing body position drills", desc:"換氣節奏與流線姿勢的分解練習。"},
+  {cat:"swim", title:"四式技術與泳池課表", creator:"MySwimPro", type:"search",
+   q:"MySwimPro swim workout technique butterfly backstroke breaststroke", desc:"分程度的泳池課表與各式技術。"},
+
+  // 羽球
+  {cat:"badminton", title:"羽球基礎技術教學", creator:"Badminton Insight", type:"search",
+   q:"Badminton Insight footwork technique tutorial", desc:"由職業選手經營，步法與擊球技術講解清楚。"},
+  {cat:"badminton", title:"殺球與高遠球動作分解", creator:"Badminton Insight", type:"search",
+   q:"badminton smash clear technique tutorial slow motion", desc:"揮拍鏈與旋轉發力的分解。"},
+  {cat:"badminton", title:"雙打站位與輪轉觀念", creator:"羽球教學", type:"search",
+   q:"badminton doubles rotation positioning tactics", desc:"前後 / 左右站位轉換與責任區。"},
+  {cat:"badminton", title:"中文羽球教學", creator:"中文羽球頻道", type:"search",
+   q:"羽球 教學 步法 揮拍 中文", desc:"中文的握拍、步法與基本功教學。"},
+
+  // 恢復
+  {cat:"recovery", title:"訓練後恢復與伸展", creator:"Squat University", type:"search",
+   q:"Squat University mobility recovery routine", desc:"活動度、放鬆與疼痛處理。"},
+  {cat:"recovery", title:"睡眠、營養與恢復的科學", creator:"Renaissance Periodization", type:"search",
+   q:"Renaissance Periodization recovery sleep nutrition training", desc:"恢復不足是進步停滯最常見原因。"}
+];
+
+const VIDEO_CATS = [
+  ["all","全部"],["strength","重訓 · 總論"],["chest","重訓 · 胸"],["back","重訓 · 背"],
+  ["shoulder","重訓 · 肩"],["biceps","重訓 · 二頭"],["triceps","重訓 · 三頭"],["legs","重訓 · 腿"],
+  ["glutes","重訓 · 臀"],["core","重訓 · 核心"],["full","重訓 · 全身爆發"],
+  ["hiit","高強度間歇"],["crossfit","混合健身"],["climb","爬山"],["hike","健行"],
+  ["run","跑步"],["bike","自行車"],["swim","游泳"],["badminton","羽球"],["recovery","恢復 · 活動度"]
+];
+</script>
+<script>
+"use strict";
+/* ---------- 小工具 ---------- */
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+const el = (tag,attrs,txt)=>{const n=document.createElement(tag);
+  if(attrs) for(const k in attrs){ if(k==="class") n.className=attrs[k];
+    else if(k==="html") n.innerHTML=attrs[k]; else n.setAttribute(k,attrs[k]); }
+  if(txt!=null) n.textContent=txt; return n;};
+const pad = n=> String(n).padStart(2,"0");
+const todayStr = ()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
+const num = v=>{const n=parseFloat(v); return isFinite(n)?n:0;};
+const round = (n,d)=>{const p=Math.pow(10,d||0); return Math.round(n*p)/p;};
+const fmt = n=> (Math.round(n*10)/10).toLocaleString("zh-TW");
+function toast(msg){const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200);}
+
+/* ---------- 儲存（本機快取，以 Google 帳號分開） ---------- */
+const KEY="fitnessRecord.v1";
+let storageOK=true;
+let DB={version:1, entries:[], customExercises:{}, customVideos:[], deleted:{}, updatedAt:0};
+let cacheKey=KEY;   // 登入後變成 KEY + "." + 使用者 ID
+
+function normalize(d){
+  d=d||{}; d.version=1;
+  d.entries=Array.isArray(d.entries)?d.entries:[];
+  d.customExercises=d.customExercises||{};
+  d.customVideos=Array.isArray(d.customVideos)?d.customVideos:[];
+  d.deleted=d.deleted||{};
+  d.updatedAt=d.updatedAt||0;
+  return d;
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(cacheKey);
+    DB = raw ? normalize(JSON.parse(raw)) : normalize({});
+    localStorage.setItem(KEY+".probe","1"); localStorage.removeItem(KEY+".probe");
+  }catch(e){ storageOK=false; DB=normalize({}); }
+}
+function save(opts){
+  DB.updatedAt = Date.now();
+  if(storageOK){
+    try{ localStorage.setItem(cacheKey, JSON.stringify(DB)); }
+    catch(e){ storageOK=false; renderStorageNote(); toast("無法寫入瀏覽器快取，資料仍會上傳雲端"); }
+  }
+  if(!(opts&&opts.noCloud)) Cloud.schedulePush();
+  renderStorageNote();
+}
+function renderStorageNote(){
+  const n=$("#storage-note");
+  if(!n) return;
+  const t = Cloud.lastSync ? new Date(Cloud.lastSync).toLocaleString("zh-TW") : "尚未同步";
+  n.innerHTML = '帳號：<b>'+(Auth.user?Auth.user.email:"—")+'</b><br>'+
+    '共 <b>'+DB.entries.length+'</b> 筆紀錄　·　最後同步：<b>'+t+'</b>　·　'+
+    '本機快取：'+(storageOK?'<b style="color:var(--success-text)">正常</b>':'<b style="color:var(--critical)">停用</b>');
+}
+
+/* ---------- 分頁切換 ---------- */
+$$("nav.tabs button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    $$("nav.tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+    ["log","history","stats","videos","data"].forEach(v=>{ $("#view-"+v).hidden = (v!==b.dataset.view); });
+    if(b.dataset.view==="history") renderHistory();
+    if(b.dataset.view==="stats") renderStats();
+    if(b.dataset.view==="data"){ renderStorageNote(); renderCustomEx(); }
+    window.scrollTo({top:0,behavior:"instant"});
+  });
+});
+
+/* ---------- 主題 ---------- */
+$("#theme-btn").addEventListener("click",()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+  try{ localStorage.setItem(KEY+".theme", dark?"light":"dark"); }catch(e){}
+  if(!$("#view-stats").hidden) renderStats();
+});
+
+/* ============================================================
+   記錄表單
+   ============================================================ */
+let currentSport="strength";
+let draftExercises=[];   // [{part,name,sets:[{w,reps,rpe}]}]
+
+function renderSportPicker(){
+  const box=$("#sport-picker"); box.innerHTML="";
+  SPORT_KEYS.forEach(k=>{
+    const b=el("button",{class:"sport",type:"button","aria-pressed":String(k===currentSport),"data-k":k});
+    b.appendChild(el("span",{class:"ico"},SPORTS[k].icon));
+    b.appendChild(el("span",{class:"nm"},SPORTS[k].name));
+    b.addEventListener("click",()=>{ currentSport=k; renderSportPicker(); renderDetail(); });
+    box.appendChild(b);
+  });
+}
+
+function opts(list,sel){ return list.map(o=>'<option value="'+o+'"'+(o===sel?" selected":"")+'>'+o+'</option>').join(""); }
+
+const DETAIL_TEMPLATES = {
+  hiit: ()=>`
+    <div class="row">
+      <div class="field w16"><label for="d-name">課表名稱</label><input type="text" id="d-name" placeholder="Tabata 全身 / 自訂"></div>
+      <div class="field w6"><label for="d-rounds">回合數</label><input type="number" id="d-rounds" min="0" placeholder="8"></div>
+      <div class="field w6"><label for="d-work">工作（秒）</label><input type="number" id="d-work" min="0" placeholder="20"></div>
+      <div class="field w6"><label for="d-rest">休息（秒）</label><input type="number" id="d-rest" min="0" placeholder="10"></div>
+      <div class="field w6"><label for="d-hr">平均心率</label><input type="number" id="d-hr" min="0" placeholder="150"></div>
+      <div class="field w6"><label for="d-hrmax">最高心率</label><input type="number" id="d-hrmax" min="0" placeholder="180"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field grow"><label for="d-moves">動作內容</label><textarea id="d-moves" rows="3" placeholder="波比跳 / 深蹲跳 / 登山者 / 開合跳"></textarea></div>
+    </div>`,
+  crossfit: ()=>`
+    <div class="row">
+      <div class="field w16"><label for="d-name">WOD 名稱</label><input type="text" id="d-name" placeholder="Fran / Murph / 自訂"></div>
+      <div class="field w12"><label for="d-type">型態</label><select id="d-type">${opts(["For Time","AMRAP","EMOM","Chipper","Strength + Metcon","其他"])}</select></div>
+      <div class="field w12"><label for="d-result">成績</label><input type="text" id="d-result" placeholder="12:34 或 8 rounds + 12"></div>
+      <div class="field w8"><label for="d-scale">級別</label><select id="d-scale">${opts(["Rx","Scaled","自訂"])}</select></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field grow"><label for="d-moves">動作與重量</label><textarea id="d-moves" rows="3" placeholder="21-15-9 Thruster 43kg / Pull-up"></textarea></div>
+    </div>`,
+  climb: ()=>`
+    <div class="row">
+      <div class="field w16"><label for="d-place">山名 / 路線</label><input type="text" id="d-place" placeholder="七星山主峰"></div>
+      <div class="field w8"><label for="d-dist">距離（km）</label><input type="number" id="d-dist" min="0" step="0.1" placeholder="8.5"></div>
+      <div class="field w8"><label for="d-gain">總爬升（m）</label><input type="number" id="d-gain" min="0" step="1" placeholder="650"></div>
+      <div class="field w8"><label for="d-alt">最高海拔（m）</label><input type="number" id="d-alt" min="0" step="1" placeholder="1120"></div>
+      <div class="field w8"><label for="d-pack">背包重量（kg）</label><input type="number" id="d-pack" min="0" step="0.5" placeholder="8"></div>
+    </div>`,
+  hike: ()=>`
+    <div class="row">
+      <div class="field w16"><label for="d-place">路線 / 地點</label><input type="text" id="d-place" placeholder="銀河洞越嶺步道"></div>
+      <div class="field w8"><label for="d-dist">距離（km）</label><input type="number" id="d-dist" min="0" step="0.1" placeholder="6"></div>
+      <div class="field w8"><label for="d-gain">爬升（m）</label><input type="number" id="d-gain" min="0" step="1" placeholder="300"></div>
+    </div>`,
+  run: ()=>`
+    <div class="row">
+      <div class="field w8"><label for="d-dist">距離（km）</label><input type="number" id="d-dist" min="0" step="0.01" placeholder="10"></div>
+      <div class="field w12"><label for="d-type">課表類型</label><select id="d-type">${opts(["輕鬆跑","節奏跑","間歇跑","長距離","恢復跑","比賽"])}</select></div>
+      <div class="field w8"><label for="d-hr">平均心率</label><input type="number" id="d-hr" min="0" placeholder="150"></div>
+      <div class="field w12"><label for="d-place">地點</label><input type="text" id="d-place" placeholder="河濱 / 操場"></div>
+      <div class="field w12"><label>配速</label><input type="text" id="d-pace" readonly placeholder="自動計算"></div>
+    </div>`,
+  bike: ()=>`
+    <div class="row">
+      <div class="field w8"><label for="d-dist">距離（km）</label><input type="number" id="d-dist" min="0" step="0.1" placeholder="40"></div>
+      <div class="field w8"><label for="d-gain">爬升（m）</label><input type="number" id="d-gain" min="0" step="1" placeholder="400"></div>
+      <div class="field w8"><label for="d-pw">平均功率（W）</label><input type="number" id="d-pw" min="0" placeholder="180"></div>
+      <div class="field w8"><label for="d-hr">平均心率</label><input type="number" id="d-hr" min="0" placeholder="145"></div>
+      <div class="field w12"><label for="d-place">路線</label><input type="text" id="d-place" placeholder="風櫃嘴"></div>
+      <div class="field w12"><label>均速</label><input type="text" id="d-speed" readonly placeholder="自動計算"></div>
+    </div>`,
+  swim: ()=>`
+    <div class="row">
+      <div class="field w8"><label for="d-dist">總距離（m）</label><input type="number" id="d-dist" min="0" step="25" placeholder="1500"></div>
+      <div class="field w12"><label for="d-pool">場地</label><select id="d-pool">${opts(["25m 泳池","50m 泳池","開放水域"])}</select></div>
+      <div class="field w12"><label for="d-stroke">主要泳姿</label><select id="d-stroke">${opts(["自由式","蛙式","仰式","蝶式","混合"])}</select></div>
+      <div class="field w12"><label for="d-sets">課表內容</label><input type="text" id="d-sets" placeholder="10×100m 間休 20 秒"></div>
+      <div class="field w12"><label>每 100m 配速</label><input type="text" id="d-pace" readonly placeholder="自動計算"></div>
+    </div>`,
+  badminton: ()=>`
+    <div class="row">
+      <div class="field w12"><label for="d-type">型態</label><select id="d-type">${opts(["雙打","單打","練球 / 多球","比賽"])}</select></div>
+      <div class="field w6"><label for="d-games">局數</label><input type="number" id="d-games" min="0" placeholder="6"></div>
+      <div class="field w12"><label for="d-place">球館</label><input type="text" id="d-place" placeholder="XX 羽球館"></div>
+      <div class="field grow"><label for="d-partner">球友 / 對手</label><input type="text" id="d-partner" placeholder=""></div>
+    </div>`
+};
+
+function renderDetail(){
+  const body=$("#detail-body");
+  $("#detail-title").textContent = "3 · "+SPORTS[currentSport].name+" 內容";
+  if(currentSport==="strength"){ renderStrengthBuilder(body); return; }
+  body.innerHTML = DETAIL_TEMPLATES[currentSport]();
+  // 自動計算欄位
+  const recalc=()=>{
+    const mins=num($("#f-dur").value), d=num($("#d-dist")?$("#d-dist").value:0);
+    if(currentSport==="run" && $("#d-pace")) $("#d-pace").value = (mins>0&&d>0)? paceStr(mins/d)+" /km" : "";
+    if(currentSport==="bike" && $("#d-speed")) $("#d-speed").value = (mins>0&&d>0)? round(d/(mins/60),1)+" km/h" : "";
+    if(currentSport==="swim" && $("#d-pace")) $("#d-pace").value = (mins>0&&d>0)? paceStr(mins/(d/100))+" /100m" : "";
+  };
+  ["#d-dist"].forEach(s=>{ const n=$(s); if(n) n.addEventListener("input",recalc); });
+  $("#f-dur").addEventListener("input",recalc);
+  recalc();
+}
+function paceStr(minPerUnit){
+  if(!isFinite(minPerUnit)||minPerUnit<=0) return "";
+  const m=Math.floor(minPerUnit), s=Math.round((minPerUnit-m)*60);
+  return (s===60? (m+1)+"'00\"" : m+"'"+pad(s)+"\"");
+}
+
+/* ---------- 重訓建構器 ---------- */
+function exListFor(part){
+  const base=(EXERCISES[part]||[]).map(e=>e[0]);
+  const custom=(DB.customExercises[part]||[]);
+  return base.concat(custom);
+}
+function exMeta(name){
+  for(const p in EXERCISES){ const f=EXERCISES[p].find(e=>e[0]===name); if(f) return {part:p,en:f[1],tip:f[2]}; }
+  return null;
+}
+function renderStrengthBuilder(body){
+  body.innerHTML=`
+    <div class="row">
+      <div class="field w12"><label for="st-part">部位</label><select id="st-part"></select></div>
+      <div class="field grow"><label for="st-ex">動作</label><select id="st-ex"></select></div>
+      <button class="btn primary" id="st-add" type="button">加入動作</button>
+    </div>
+    <p class="hint" style="margin-top:8px">找不到的動作可以到「資料備份 → 自訂動作」新增。</p>
+    <div id="st-list" style="margin-top:14px"></div>
+    <div id="st-summary" class="hint"></div>`;
+  const ps=$("#st-part");
+  Object.keys(PARTS).forEach(p=> ps.appendChild(el("option",{value:p},PARTS[p].name)));
+  const fillEx=()=>{ const es=$("#st-ex"); es.innerHTML="";
+    exListFor(ps.value).forEach(n=> es.appendChild(el("option",{value:n},n))); };
+  ps.addEventListener("change",fillEx); fillEx();
+  $("#st-add").addEventListener("click",()=>{
+    const name=$("#st-ex").value; if(!name) return;
+    const last=lastSetsFor(name);
+    draftExercises.push({part:ps.value,name,sets: last? last.map(s=>({w:s.w,reps:s.reps,rpe:""})) : [{w:"",reps:"",rpe:""},{w:"",reps:"",rpe:""},{w:"",reps:"",rpe:""}]});
+    renderDraft();
+  });
+  renderDraft();
+}
+function lastSetsFor(name){
+  const list=DB.entries.filter(e=>e.sport==="strength").sort((a,b)=> b.date.localeCompare(a.date));
+  for(const e of list){ const ex=(e.data.exercises||[]).find(x=>x.name===name); if(ex&&ex.sets.length) return ex.sets; }
+  return null;
+}
+function renderDraft(){
+  const box=$("#st-list"); if(!box) return; box.innerHTML="";
+  if(!draftExercises.length){ box.appendChild(el("p",{class:"empty"},"還沒有加入動作。選好部位與動作後按「加入動作」。")); $("#st-summary").textContent=""; return; }
+  draftExercises.forEach((ex,i)=>{
+    const meta=exMeta(ex.name);
+    const card=el("div",{class:"ex-card"});
+    const head=el("div",{class:"ex-head"});
+    head.appendChild(el("span",{class:"name"},ex.name));
+    head.appendChild(el("span",{class:"tag"},PARTS[ex.part]?PARTS[ex.part].name:""));
+    head.appendChild(el("span",{class:"spacer",style:"flex:1"}));
+    const vbtn=el("button",{class:"btn sm",type:"button"},"▶ 看教學");
+    vbtn.addEventListener("click",()=>{
+      const q = meta ? (meta.en+" tutorial Jeff Nippard technique") : (ex.name+" 教學");
+      window.open(YT(q),"_blank","noopener");
+    });
+    head.appendChild(vbtn);
+    const del=el("button",{class:"btn sm danger",type:"button"},"移除");
+    del.addEventListener("click",()=>{ draftExercises.splice(i,1); renderDraft(); });
+    head.appendChild(del);
+    card.appendChild(head);
+
+    if(meta && meta.tip) card.appendChild(el("p",{class:"hint",style:"margin:0 0 8px"},"重點：" + meta.tip));
+    const prev=lastSetsFor(ex.name);
+    if(prev) card.appendChild(el("p",{class:"hint",style:"margin:0 0 8px"},
+      "上次：" + prev.map(s=> (s.w||0)+"kg × "+(s.reps||0)).join("　")));
+
+    const tb=el("table");
+    tb.innerHTML="<thead><tr><th></th><th>重量 (kg)</th><th>次數</th><th>RPE</th><th></th></tr></thead>";
+    const tbody=el("tbody");
+    ex.sets.forEach((s,j)=>{
+      const tr=el("tr");
+      tr.appendChild(el("td",{class:"setno"},String(j+1)));
+      ["w","reps","rpe"].forEach(f=>{
+        const td=el("td"); const inp=el("input",{type:"number",step:f==="w"?"0.5":(f==="rpe"?"0.5":"1"),min:"0",value:s[f]==null?"":s[f]});
+        inp.addEventListener("input",()=>{ s[f]=inp.value; updateSummary(); });
+        td.appendChild(inp); tr.appendChild(td);
+      });
+      const td=el("td");
+      const x=el("button",{class:"btn sm ghost",type:"button",title:"刪除這組"},"✕");
+      x.addEventListener("click",()=>{ ex.sets.splice(j,1); renderDraft(); });
+      td.appendChild(x); tr.appendChild(td);
+      tbody.appendChild(tr);
+    });
+    tb.appendChild(tbody); card.appendChild(tb);
+
+    const foot=el("div",{class:"row",style:"margin-top:8px"});
+    const add=el("button",{class:"btn sm",type:"button"},"+ 新增一組");
+    add.addEventListener("click",()=>{ const l=ex.sets[ex.sets.length-1]||{w:"",reps:"",rpe:""};
+      ex.sets.push({w:l.w,reps:l.reps,rpe:""}); renderDraft(); });
+    foot.appendChild(add);
+    const volSpan=el("span",{class:"hint",style:"margin-left:auto"});
+    volSpan.textContent="訓練量 "+fmt(exVolume(ex))+" kg·次";
+    foot.appendChild(volSpan);
+    card.appendChild(foot);
+    box.appendChild(card);
+  });
+  updateSummary();
+}
+function exVolume(ex){ return ex.sets.reduce((a,s)=> a + num(s.w)*num(s.reps), 0); }
+function updateSummary(){
+  const n=$("#st-summary"); if(!n) return;
+  const total=draftExercises.reduce((a,e)=>a+exVolume(e),0);
+  const sets=draftExercises.reduce((a,e)=>a+e.sets.length,0);
+  n.textContent = draftExercises.length? ("共 "+draftExercises.length+" 個動作 · "+sets+" 組 · 總訓練量 "+fmt(total)+" kg·次") : "";
+  $$(".ex-card").forEach((c,i)=>{ const s=c.querySelector(".row .hint"); if(s&&draftExercises[i]) s.textContent="訓練量 "+fmt(exVolume(draftExercises[i]))+" kg·次"; });
+}
+
+/* ---------- 儲存紀錄 ---------- */
+function collectDetail(){
+  const g=id=> { const n=$("#"+id); return n? n.value.trim() : ""; };
+  switch(currentSport){
+    case "strength": return {exercises: draftExercises.map(e=>({part:e.part,name:e.name,
+      sets:e.sets.filter(s=>s.w!==""||s.reps!=="").map(s=>({w:num(s.w),reps:num(s.reps),rpe:s.rpe===""?null:num(s.rpe)}))}))
+      .filter(e=>e.sets.length)};
+    case "hiit": return {name:g("d-name"),rounds:num(g("d-rounds")),work:num(g("d-work")),rest:num(g("d-rest")),
+      hr:num(g("d-hr")),hrMax:num(g("d-hrmax")),moves:g("d-moves")};
+    case "crossfit": return {name:g("d-name"),type:g("d-type"),result:g("d-result"),scale:g("d-scale"),moves:g("d-moves")};
+    case "climb": return {place:g("d-place"),dist:num(g("d-dist")),gain:num(g("d-gain")),alt:num(g("d-alt")),pack:num(g("d-pack"))};
+    case "hike": return {place:g("d-place"),dist:num(g("d-dist")),gain:num(g("d-gain"))};
+    case "run": return {dist:num(g("d-dist")),type:g("d-type"),hr:num(g("d-hr")),place:g("d-place")};
+    case "bike": return {dist:num(g("d-dist")),gain:num(g("d-gain")),power:num(g("d-pw")),hr:num(g("d-hr")),place:g("d-place")};
+    case "swim": return {dist:num(g("d-dist")),pool:g("d-pool"),stroke:g("d-stroke"),sets:g("d-sets")};
+    case "badminton": return {type:g("d-type"),games:num(g("d-games")),place:g("d-place"),partner:g("d-partner")};
+  }
+  return {};
+}
+$("#btn-save").addEventListener("click",()=>{
+  const date=$("#f-date").value || todayStr();
+  const data=collectDetail();
+  if(currentSport==="strength" && !data.exercises.length){ toast("請至少填入一個動作的重量與次數"); return; }
+  const entry={ id:Date.now()+"-"+Math.random().toString(36).slice(2,7), sport:currentSport, date,
+    duration:num($("#f-dur").value), rpe: $("#f-rpe").value===""?null:num($("#f-rpe").value),
+    note:$("#f-note").value.trim(), data, createdAt:new Date().toISOString() };
+  DB.entries.push(entry); save();
+  toast("已儲存：" + date + " " + SPORTS[currentSport].name);
+  resetForm(); renderTopPills();
+});
+function resetForm(){
+  $("#f-date").value=todayStr(); $("#f-dur").value=""; $("#f-rpe").value=""; $("#f-note").value="";
+  draftExercises=[]; renderDetail();
+}
+$("#btn-reset").addEventListener("click",()=>{ resetForm(); toast("表單已清空"); });
+
+/* ============================================================
+   歷史紀錄
+   ============================================================ */
+function describe(e){
+  const d=e.data||{};
+  switch(e.sport){
+    case "strength":{
+      const parts=[...new Set((d.exercises||[]).map(x=>PARTS[x.part]?PARTS[x.part].name:""))].filter(Boolean);
+      const sets=(d.exercises||[]).reduce((a,x)=>a+x.sets.length,0);
+      return parts.join("・")+"　"+(d.exercises||[]).length+" 動作 / "+sets+" 組 / "+fmt(entryVolume(e))+" kg·次";}
+    case "hiit": return [d.name,d.rounds?d.rounds+" 回合":"",(d.work&&d.rest)?d.work+"″/"+d.rest+"″":"",d.hr?"平均心率 "+d.hr:""].filter(Boolean).join("　");
+    case "crossfit": return [d.name,d.type,d.result,d.scale].filter(Boolean).join("　");
+    case "climb": return [d.place,d.dist?d.dist+" km":"",d.gain?"爬升 "+d.gain+" m":"",d.alt?"海拔 "+d.alt+" m":""].filter(Boolean).join("　");
+    case "hike": return [d.place,d.dist?d.dist+" km":"",d.gain?"爬升 "+d.gain+" m":""].filter(Boolean).join("　");
+    case "run": return [d.dist?d.dist+" km":"",d.type,(e.duration&&d.dist)?paceStr(e.duration/d.dist)+" /km":"",d.hr?"心率 "+d.hr:""].filter(Boolean).join("　");
+    case "bike": return [d.dist?d.dist+" km":"",(e.duration&&d.dist)?round(d.dist/(e.duration/60),1)+" km/h":"",d.gain?"爬升 "+d.gain+" m":"",d.power?d.power+" W":""].filter(Boolean).join("　");
+    case "swim": return [d.dist?d.dist+" m":"",d.stroke,d.pool,(e.duration&&d.dist)?paceStr(e.duration/(d.dist/100))+" /100m":""].filter(Boolean).join("　");
+    case "badminton": return [d.type,d.games?d.games+" 局":"",d.place,d.partner].filter(Boolean).join("　");
+  }
+  return "";
+}
+function entryVolume(e){
+  if(e.sport!=="strength") return 0;
+  return (e.data.exercises||[]).reduce((a,x)=> a + x.sets.reduce((b,s)=> b + num(s.w)*num(s.reps),0), 0);
+}
+function renderHistory(){
+  const sportSel=$("#h-sport");
+  if(!sportSel.options.length){
+    sportSel.appendChild(el("option",{value:"all"},"全部"));
+    SPORT_KEYS.forEach(k=> sportSel.appendChild(el("option",{value:k},SPORTS[k].name)));
+    ["#h-sport","#h-range","#h-search"].forEach(s=> $(s).addEventListener("input",renderHistory));
+    $("#h-sport").addEventListener("change",renderHistory); $("#h-range").addEventListener("change",renderHistory);
+  }
+  const list=$("#history-list"); list.innerHTML="";
+  const sp=sportSel.value, days=parseInt($("#h-range").value,10), kw=$("#h-search").value.trim().toLowerCase();
+  let rows=DB.entries.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  if(sp!=="all") rows=rows.filter(e=>e.sport===sp);
+  if(days>0){ const lim=new Date(Date.now()-days*864e5); const ls=lim.getFullYear()+"-"+pad(lim.getMonth()+1)+"-"+pad(lim.getDate());
+    rows=rows.filter(e=>e.date>=ls); }
+  if(kw) rows=rows.filter(e=> (JSON.stringify(e.data)+" "+e.note+" "+SPORTS[e.sport].name).toLowerCase().includes(kw));
+  if(!rows.length){ list.appendChild(el("p",{class:"empty"},"沒有符合條件的紀錄。")); return; }
+
+  const total=rows.reduce((a,e)=>a+e.duration,0);
+  list.appendChild(el("p",{class:"hint",style:"margin-top:0"}, rows.length+" 筆　合計 "+fmt(total/60)+" 小時"));
+
+  rows.forEach(e=>{
+    const c=el("div",{class:"entry"});
+    const h=el("div",{class:"eh"});
+    h.appendChild(el("span",{class:"date"}, e.date));
+    h.appendChild(el("span",{class:"tag"}, SPORTS[e.sport].icon+" "+SPORTS[e.sport].name));
+    h.appendChild(el("span",{class:"meta"}, [e.duration?e.duration+" 分":"", e.rpe?"RPE "+e.rpe:""].filter(Boolean).join("　")));
+    const sp2=el("span"); sp2.style.flex="1"; h.appendChild(sp2);
+    const del=el("button",{class:"btn sm danger",type:"button"},"刪除");
+    del.addEventListener("click",()=>{ if(confirm("刪除 "+e.date+" 的"+SPORTS[e.sport].name+"紀錄？")){
+      DB.entries=DB.entries.filter(x=>x.id!==e.id); DB.deleted[e.id]=Date.now();
+      save(); renderHistory(); renderTopPills(); } });
+    h.appendChild(del);
+    c.appendChild(h);
+    c.appendChild(el("div",{class:"meta",style:"margin-top:4px"}, describe(e)));
+    if(e.note) c.appendChild(el("div",{class:"meta",style:"margin-top:2px;color:var(--muted)"}, "📝 "+e.note));
+    if(e.sport==="strength"){
+      const det=el("details"); det.appendChild(el("summary",null,"展開逐組明細"));
+      const bodyd=el("div",{class:"body"});
+      (e.data.exercises||[]).forEach(x=>{
+        bodyd.appendChild(el("div",{style:"font-weight:600;margin-top:6px"}, x.name));
+        const t=el("table");
+        t.innerHTML="<thead><tr><th>組</th><th>重量</th><th>次數</th><th>RPE</th></tr></thead>";
+        const tb=el("tbody");
+        x.sets.forEach((s,i)=>{ const tr=el("tr");
+          [String(i+1), s.w+" kg", s.reps+" 次", s.rpe==null?"–":String(s.rpe)].forEach(v=> tr.appendChild(el("td",null,v)));
+          tb.appendChild(tr); });
+        t.appendChild(tb); bodyd.appendChild(t);
+      });
+      det.appendChild(bodyd); c.appendChild(det);
+    } else if(e.data.moves||e.data.sets){
+      const txt=e.data.moves||e.data.sets;
+      if(txt) c.appendChild(el("div",{class:"meta",style:"margin-top:4px;white-space:pre-wrap"}, txt));
+    }
+    list.appendChild(c);
+  });
+}
+</script>
+<script>
+"use strict";
+/* ============================================================
+   圖表（純 SVG，無外部相依）
+   色彩取自已驗證的預設調色盤，單一數列以序列藍呈現
+   ============================================================ */
+const SVGNS="http://www.w3.org/2000/svg";
+const sv=(t,a)=>{const n=document.createElementNS(SVGNS,t); for(const k in a) n.setAttribute(k,a[k]); return n;};
+function roundTop(x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h));
+  return `M${x},${y+h} L${x},${y+r} Q${x},${y} ${x+r},${y} L${x+w-r},${y} Q${x+w},${y} ${x+w},${y+r} L${x+w},${y+h} Z`; }
+function roundRight(x,y,w,h,r){ r=Math.max(0,Math.min(r,h/2,w));
+  return `M${x},${y} L${x+w-r},${y} Q${x+w},${y} ${x+w},${y+r} L${x+w},${y+h-r} Q${x+w},${y+h} ${x+w-r},${y+h} L${x},${y+h} Z`; }
+const TIP=$("#tip");
+function tipOn(node, html){
+  node.addEventListener("mouseenter",()=>{ TIP.innerHTML=html; TIP.style.opacity="1"; });
+  node.addEventListener("mousemove",ev=>{ TIP.style.left=Math.min(ev.clientX+14, innerWidth-240)+"px"; TIP.style.top=(ev.clientY-10)+"px"; });
+  node.addEventListener("mouseleave",()=>{ TIP.style.opacity="0"; });
+}
+function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log10(v))); const n=v/p;
+  return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p; }
+function tableView(host, head, rows){
+  const d=el("details",{class:"tbl"}); d.appendChild(el("summary",null,"以表格檢視資料"));
+  const t=el("table",{class:"tblview"});
+  t.innerHTML="<thead><tr>"+head.map(h=>"<th>"+h+"</th>").join("")+"</tr></thead>";
+  const tb=el("tbody"); rows.forEach(r=>{ const tr=el("tr"); r.forEach(v=> tr.appendChild(el("td",null,String(v)))); tb.appendChild(tr); });
+  t.appendChild(tb); d.appendChild(t); host.appendChild(d);
+}
+
+/* 直式長條圖（時間趨勢） */
+function colChart(host, items, unit){
+  host.innerHTML="";
+  if(!items.length || items.every(i=>!i.v)){ host.appendChild(el("p",{class:"empty"},"還沒有足夠的資料。")); return; }
+  const W=720,H=250,L=46,R=10,T=12,B=34, iw=W-L-R, ih=H-T-B;
+  const max=niceMax(Math.max(...items.map(i=>i.v)));
+  const s=sv("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img"});
+  for(let i=0;i<=4;i++){ const y=T+ih-ih*i/4;
+    s.appendChild(sv("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:i?"var(--grid)":"var(--axis)","stroke-width":1}));
+    const tx=sv("text",{x:L-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}); tx.textContent=fmt(max*i/4); s.appendChild(tx); }
+  const step=iw/items.length, bw=Math.min(38, step-6);
+  items.forEach((it,i)=>{
+    const h=it.v/max*ih, x=L+step*i+(step-bw)/2, y=T+ih-h;
+    if(it.v>0){
+      const p=sv("path",{d:roundTop(x,y,bw,h,4),fill:"var(--seq-450)"});
+      tipOn(p, "<b>"+it.label+"</b><br>"+fmt(it.v)+" "+unit+(it.sub?"<br>"+it.sub:""));
+      s.appendChild(p);
+    }
+    if(i%2===0 || items.length<=8){ const t=sv("text",{x:x+bw/2,y:H-14,"text-anchor":"middle","font-size":10.5,fill:"var(--muted)"});
+      t.textContent=it.short||it.label; s.appendChild(t); }
+  });
+  host.appendChild(s);
+  tableView(host,["區間",unit],items.map(i=>[i.label,fmt(i.v)]));
+}
+
+/* 橫式長條圖（類別分布） */
+function barChart(host, items, unit){
+  host.innerHTML="";
+  if(!items.length){ host.appendChild(el("p",{class:"empty"},"還沒有資料。")); return; }
+  const rowH=30, W=720, L=104, R=52, T=4, ih=items.length*rowH, H=T+ih+8, iw=W-L-R;
+  const max=Math.max(...items.map(i=>i.v))||1;
+  const s=sv("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img"});
+  items.forEach((it,i)=>{
+    const y=T+i*rowH+5, h=rowH-12, w=Math.max(it.v/max*iw,1);
+    const lab=sv("text",{x:L-10,y:y+h/2+4,"text-anchor":"end","font-size":12,fill:"var(--text-secondary)"}); lab.textContent=it.label; s.appendChild(lab);
+    const p=sv("path",{d:roundRight(L,y,w,h,4),fill:it.color||"var(--seq-450)"});
+    tipOn(p,"<b>"+it.label+"</b><br>"+fmt(it.v)+" "+unit+(it.sub?"<br>"+it.sub:""));
+    s.appendChild(p);
+    const v=sv("text",{x:L+w+8,y:y+h/2+4,"font-size":12,fill:"var(--text-secondary)"}); v.textContent=fmt(it.v); s.appendChild(v);
+  });
+  host.appendChild(s);
+  tableView(host,["項目",unit],items.map(i=>[i.label,fmt(i.v)]));
+}
+
+/* 折線圖（進步曲線） */
+function lineChart(host, pts, unit){
+  host.innerHTML="";
+  if(pts.length<2){ host.appendChild(el("p",{class:"empty"},"這個動作至少要有兩天的紀錄才畫得出趨勢。")); return; }
+  const W=720,H=260,L=52,R=16,T=14,B=34, iw=W-L-R, ih=H-T-B;
+  const vals=pts.map(p=>p.v);
+  let lo=Math.min(...vals), hi=Math.max(...vals);
+  if(hi===lo){ lo=Math.max(0,lo*0.9); hi=hi*1.1||1; }
+  const padv=(hi-lo)*0.18;
+  const step=niceMax(((hi+padv)-Math.max(0,lo-padv))/4);
+  const mn=Math.max(0, Math.floor(Math.max(0,lo-padv)/step)*step);
+  const mx=mn+step*4;
+  const s=sv("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img"});
+  for(let i=0;i<=4;i++){ const y=T+ih-ih*i/4;
+    s.appendChild(sv("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:i?"var(--grid)":"var(--axis)","stroke-width":1}));
+    const tx=sv("text",{x:L-8,y:y+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"}); tx.textContent=fmt(mn+(mx-mn)*i/4); s.appendChild(tx); }
+  const X=i=> L + (pts.length===1?iw/2 : iw*i/(pts.length-1));
+  const Y=v=> T + ih - (v-mn)/(mx-mn||1)*ih;
+  const d=pts.map((p,i)=> (i?"L":"M")+X(i)+","+Y(p.v)).join(" ");
+  s.appendChild(sv("path",{d,fill:"none",stroke:"var(--seq-450)","stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"}));
+  pts.forEach((p,i)=>{
+    const c=sv("circle",{cx:X(i),cy:Y(p.v),r:4.5,fill:"var(--seq-450)",stroke:"var(--surface-1)","stroke-width":2});
+    tipOn(c,"<b>"+p.label+"</b><br>"+fmt(p.v)+" "+unit+(p.sub?"<br>"+p.sub:""));
+    s.appendChild(c);
+    const hit=sv("circle",{cx:X(i),cy:Y(p.v),r:14,fill:"transparent"}); tipOn(hit,"<b>"+p.label+"</b><br>"+fmt(p.v)+" "+unit+(p.sub?"<br>"+p.sub:"")); s.appendChild(hit);
+    if(i===0||i===pts.length-1||pts.length<=6){ const t=sv("text",{x:X(i),y:H-14,"text-anchor":i===0?"start":(i===pts.length-1?"end":"middle"),"font-size":10.5,fill:"var(--muted)"});
+      t.textContent=p.label.slice(5); s.appendChild(t); }
+  });
+  // 首末直接標示數值
+  const last=pts[pts.length-1];
+  const lt=sv("text",{x:X(pts.length-1)-6,y:Y(last.v)-12,"text-anchor":"end","font-size":12,fill:"var(--text-primary)","font-weight":"600"});
+  lt.textContent=fmt(last.v)+" "+unit; s.appendChild(lt);
+  host.appendChild(s);
+  tableView(host,["日期",unit],pts.map(p=>[p.label,fmt(p.v)]));
+}
+
+/* ============================================================
+   統計
+   ============================================================ */
+function dstr(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function streakDays(){
+  const set=new Set(DB.entries.map(e=>e.date));
+  let n=0, d=new Date();
+  if(!set.has(dstr(d))) d.setDate(d.getDate()-1);   // 今天還沒練不算中斷
+  while(set.has(dstr(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function weekStart(d){ const x=new Date(d); const wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); x.setHours(0,0,0,0); return x; }
+function renderTopPills(){
+  $("#pill-streak").innerHTML="連續 <b>"+streakDays()+"</b> 天";
+  const ws=dstr(weekStart(new Date()));
+  $("#pill-week").innerHTML="本週 <b>"+DB.entries.filter(e=>e.date>=ws).length+"</b> 次";
+}
+function renderStats(){
+  const now=new Date(), mStart=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-01";
+  const month=DB.entries.filter(e=>e.date>=mStart);
+  const mMin=month.reduce((a,e)=>a+e.duration,0);
+  const mVol=month.reduce((a,e)=>a+entryVolume(e),0);
+  const mKm=month.filter(e=>["run","bike","hike","climb"].includes(e.sport)).reduce((a,e)=>a+num(e.data.dist),0);
+  const kpis=[
+    ["本月訓練次數", month.length, "次", DB.entries.length+" 筆累計"],
+    ["本月訓練時間", fmt(mMin/60), "小時", fmt(mMin)+" 分鐘"],
+    ["目前連續天數", streakDays(), "天", "以有紀錄的日子計算"],
+    ["本月重訓總量", fmt(mVol), "kg·次", "重量 × 次數加總"],
+    ["本月移動距離", fmt(mKm), "km", "跑步 / 自行車 / 山徑"]
+  ];
+  const row=$("#kpi-row"); row.innerHTML="";
+  kpis.forEach(k=>{ const c=el("div",{class:"kpi"});
+    c.appendChild(el("div",{class:"lab"},k[0]));
+    c.appendChild(el("div",{class:"val"},String(k[1])+" "+k[2]));
+    c.appendChild(el("div",{class:"sub"},k[3])); row.appendChild(c); });
+
+  // 近 12 週時長
+  const weeks=[];
+  const ws0=weekStart(new Date());
+  for(let i=11;i>=0;i--){ const s=new Date(ws0); s.setDate(s.getDate()-i*7);
+    const e2=new Date(s); e2.setDate(e2.getDate()+6);
+    const a=dstr(s), b=dstr(e2);
+    const rows=DB.entries.filter(x=>x.date>=a && x.date<=b);
+    weeks.push({label:a+" ~ "+b, short:(s.getMonth()+1)+"/"+s.getDate(),
+      v:rows.reduce((t,x)=>t+x.duration,0), sub:rows.length+" 次訓練"}); }
+  colChart($("#chart-weeks"), weeks, "分鐘");
+
+  // 運動類型分布
+  const bySport=SPORT_KEYS.map(k=>{ const rows=DB.entries.filter(e=>e.sport===k);
+    return {label:SPORTS[k].icon+" "+SPORTS[k].name, v:rows.length, sub:fmt(rows.reduce((a,e)=>a+e.duration,0)/60)+" 小時"}; })
+    .filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  barChart($("#chart-sports"), bySport, "次");
+
+  // 部位訓練量
+  const pv={};
+  DB.entries.filter(e=>e.sport==="strength").forEach(e=>{
+    (e.data.exercises||[]).forEach(x=>{ pv[x.part]=(pv[x.part]||0)+x.sets.reduce((a,s)=>a+num(s.w)*num(s.reps),0); }); });
+  const parts=Object.keys(pv).map(p=>({label:PARTS[p]?PARTS[p].name:p, v:pv[p]})).sort((a,b)=>b.v-a.v);
+  barChart($("#chart-parts"), parts, "kg·次");
+
+  // 進步曲線
+  const exSel=$("#s-ex"), prev=exSel.value;
+  const names=[...new Set(DB.entries.filter(e=>e.sport==="strength")
+    .flatMap(e=>(e.data.exercises||[]).map(x=>x.name)))].sort();
+  exSel.innerHTML="";
+  names.forEach(n=> exSel.appendChild(el("option",{value:n},n)));
+  if(names.includes(prev)) exSel.value=prev;
+  if(!exSel._bound){ exSel.addEventListener("change",renderProgress); $("#s-metric").addEventListener("change",renderProgress); exSel._bound=true; }
+  renderProgress();
+  renderPR();
+}
+function renderProgress(){
+  const name=$("#s-ex").value, metric=$("#s-metric").value;
+  const host=$("#chart-progress");
+  if(!name){ host.innerHTML='<p class="empty">還沒有重訓紀錄。</p>'; return; }
+  const byDate={};
+  DB.entries.filter(e=>e.sport==="strength").forEach(e=>{
+    (e.data.exercises||[]).filter(x=>x.name===name).forEach(x=>{
+      const e1=Math.max(...x.sets.map(s=> num(s.w)*(1+num(s.reps)/30)),0);
+      const top=Math.max(...x.sets.map(s=> num(s.w)),0);
+      const vol=x.sets.reduce((a,s)=>a+num(s.w)*num(s.reps),0);
+      const cur=byDate[e.date]||{e1rm:0,top:0,vol:0,sets:0};
+      byDate[e.date]={e1rm:Math.max(cur.e1rm,e1), top:Math.max(cur.top,top), vol:cur.vol+vol, sets:cur.sets+x.sets.length};
+    }); });
+  const pts=Object.keys(byDate).sort().map(d=>({label:d, v:round(byDate[d][metric],1), sub:byDate[d].sets+" 組"}));
+  const unit = metric==="vol"?"kg·次":"kg";
+  lineChart(host, pts, unit);
+}
+function renderPR(){
+  const host=$("#pr-table"); host.innerHTML="";
+  const best={};
+  DB.entries.filter(e=>e.sport==="strength").forEach(e=>{
+    (e.data.exercises||[]).forEach(x=>{
+      x.sets.forEach(s=>{
+        const w=num(s.w), r=num(s.reps); if(!w||!r) return;
+        const e1=w*(1+r/30);
+        const b=best[x.name]||{w:0,e1:0,date:"",rec:""};
+        if(w>b.w) { b.w=w; }
+        if(e1>b.e1){ b.e1=e1; b.date=e.date; b.rec=w+" kg × "+r; }
+        best[x.name]=b; }); }); });
+  const names=Object.keys(best).sort((a,b)=> best[b].e1-best[a].e1);
+  if(!names.length){ host.appendChild(el("p",{class:"empty"},"還沒有重訓紀錄。")); return; }
+  const t=el("table",{class:"tblview"});
+  t.innerHTML="<thead><tr><th>動作</th><th>最佳單組</th><th>預估 1RM</th><th>最重重量</th><th>日期</th></tr></thead>";
+  const tb=el("tbody");
+  names.forEach(n=>{ const b=best[n]; const tr=el("tr");
+    [n,b.rec,fmt(b.e1)+" kg",fmt(b.w)+" kg",b.date].forEach(v=> tr.appendChild(el("td",null,v)));
+    tb.appendChild(tr); });
+  t.appendChild(tb); host.appendChild(t);
+  host.appendChild(el("p",{class:"hint"},"預估 1RM 使用 Epley 公式：重量 × (1 + 次數 ÷ 30)，僅供趨勢參考。"));
+}
+
+/* ============================================================
+   影片庫
+   ============================================================ */
+function renderVideos(){
+  const sel=$("#v-cat"), csel=$("#cv-cat");
+  if(!sel.options.length){
+    VIDEO_CATS.forEach(c=> sel.appendChild(el("option",{value:c[0]},c[1])));
+    VIDEO_CATS.filter(c=>c[0]!=="all").forEach(c=> csel.appendChild(el("option",{value:c[0]},c[1])));
+    sel.addEventListener("change",renderVideos); $("#v-search").addEventListener("input",renderVideos);
+  }
+  const cat=sel.value||"all", kw=$("#v-search").value.trim().toLowerCase();
+  const all=VIDEO_LIB.concat(DB.customVideos.map(v=>Object.assign({type:"link",creator:"我的收藏",desc:"自行加入"},v)));
+  const rows=all.filter(v=> (cat==="all"||v.cat===cat) &&
+    (!kw || (v.title+v.creator+(v.desc||"")+(v.q||"")).toLowerCase().includes(kw)));
+  const g=$("#vid-grid"); g.innerHTML="";
+  if(!rows.length){ g.appendChild(el("p",{class:"empty"},"沒有符合的影片。")); return; }
+  rows.forEach(v=>{
+    const c=el("div",{class:"vid"});
+    c.appendChild(el("div",{class:"t"},v.title));
+    const catName=(VIDEO_CATS.find(x=>x[0]===v.cat)||["","其他"])[1];
+    c.appendChild(el("div",{class:"c"}, v.creator+"　·　"+catName));
+    c.appendChild(el("div",{class:"d"}, v.desc||""));
+    const a=el("a",{href: v.type==="link"? v.url : YT(v.q), target:"_blank", rel:"noopener"},
+      v.type==="link" ? "直接觀看 ↗" : "搜尋教學 ↗");
+    c.appendChild(a);
+    g.appendChild(c);
+  });
+  renderCustomVideos();
+}
+function renderCustomVideos(){
+  const host=$("#cv-list"); host.innerHTML="";
+  if(!DB.customVideos.length){ host.appendChild(el("p",{class:"empty"},"還沒有自訂影片。")); return; }
+  DB.customVideos.forEach((v,i)=>{
+    const r=el("div",{class:"row",style:"align-items:center;margin-bottom:6px"});
+    r.appendChild(el("span",null,v.title));
+    const catName=(VIDEO_CATS.find(x=>x[0]===v.cat)||["","其他"])[1];
+    r.appendChild(el("span",{class:"tag"},catName));
+    const sp=el("span"); sp.style.flex="1"; r.appendChild(sp);
+    const del=el("button",{class:"btn sm danger",type:"button"},"移除");
+    del.addEventListener("click",()=>{ DB.customVideos.splice(i,1); save(); renderVideos(); });
+    r.appendChild(del); host.appendChild(r);
+  });
+}
+$("#cv-add").addEventListener("click",()=>{
+  const t=$("#cv-title").value.trim(), u=$("#cv-url").value.trim(), c=$("#cv-cat").value;
+  if(!t||!u){ toast("請填入標題與網址"); return; }
+  if(!/^https?:\/\//i.test(u)){ toast("網址需以 http(s):// 開頭"); return; }
+  DB.customVideos.push({title:t,url:u,cat:c}); save();
+  $("#cv-title").value=""; $("#cv-url").value=""; renderVideos(); toast("已加入影片庫");
+});
+
+/* ============================================================
+   資料備份 / 自訂動作
+   ============================================================ */
+function download(name, text, mime){
+  const blob=new Blob([text],{type:mime||"application/json;charset=utf-8"});
+  const a=el("a",{href:URL.createObjectURL(blob),download:name});
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+}
+$("#btn-export").addEventListener("click",()=>{
+  download("運動紀錄備份_"+todayStr()+".json", JSON.stringify(DB,null,2)); toast("已匯出 JSON");
+});
+function csvCell(v){ v=String(v==null?"":v); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
+$("#btn-csv").addEventListener("click",()=>{
+  const head=["日期","運動","時長(分)","RPE","內容摘要","備註"];
+  const rows=DB.entries.slice().sort((a,b)=>a.date.localeCompare(b.date))
+    .map(e=>[e.date,SPORTS[e.sport].name,e.duration,e.rpe==null?"":e.rpe,describe(e),e.note]);
+  download("運動紀錄_"+todayStr()+".csv","﻿"+[head].concat(rows).map(r=>r.map(csvCell).join(",")).join("\n"),"text/csv;charset=utf-8");
+  toast("已匯出 CSV");
+});
+$("#btn-csv-sets").addEventListener("click",()=>{
+  const head=["日期","部位","動作","組別","重量(kg)","次數","RPE","訓練量"];
+  const rows=[];
+  DB.entries.filter(e=>e.sport==="strength").sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+    (e.data.exercises||[]).forEach(x=> x.sets.forEach((s,i)=>
+      rows.push([e.date, PARTS[x.part]?PARTS[x.part].name:x.part, x.name, i+1, s.w, s.reps, s.rpe==null?"":s.rpe, round(num(s.w)*num(s.reps),1)])));
+  });
+  if(!rows.length){ toast("還沒有重訓紀錄"); return; }
+  download("重訓逐組_"+todayStr()+".csv","﻿"+[head].concat(rows).map(r=>r.map(csvCell).join(",")).join("\n"),"text/csv;charset=utf-8");
+  toast("已匯出逐組 CSV");
+});
+$("#file-import").addEventListener("change",ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+      const p=JSON.parse(rd.result);
+      if(!p.entries) throw new Error("格式不符");
+      const mode=confirm("按「確定」= 合併到現有資料\n按「取消」= 完全取代現有資料");
+      if(mode){ const ids=new Set(DB.entries.map(e=>e.id));
+        p.entries.forEach(e=>{ if(!ids.has(e.id)) DB.entries.push(e); });
+        (p.customVideos||[]).forEach(v=> DB.customVideos.push(v));
+        for(const k in (p.customExercises||{})) DB.customExercises[k]=[...new Set((DB.customExercises[k]||[]).concat(p.customExercises[k]))];
+      } else { DB=normalize({entries:p.entries, customExercises:p.customExercises, customVideos:p.customVideos, deleted:p.deleted}); }
+      save(); renderTopPills(); renderHistory(); toast("匯入完成，共 "+DB.entries.length+" 筆");
+      renderStorageNote();
+    }catch(err){ toast("匯入失敗："+err.message); } };
+  rd.readAsText(f); ev.target.value="";
+});
+$("#btn-clear").addEventListener("click",()=>{
+  if(!confirm("確定要清除全部資料嗎？建議先匯出備份。")) return;
+  if(!confirm("最後確認：這個動作無法復原，雲端資料也會一併清空。")) return;
+  const tomb={}; DB.entries.forEach(e=> tomb[e.id]=Date.now());
+  DB={version:1, entries:[], customExercises:{}, customVideos:[], deleted:Object.assign(DB.deleted||{},tomb), updatedAt:0}; save();
+  renderTopPills(); renderHistory(); renderStorageNote(); resetForm(); toast("已清除所有資料");
+});
+function renderCustomEx(){
+  const sel=$("#ce-part");
+  if(!sel.options.length) Object.keys(PARTS).forEach(p=> sel.appendChild(el("option",{value:p},PARTS[p].name)));
+  const host=$("#ce-list"); host.innerHTML="";
+  const keys=Object.keys(DB.customExercises).filter(k=>(DB.customExercises[k]||[]).length);
+  if(!keys.length){ host.appendChild(el("p",{class:"empty"},"還沒有自訂動作。")); return; }
+  keys.forEach(k=> DB.customExercises[k].forEach((n,i)=>{
+    const r=el("div",{class:"row",style:"align-items:center;margin-bottom:6px"});
+    r.appendChild(el("span",{class:"tag"},PARTS[k]?PARTS[k].name:k));
+    r.appendChild(el("span",null,n));
+    const sp=el("span"); sp.style.flex="1"; r.appendChild(sp);
+    const del=el("button",{class:"btn sm danger",type:"button"},"移除");
+    del.addEventListener("click",()=>{ DB.customExercises[k].splice(i,1); save(); renderCustomEx();
+      if(currentSport==="strength") renderDetail(); });
+    r.appendChild(del); host.appendChild(r);
+  }));
+}
+$("#ce-add").addEventListener("click",()=>{
+  const p=$("#ce-part").value, n=$("#ce-name").value.trim();
+  if(!n){ toast("請輸入動作名稱"); return; }
+  DB.customExercises[p]=DB.customExercises[p]||[];
+  if(DB.customExercises[p].includes(n)||exListFor(p).includes(n)){ toast("這個動作已經有了"); return; }
+  DB.customExercises[p].push(n); save(); $("#ce-name").value="";
+  renderCustomEx(); if(currentSport==="strength") renderDetail(); toast("已新增：" + n);
+});
+
+/* ============================================================
+   Google 登入（Google Identity Services）＋ 雲端硬碟同步
+   資料存放於使用者自己雲端硬碟的 App 專用隱藏資料夾（appDataFolder）
+   ============================================================ */
+const CONFIG = {
+  // ★ 把你在 Google Cloud Console 建立的「OAuth 用戶端 ID」貼在這裡，
+  //   使用者就不用自己輸入。留空的話，程式會在登入畫面請使用者貼上。
+  CLIENT_ID: ""
+};
+const SCOPES = "openid email profile https://www.googleapis.com/auth/drive.appdata";
+const FILE_NAME = "fitness-record.json";
+
+const Auth = {
+  clientId:"", tokenClient:null, token:null, expiresAt:0, user:null, _resolve:null, _reject:null,
+  storedId(){ try{ return localStorage.getItem(KEY+".clientId")||""; }catch(e){ return ""; } },
+  setId(v){ try{ localStorage.setItem(KEY+".clientId", v); }catch(e){} Auth.clientId=v; }
+};
+
+function gisReady(){
+  return new Promise((res,rej)=>{
+    let n=0;
+    (function poll(){
+      if(window.google && google.accounts && google.accounts.oauth2) return res();
+      if(++n>100) return rej(new Error("無法載入 Google 登入元件，請檢查網路"));
+      setTimeout(poll,100);
+    })();
+  });
+}
+function initTokenClient(){
+  Auth.tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: Auth.clientId,
+    scope: SCOPES,
+    callback: (resp)=>{
+      if(resp && resp.access_token){
+        Auth.token=resp.access_token;
+        Auth.expiresAt=Date.now()+(parseInt(resp.expires_in,10)||3600)*1000;
+        if(Auth._resolve){ const f=Auth._resolve; Auth._resolve=Auth._reject=null; f(Auth.token); }
+      } else if(Auth._reject){ const f=Auth._reject; Auth._resolve=Auth._reject=null; f(new Error("未取得授權")); }
+    },
+    error_callback: (err)=>{
+      if(Auth._reject){ const f=Auth._reject; Auth._resolve=Auth._reject=null;
+        f(new Error(err && err.type==="popup_closed" ? "你關閉了登入視窗" : "登入失敗，請再試一次")); }
+    }
+  });
+}
+function requestToken(prompt){
+  return new Promise((res,rej)=>{
+    if(Auth.token && Date.now() < Auth.expiresAt-60000) return res(Auth.token);
+    if(!Auth.tokenClient) return rej(new Error("尚未初始化 Google 登入"));
+    Auth._resolve=res; Auth._reject=rej;
+    try{ Auth.tokenClient.requestAccessToken({prompt: prompt||""}); }
+    catch(e){ Auth._resolve=Auth._reject=null; rej(e); }
+  });
+}
+async function driveFetch(url, opts, retry){
+  const t = await requestToken();
+  const o = Object.assign({}, opts||{});
+  o.headers = Object.assign({}, o.headers||{}, {Authorization:"Bearer "+t});
+  const r = await fetch(url, o);
+  if(r.status===401 && !retry){ Auth.token=null; Auth.expiresAt=0; return driveFetch(url,opts,true); }
+  if(!r.ok) throw new Error("Drive API "+r.status+"："+(await r.text()).slice(0,160));
+  return r;
+}
+
+const Cloud = {
+  fileId:null, lastSync:0, timer:null, busy:false, pending:false,
+  badge(state, txt){
+    const b=$("#sync-badge"); if(!b) return;
+    b.dataset.state=state; b.querySelector(".txt").textContent=txt;
+    b.style.cursor = state==="err" ? "pointer" : "default";
+  },
+  async findFile(){
+    const q=encodeURIComponent("name = '"+FILE_NAME+"' and trashed = false");
+    const r=await driveFetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+
+      "&fields=files(id,name,modifiedTime)&pageSize=10");
+    const j=await r.json();
+    return (j.files&&j.files[0])||null;
+  },
+  async pull(){
+    const f=await Cloud.findFile();
+    if(!f){ Cloud.fileId=null; return null; }
+    Cloud.fileId=f.id;
+    const r=await driveFetch("https://www.googleapis.com/drive/v3/files/"+f.id+"?alt=media");
+    const txt=await r.text();
+    try{ return normalize(JSON.parse(txt)); }catch(e){ return null; }
+  },
+  async push(){
+    if(Cloud.busy){ Cloud.pending=true; return; }
+    Cloud.busy=true; Cloud.badge("saving","同步中…");
+    try{
+      const body=JSON.stringify(DB);
+      if(!Cloud.fileId){
+        const f=await Cloud.findFile();
+        if(f) Cloud.fileId=f.id;
+        else{
+          const r=await driveFetch("https://www.googleapis.com/drive/v3/files",{
+            method:"POST", headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({name:FILE_NAME, parents:["appDataFolder"], mimeType:"application/json"})});
+          Cloud.fileId=(await r.json()).id;
+        }
+      }
+      await driveFetch("https://www.googleapis.com/upload/drive/v3/files/"+Cloud.fileId+"?uploadType=media",
+        {method:"PATCH", headers:{"Content-Type":"application/json"}, body});
+      Cloud.lastSync=Date.now();
+      Cloud.badge("ok","已同步 "+new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}));
+      renderStorageNote();
+    }catch(e){
+      // 關閉分頁 / 重新整理時請求會被中止，不算真正的失敗（本機快取仍在，下次載入會補傳）
+      if(!Cloud.unloading){ Cloud.badge("err","同步失敗，點我重試"); console.warn("同步失敗：", e.message); }
+    }finally{
+      Cloud.busy=false;
+      if(Cloud.pending){ Cloud.pending=false; Cloud.push(); }
+    }
+  },
+  schedulePush(){
+    if(!Auth.user) return;
+    clearTimeout(Cloud.timer);
+    Cloud.badge("saving","即將同步…");
+    Cloud.timer=setTimeout(()=>Cloud.push(), 1500);
+  },
+  flush(){ if(Auth.user){ clearTimeout(Cloud.timer); Cloud.push(); } },
+  async syncNow(){
+    Cloud.badge("saving","同步中…");
+    try{
+      const remote=await Cloud.pull();
+      if(remote){ DB=mergeDB(DB, remote); if(storageOK) try{localStorage.setItem(cacheKey,JSON.stringify(DB));}catch(e){} }
+      await Cloud.push();
+      renderTopPills(); renderHistory(); if(!$("#view-stats").hidden) renderStats(); renderVideos();
+    }catch(e){ Cloud.badge("err","同步失敗，點我重試"); toast("同步失敗："+e.message); }
+  }
+};
+function mergeDB(local, remote){
+  local=normalize(local); remote=normalize(remote);
+  const out=normalize({});
+  out.deleted=Object.assign({}, remote.deleted, local.deleted);
+  const map={};
+  remote.entries.forEach(e=>{ if(e&&e.id) map[e.id]=e; });
+  local.entries.forEach(e=>{
+    if(!e||!e.id) return;
+    const r=map[e.id];
+    if(!r || String(e.createdAt||"") > String(r.createdAt||"")) map[e.id]=e;
+  });
+  out.entries=Object.keys(map).map(k=>map[k]).filter(e=> !out.deleted[e.id]);
+  const ce={};
+  [remote.customExercises, local.customExercises].forEach(src=>{
+    for(const k in src) ce[k]=[...new Set((ce[k]||[]).concat(src[k]||[]))]; });
+  out.customExercises=ce;
+  const seen=new Set();
+  remote.customVideos.concat(local.customVideos).forEach(v=>{
+    const k=(v.title||"")+"|"+(v.url||""); if(!seen.has(k)){ seen.add(k); out.customVideos.push(v); } });
+  out.updatedAt=Math.max(local.updatedAt||0, remote.updatedAt||0);
+  return out;
+}
+
+async function fetchProfile(){
+  const r=await driveFetch("https://www.googleapis.com/oauth2/v3/userinfo");
+  return r.json();
+}
+function renderAccount(){
+  const host=$("#acct"); host.innerHTML="";
+  if(!Auth.user) return;
+  if(Auth.user.picture) host.appendChild(el("img",{src:Auth.user.picture,alt:"",referrerpolicy:"no-referrer"}));
+  host.appendChild(el("span",{class:"nm",title:Auth.user.email}, Auth.user.name||Auth.user.email));
+  const out=el("button",{class:"btn sm",type:"button"},"登出");
+  out.addEventListener("click", signOut);
+  host.appendChild(out);
+}
+async function afterSignIn(){
+  const p=await fetchProfile();
+  Auth.user={sub:p.sub, name:p.name, email:p.email, picture:p.picture};
+  try{ localStorage.setItem(KEY+".lastUser", p.sub); }catch(e){}
+  cacheKey = KEY+"."+p.sub;
+  load();
+  $("#gate").hidden=true; $("#app").hidden=false;
+  renderAccount(); renderSportPicker(); renderDetail(); renderVideos();
+  Cloud.badge("saving","讀取雲端資料…");
+  try{
+    const remote=await Cloud.pull();
+    if(remote) DB=mergeDB(DB, remote);
+    if(storageOK) try{ localStorage.setItem(cacheKey, JSON.stringify(DB)); }catch(e){}
+    await Cloud.push();
+  }catch(e){
+    Cloud.badge("err","雲端連線失敗，點我重試");
+    toast("雲端讀取失敗，先使用本機資料："+e.message);
+  }
+  renderTopPills(); renderStorageNote(); renderDetail();
+}
+function signOut(){
+  const t=Auth.token;
+  Auth.token=null; Auth.expiresAt=0; Auth.user=null; Cloud.fileId=null; Cloud.lastSync=0;
+  clearTimeout(Cloud.timer);
+  try{ if(t && google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(t, ()=>{}); }catch(e){}
+  try{ localStorage.removeItem(KEY+".lastUser"); }catch(e){}
+  DB=normalize({}); cacheKey=KEY;
+  $("#app").hidden=true; $("#gate").hidden=false;
+  Cloud.badge("idle","尚未同步");
+}
+function renderGateSetup(){
+  const host=$("#gate-setup"); host.innerHTML="";
+  const btn=$("#btn-signin");
+  if(location.protocol==="file:"){
+    btn.disabled=true; btn.style.opacity=".5"; btn.style.cursor="not-allowed";
+    const b=el("div",{class:"setupbox"});
+    b.innerHTML='<h3>⚠ 目前是用「直接開啟檔案」的方式執行</h3>'+
+      '<p style="margin:0;font-size:13px;color:var(--text-secondary)">Google 登入只能在網址（http/https）下運作。'+
+      '請改用附的 <code>啟動運動紀錄.bat</code> 開啟，網址會是 <code>http://localhost:8080</code>。</p>';
+    host.appendChild(b);
+    return;
+  }
+  if(Auth.clientId) return;
+  btn.disabled=true; btn.style.opacity=".5";
+  const b=el("div",{class:"setupbox"});
+  b.innerHTML='<h3>第一次使用：填入 Google 用戶端 ID</h3>'+
+    '<ol><li>到 Google Cloud Console 建立專案，啟用 <code>Google Drive API</code></li>'+
+    '<li>「憑證」→ 建立 OAuth 用戶端 ID → 網頁應用程式</li>'+
+    '<li>已授權的 JavaScript 來源填入 <code>'+location.origin+'</code></li>'+
+    '<li>把產生的用戶端 ID 貼到下面</li></ol>';
+  const row=el("div",{class:"row"});
+  const inp=el("input",{type:"text",placeholder:"xxxxx.apps.googleusercontent.com",style:"flex:1;min-width:220px;background:var(--surface-1);border:1px solid var(--border);border-radius:9px;padding:8px 10px"});
+  const ok=el("button",{class:"btn primary",type:"button"},"儲存");
+  ok.addEventListener("click",async ()=>{
+    const v=inp.value.trim();
+    if(!/\.apps\.googleusercontent\.com$/.test(v)){ toast("用戶端 ID 應該以 .apps.googleusercontent.com 結尾"); return; }
+    Auth.setId(v);
+    try{ await gisReady(); initTokenClient(); }catch(e){ toast(e.message); return; }
+    btn.disabled=false; btn.style.opacity="1"; host.innerHTML="";
+    toast("已儲存，請按下方按鈕登入");
+  });
+  row.appendChild(inp); row.appendChild(ok); b.appendChild(row);
+  host.appendChild(b);
+}
+
+$("#btn-signin").addEventListener("click", async ()=>{
+  try{
+    if(!Auth.tokenClient){ await gisReady(); initTokenClient(); }
+    await requestToken("");
+    await afterSignIn();
+  }catch(e){ toast(e.message||"登入失敗"); }
+});
+$("#sync-badge").addEventListener("click", ()=>{ if($("#sync-badge").dataset.state==="err") Cloud.syncNow(); });
+$("#btn-sync").addEventListener("click", ()=>{ if(Auth.user) Cloud.syncNow(); else toast("請先登入"); });
+$("#btn-signout").addEventListener("click", signOut);
+$("#btn-switch").addEventListener("click", async ()=>{
+  Cloud.flush();
+  Auth.token=null; Auth.expiresAt=0;
+  try{ await requestToken("select_account"); await afterSignIn(); toast("已切換帳號"); }
+  catch(e){ toast(e.message||"切換失敗"); }
+});
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") Cloud.flush(); });
+window.addEventListener("pagehide", ()=>{ Cloud.unloading=true; });
+window.addEventListener("beforeunload", ()=>{ Cloud.unloading=true; });
+
+/* ============================================================
+   啟動
+   ============================================================ */
+(function init(){
+  try{ const th=localStorage.getItem(KEY+".theme"); if(th) document.documentElement.setAttribute("data-theme",th); }catch(e){}
+  // 也可用網址參數帶入用戶端 ID：  ...?client_id=xxxx.apps.googleusercontent.com
+  try{
+    const q=new URLSearchParams(location.search).get("client_id");
+    if(q && /\.apps\.googleusercontent\.com$/.test(q)){
+      Auth.setId(q);
+      history.replaceState(null,"",location.pathname);
+    }
+  }catch(e){}
+  Auth.clientId = CONFIG.CLIENT_ID || Auth.storedId();
+  $("#f-date").value=todayStr();
+  DB=normalize({});
+  renderGateSetup();
+  if(Auth.clientId && location.protocol!=="file:"){
+    gisReady().then(()=>{
+      initTokenClient();
+      // 之前登入過就嘗試靜默恢復（若瀏覽器擋下彈窗則停留在登入畫面）
+      let last=""; try{ last=localStorage.getItem(KEY+".lastUser")||""; }catch(e){}
+      if(last){ requestToken("none").then(afterSignIn).catch(()=>{}); }
+    }).catch(e=> toast(e.message));
+  }
+})();
+</script>
+</body>
+</html>
