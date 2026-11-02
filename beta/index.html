@@ -78,7 +78,7 @@ main{padding:0 18px}
 .btn.pri{background:var(--acc);border-color:transparent;color:var(--acc-ink);font-weight:650}
 .btn.ghost{background:transparent}
 .btn.dim{color:var(--mut)}
-.btn.crit{color:var(--crit)}
+.btn.crit,.crit{color:var(--crit)}
 .btn.wide{width:100%;text-align:center;padding:13px}
 .btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
 .link{color:var(--acc);font-size:13px;font-weight:600}
@@ -552,12 +552,20 @@ full:[
 ]
 };
 
-/* 預設課表模板 */
+/* 預設課表模板（快選） */
 const TEMPLATES_DEFAULT = [
-  {id:"t-push", name:"胸日", items:["槓鈴臥推","上斜啞鈴臥推","滑輪飛鳥","滑輪下壓"]},
-  {id:"t-pull", name:"背日", items:["引體向上","槓鈴划船","坐姿划船","槓鈴彎舉"]},
-  {id:"t-legs", name:"腿日", items:["背蹲舉","羅馬尼亞硬舉","腿彎舉","站姿提踵"]}
+  {id:"t-chest",    name:"胸日",  items:["槓鈴臥推","上斜啞鈴臥推","滑輪飛鳥","滑輪下壓"]},
+  {id:"t-back",     name:"背日",  items:["引體向上","槓鈴划船","坐姿划船","直臂下壓"]},
+  {id:"t-shoulder", name:"肩日",  items:["站姿肩推","側平舉","反向飛鳥","臉拉"]},
+  {id:"t-arm",      name:"手臂日", items:["槓鈴彎舉","錘式彎舉","滑輪下壓","顱骨粉碎"]},
+  {id:"t-legs",     name:"腿日",  items:["背蹲舉","羅馬尼亞硬舉","腿彎舉","站姿提踵"]},
+  {id:"t-core",     name:"腹部日", items:["懸垂舉腿","滑輪捲腹","棒式","農夫走路"]}
 ];
+const TPL_SEED = 2;   // 預設模板版本：升版時補進既有使用者的清單
+
+/* 混合健身型態：中文 + 英文原名 */
+const WOD_TYPES = ["限時完成（For Time）","限時最多回合（AMRAP）","每分鐘一組（EMOM）",
+  "長組合（Chipper）","肌力 ＋ 體能（Strength + Metcon）","其他"];
 
 /* 查表 */
 const EX_INDEX = {};
@@ -601,6 +609,12 @@ function normalize(d){
   d=d||{}; d.version=2;
   d.entries=Array.isArray(d.entries)?d.entries:[];
   d.templates=Array.isArray(d.templates)&&d.templates.length?d.templates:TEMPLATES_DEFAULT.map(t=>({...t}));
+  // 預設模板升版：把新增的快選項目補進既有清單（只做一次）
+  if((d.tplSeed||0)<TPL_SEED){
+    const have=new Set(d.templates.map(t=>t.id||t.name));
+    TEMPLATES_DEFAULT.forEach(t=>{ if(!have.has(t.id)&&!have.has(t.name)) d.templates.push({...t}); });
+    d.tplSeed=TPL_SEED;
+  }
   d.customExercises=d.customExercises||{};
   d.deleted=d.deleted||{};
   d.draft=d.draft||null;
@@ -962,14 +976,35 @@ function renderLog(){
 
   const foot=el("div",{style:"display:flex;gap:10px;margin:18px 0 10px"});
   const cancel=el("button",{class:"btn",style:"flex:none;padding:13px 18px"},"取消");
-  cancel.addEventListener("click",()=>{
-    if(L.sport==="strength" && L.exercises.length && !confirm("取消會保留草稿，確定？")) return;
-    stashDraft(); go("home");
-  });
+  cancel.addEventListener("click",confirmLeave);
   const ok=el("button",{class:"btn pri",style:"flex:1;padding:13px"},"儲存這筆紀錄");
   ok.addEventListener("click",saveLog);
   foot.appendChild(cancel); foot.appendChild(ok);
   v.appendChild(foot);
+}
+/* 離開未儲存的紀錄：保留草稿 / 捨棄 / 繼續編輯 */
+function confirmLeave(){
+  if(!L){ go("home"); return; }
+  closePad();
+  const something = L.sport==="strength" ? L.exercises.length : (L.duration||Object.keys(L.data||{}).length);
+  if(!something){ L=null; go("home"); return; }
+  openSheet(s=>{
+    s.appendChild(el("h2",null,"這筆還沒儲存"));
+    s.appendChild(el("p",{style:"font-size:13.5px;color:var(--ink2);margin:8px 0 16px"},
+      hasInput()||L.duration ? "已經填了內容，要怎麼處理？" : "還沒填內容，可以直接離開。"));
+    const mk=(label,desc,cls,fn)=>{
+      const b=el("button",{class:"rowcard"});
+      const r=el("div",{class:"t"}); r.appendChild(el("b",{class:cls||""},label));
+      b.appendChild(r); b.appendChild(el("div",{class:"m"},desc));
+      b.addEventListener("click",()=>{ closeSheet(); fn(); });
+      return b;
+    };
+    s.appendChild(mk("繼續編輯","回到剛才的畫面","",()=>{ go("log"); renderLog(); }));
+    s.appendChild(mk("保留草稿並離開","首頁會出現「繼續」，之後可以接著記","",()=>{ stashDraft(); go("home"); }));
+    s.appendChild(mk("捨棄這筆","不保留，直接丟掉","crit",()=>{
+      L=null; DB.draft=null; save({noCloud:true}); go("home"); toast("已捨棄");
+    }));
+  });
 }
 function fieldInput(label,type,val,on,ph,attrs){
   const f=el("div",{class:"field"});
@@ -998,14 +1033,11 @@ function renderStrengthBody(v){
     [mdw(L.date), parts.join(" · "), L.exercises.length?L.exercises.length+" 動作":"", sets?sets+" 組":"",
      vol?"訓練量 "+fmt(vol)+" kg·次":""].filter(Boolean).join(" · ");
 
-  const tc=el("div",{class:"chips",style:"margin:12px 0 14px"});
+  v.appendChild(el("div",{class:"lab",style:"margin:14px 0 6px"},"快選課表"));
+  const tc=el("div",{class:"chips",style:"margin:0 0 14px"});
   (DB.templates||[]).forEach(t=>{
     const b=el("button",{class:"chip","aria-pressed":String(L.template===t.name)},t.name);
-    b.addEventListener("click",()=>{
-      L.template=t.name;
-      t.items.forEach(n=>{ if(!L.exercises.some(x=>x.name===n)) addExercise(n,true); });
-      renderLog();
-    });
+    b.addEventListener("click",()=>applyTemplate(t));
     tc.appendChild(b);
   });
   v.appendChild(tc);
@@ -1015,6 +1047,44 @@ function renderStrengthBody(v){
   const add=el("button",{class:"btn wide",style:"margin-top:4px"},"＋ 加入動作");
   add.addEventListener("click",openExercisePicker);
   v.appendChild(add);
+}
+/* 快選課表切換：已輸入資料時要先問過才覆蓋 */
+function hasInput(){
+  return !!(L && L.sport==="strength" && L.exercises.some(x=>x.sets.some(s=>s.w!==""||s.reps!=="")));
+}
+function setTemplate(t){
+  L.template=t.name;
+  L.exercises=[];
+  (t.items||[]).forEach(n=>addExercise(n,true));
+  KP.ex=-1; closePad(); renderLog();
+  toast("已套用「"+t.name+"」");
+}
+function applyTemplate(t){
+  if(!L) return;
+  if(L.template===t.name) return;
+  if(!hasInput()){ setTemplate(t); return; }
+  closePad();
+  openSheet(s=>{
+    const h=el("h2",null,"已經輸入資料");
+    s.appendChild(h);
+    s.appendChild(el("p",{style:"font-size:13.5px;color:var(--ink2);margin:8px 0 16px"},
+      "目前的「"+(L.template||"自訂菜單")+"」已經填了重量或次數。要怎麼處理？"));
+    const mk=(label,desc,cls,fn)=>{
+      const b=el("button",{class:"rowcard"});
+      const r=el("div",{class:"t"}); r.appendChild(el("b",{class:cls||""},label));
+      b.appendChild(r); b.appendChild(el("div",{class:"m"},desc));
+      b.addEventListener("click",()=>{ closeSheet(); fn(); });
+      return b;
+    };
+    s.appendChild(mk("留在「"+(L.template||"目前菜單")+"」","不切換，繼續記現在這份（建議）","",()=>renderLog()));
+    s.appendChild(mk("把「"+t.name+"」的動作加進來","保留已輸入的內容，只補上缺少的動作","",()=>{
+      (t.items||[]).forEach(n=>{ if(!L.exercises.some(y=>y.name===n)) addExercise(n,true); });
+      renderLog(); toast("已加入「"+t.name+"」的動作");
+    }));
+    s.appendChild(mk("換成「"+t.name+"」","清掉目前已輸入的內容，重新開始","crit",()=>{
+      if(confirm("確定清掉目前已輸入的內容，換成「"+t.name+"」？")) setTemplate(t); else renderLog();
+    }));
+  });
 }
 function excCard(x,xi){
   const c=el("div",{class:"exc"});
@@ -1163,7 +1233,7 @@ function renderSportBody(v){
     case "crossfit":
       box.appendChild(fieldInput("WOD 名稱","text",K("name"),set("name"),"Fran"));
       box.appendChild(el("div",{class:"lab"},"型態"));
-      box.appendChild(chipRow(["For Time","AMRAP","EMOM","Chipper","其他"],K("type","For Time"),x=>d.type=x));
+      box.appendChild(chipRow(WOD_TYPES,K("type",WOD_TYPES[0]),x=>d.type=x));
       box.appendChild(el("div",{class:"fgrid",style:"margin-top:12px"})).append(
         fieldInput("成績","text",K("result"),set("result"),"12:34"),
         fieldSelect("級別",["Rx","Scaled","自訂"],K("scale","Rx"),x=>d.scale=x));
@@ -1270,6 +1340,9 @@ function renderPad(){
   const rb=el("button",{class:"btn sm rest"}, rest.t?("⏱ 休息 "+mmss(rest.left)):"⏱ 休息");
   rb.addEventListener("click",()=> rest.t?stopRest():startRest(90));
   st.appendChild(rb);
+  const close=el("button",{class:"btn sm",title:"收起鍵盤",style:"margin-left:6px"},"✕ 收起");
+  close.addEventListener("click",()=>{ closePad(); renderLog(); });
+  st.appendChild(close);
   p.appendChild(st);
 
   const keys=el("div",{class:"keys"});
