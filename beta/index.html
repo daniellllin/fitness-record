@@ -254,12 +254,12 @@ main{padding:0 18px}
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m1-beta.4</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m1-beta.5</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m1-beta.4</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m1-beta.5</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -296,7 +296,7 @@ main{padding:0 18px}
    每日運動紀錄 — 資料定義
    M1：手機版介面、重訓逐組輸入、內建動作教學
    ============================================================ */
-const APP = { beta:true, ver:"m1-beta.4" };
+const APP = { beta:true, ver:"m1-beta.5" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1892,7 +1892,7 @@ function clearAll(){
    ============================================================ */
 const CONFIG = {
   // ★ 貼上 Google Cloud Console 的「OAuth 用戶端 ID」，使用者就不用自己輸入
-  CLIENT_ID: ""
+  CLIENT_ID: "761362119915-n2diispa8qkascmancs1687snhsmc575.apps.googleusercontent.com"
 };
 const SCOPES="openid email profile https://www.googleapis.com/auth/drive.appdata";
 const FILE_NAME = APP.beta ? "fitness-record-beta.json" : "fitness-record.json";
