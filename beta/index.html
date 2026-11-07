@@ -226,6 +226,8 @@ main{padding:0 18px}
 /* beta 標示 */
 .betabar{background:var(--warn);color:#1a1200;font-size:12px;font-weight:650;text-align:center;padding:5px 10px;
   letter-spacing:.04em}
+.updbar{position:fixed;top:0;left:0;right:0;z-index:95;background:var(--acc);color:var(--acc-ink);
+  font-size:14px;font-weight:650;padding:12px 16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .toast{position:fixed;left:50%;bottom:calc(104px + var(--safe-b));transform:translateX(-50%) translateY(10px);
   background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:90;
   opacity:0;transition:.2s;pointer-events:none;max-width:88vw;text-align:center}
@@ -252,11 +254,12 @@ main{padding:0 18px}
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m1-beta.4</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver"></span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m1-beta.4</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -293,7 +296,7 @@ main{padding:0 18px}
    每日運動紀錄 — 資料定義
    M1：手機版介面、重訓逐組輸入、內建動作教學
    ============================================================ */
-const APP = { beta:true, ver:"m1-beta.3" };
+const APP = { beta:true, ver:"m1-beta.4" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -2101,13 +2104,48 @@ $("#btn-signin").addEventListener("click",async()=>{
   }catch(e){ toast(e.message||"登入失敗"); }
 });
 $("#sync-dot").addEventListener("click",()=>{ if($("#sync-dot").dataset.s==="err") Cloud.syncNow(); });
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"){ if(L) stashDraftSoft(); Cloud.flush(); } });
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden"){ if(L) stashDraftSoft(); Cloud.flush(); }
+  else checkUpdate();
+});
 window.addEventListener("pagehide",()=>{ Cloud.unloading=true; });
 window.addEventListener("beforeunload",()=>{ Cloud.unloading=true; if(L) stashDraftSoft(); });
 function stashDraftSoft(){
   if(!L) return;
-  const empty = L.sport==="strength" ? !L.exercises.length : !L.duration && !Object.keys(L.data||{}).length;
-  if(!empty){ DB.draft=L; if(storageOK) try{ localStorage.setItem(cacheKey,JSON.stringify(DB)); }catch(e){} }
+  const worth = L.sport==="strength" ? (hasInput()||!!L.duration) : (!!L.duration||Object.keys(L.data||{}).length>0);
+  if(worth){ DB.draft=L; if(storageOK) try{ localStorage.setItem(cacheKey,JSON.stringify(DB)); }catch(e){} }
+}
+
+/* ============================================================
+   新版本偵測
+   GitHub Pages 會快取 HTML 約 10 分鐘，瀏覽器也可能留著舊檔。
+   這裡繞過快取讀一次伺服器上的檔案，比對版本號，不同就提示更新。
+   ============================================================ */
+let _lastUpdCheck=0;
+async function checkUpdate(){
+  if(location.protocol==="file:") return;
+  if(Date.now()-_lastUpdCheck<60000) return;
+  _lastUpdCheck=Date.now();
+  try{
+    const r=await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"});
+    if(!r.ok) return;
+    const m=(await r.text()).match(/ver:"([^"]+)"/);
+    if(m && m[1]!==APP.ver) showUpdate(m[1]);
+  }catch(e){}
+}
+function showUpdate(v){
+  let b=$("#updbar");
+  if(!b){
+    b=el("button",{id:"updbar",class:"updbar",type:"button"});
+    b.addEventListener("click",()=>{
+      if(L) stashDraftSoft();
+      Cloud.flush();
+      setTimeout(()=>location.replace(location.pathname+"?v="+encodeURIComponent(b.dataset.v)),300);
+    });
+    document.body.appendChild(b);
+  }
+  b.dataset.v=v;
+  b.textContent="有新版本 "+v+"（目前 "+APP.ver+"）· 點這裡更新";
 }
 
 /* ============================================================
@@ -2115,6 +2153,8 @@ function stashDraftSoft(){
    ============================================================ */
 (function init(){
   DB=normalize({}); applyTheme();
+  $$(".appver").forEach(n=>n.textContent=APP.ver);
+  setTimeout(checkUpdate,1200);
   try{
     const q=new URLSearchParams(location.search).get("client_id");
     if(q&&/\.apps\.googleusercontent\.com$/.test(q)){ Auth.setId(q); history.replaceState(null,"",location.pathname); }
