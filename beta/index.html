@@ -256,7 +256,7 @@ main{padding:0 18px}
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver"></span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -293,7 +293,7 @@ main{padding:0 18px}
    每日運動紀錄 — 資料定義
    M1：手機版介面、重訓逐組輸入、內建動作教學
    ============================================================ */
-const APP = { beta:true, ver:"m1-beta.1" };
+const APP = { beta:true, ver:"m1-beta.3" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -605,13 +605,26 @@ const KEY = APP.beta ? "fitnessRecord.beta" : "fitnessRecord.v1";
 let storageOK=true, cacheKey=KEY;
 let DB=null, view="home", L=null;
 
+/* 課表以「名稱」為識別，去掉同名重複（舊版 id 與新版 id 不同造成的） */
+function dedupeTemplates(list){
+  const seen=new Set(), keep=[];
+  (Array.isArray(list)?list:[]).forEach(t=>{
+    if(!t) return;
+    const k=String(t.name||t.id||"").trim();
+    if(!k||seen.has(k)) return;
+    seen.add(k); keep.push(t);
+  });
+  return keep;
+}
 function normalize(d){
   d=d||{}; d.version=2;
   d.entries=Array.isArray(d.entries)?d.entries:[];
   d.templates=Array.isArray(d.templates)&&d.templates.length?d.templates:TEMPLATES_DEFAULT.map(t=>({...t}));
+  d.templates=dedupeTemplates(d.templates);
   // 預設模板升版：把新增的快選項目補進既有清單（只做一次）
   if((d.tplSeed||0)<TPL_SEED){
-    const have=new Set(d.templates.map(t=>t.id||t.name));
+    const have=new Set();
+    d.templates.forEach(t=>{ if(t.id) have.add(t.id); if(t.name) have.add(t.name); });
     TEMPLATES_DEFAULT.forEach(t=>{ if(!have.has(t.id)&&!have.has(t.name)) d.templates.push({...t}); });
     d.tplSeed=TPL_SEED;
   }
@@ -905,7 +918,7 @@ function repeatLast(date,last){
   L=blankLog("strength",date);
   L.template=(last.data&&last.data.template)||"";
   ((last.data&&last.data.exercises)||[]).forEach(x=>{
-    L.exercises.push({name:x.name, part:x.part, sets:x.sets.map(s=>({w:s.w,reps:s.reps,done:false}))});
+    L.exercises.push({name:x.name, part:x.part, sets:x.sets.map(s=>({w:s.w,reps:s.reps,done:false,t:true}))});
   });
   openLog(); toast("已帶入上次的動作與重量");
 }
@@ -913,8 +926,8 @@ function startSport(k,date){ L=blankLog(k,date); openLog(); }
 function openLog(){ go("log"); renderLog(); }
 function stashDraft(){
   if(!L) return;
-  const empty = L.sport==="strength" ? !L.exercises.length : !L.duration && !Object.keys(L.data||{}).length;
-  DB.draft = empty ? null : L;
+  const worth = L.sport==="strength" ? (hasInput()||!!L.duration) : (!!L.duration||Object.keys(L.data||{}).length>0);
+  DB.draft = worth ? L : null;
   save({noCloud:!DB.draft});
   L=null;
 }
@@ -926,8 +939,9 @@ function lastSetsFor(name){
 function addExercise(name, quiet){
   const info=exInfo(name);
   const prev=lastSetsFor(name);
-  const sets = prev ? prev.sets.map(s=>({w:s.w,reps:"",done:false}))
-                    : [{w:"",reps:"",done:false},{w:"",reps:"",done:false},{w:"",reps:"",done:false}];
+  // t = 使用者真的動過這一組（系統帶入的上次重量不算）
+  const sets = prev ? prev.sets.map(s=>({w:s.w,reps:"",done:false,t:false}))
+                    : [{w:"",reps:"",done:false,t:false},{w:"",reps:"",done:false,t:false},{w:"",reps:"",done:false,t:false}];
   L.exercises.push({name, part: info?info.part:(exPart(name)||"full"), sets});
   if(!quiet){ renderLog(); toast("已加入 "+name); }
 }
@@ -975,9 +989,9 @@ function renderLog(){
   nf.appendChild(ta); v.appendChild(nf);
 
   const foot=el("div",{style:"display:flex;gap:10px;margin:18px 0 10px"});
-  const cancel=el("button",{class:"btn",style:"flex:none;padding:13px 18px"},"取消");
+  const cancel=el("button",{class:"btn",id:"btn-cancel-log",style:"flex:none;padding:13px 18px"},"取消");
   cancel.addEventListener("click",confirmLeave);
-  const ok=el("button",{class:"btn pri",style:"flex:1;padding:13px"},"儲存這筆紀錄");
+  const ok=el("button",{class:"btn pri",id:"btn-save-log",style:"flex:1;padding:13px"},"儲存這筆紀錄");
   ok.addEventListener("click",saveLog);
   foot.appendChild(cancel); foot.appendChild(ok);
   v.appendChild(foot);
@@ -986,12 +1000,12 @@ function renderLog(){
 function confirmLeave(){
   if(!L){ go("home"); return; }
   closePad();
-  const something = L.sport==="strength" ? L.exercises.length : (L.duration||Object.keys(L.data||{}).length);
-  if(!something){ L=null; go("home"); return; }
+  const something = L.sport==="strength" ? (hasInput()||!!L.duration) : (L.duration||Object.keys(L.data||{}).length);
+  if(!something){ L=null; DB.draft=null; go("home"); return; }
   openSheet(s=>{
     s.appendChild(el("h2",null,"這筆還沒儲存"));
     s.appendChild(el("p",{style:"font-size:13.5px;color:var(--ink2);margin:8px 0 16px"},
-      hasInput()||L.duration ? "已經填了內容，要怎麼處理？" : "還沒填內容，可以直接離開。"));
+      "已經填了內容，要怎麼處理？"));
     const mk=(label,desc,cls,fn)=>{
       const b=el("button",{class:"rowcard"});
       const r=el("div",{class:"t"}); r.appendChild(el("b",{class:cls||""},label));
@@ -1048,9 +1062,9 @@ function renderStrengthBody(v){
   add.addEventListener("click",openExercisePicker);
   v.appendChild(add);
 }
-/* 快選課表切換：已輸入資料時要先問過才覆蓋 */
+/* 快選課表切換：使用者真的輸入過才需要先問過 */
 function hasInput(){
-  return !!(L && L.sport==="strength" && L.exercises.some(x=>x.sets.some(s=>s.w!==""||s.reps!=="")));
+  return !!(L && L.sport==="strength" && L.exercises.some(x=>x.sets.some(s=> s.t || s.reps!=="" )));
 }
 function setTemplate(t){
   L.template=t.name;
@@ -1113,7 +1127,8 @@ function excCard(x,xi){
     const ls=prev&&prev.sets[si];
     r.appendChild(el("span",{class:"last"},ls?"上次\n"+ls.w+"×"+ls.reps:""));
     const ok=el("button",{class:"ok","aria-pressed":String(!!s.done)},"✓");
-    ok.addEventListener("click",()=>{ s.done=!s.done; if(s.done&&s.w!==""&&s.reps!=="") nextCell(); renderLog(); });
+    ok.addEventListener("click",()=>{ s.done=!s.done; s.t=true;
+      if(s.done&&s.w!==""&&s.reps!=="") nextCell(); renderLog(); });
     r.appendChild(ok);
     c.appendChild(r);
   });
@@ -1126,7 +1141,7 @@ function excCard(x,xi){
   if(prev){
     const same=el("button",{class:"btn sm pri"},"全部同上次");
     same.addEventListener("click",()=>{
-      x.sets=prev.sets.map(s=>({w:s.w,reps:s.reps,done:true}));
+      x.sets=prev.sets.map(s=>({w:s.w,reps:s.reps,done:true,t:true}));
       renderLog(); toast("已套用上次的 "+prev.sets.length+" 組");
     });
     f.appendChild(same);
@@ -1277,9 +1292,10 @@ function saveLog(){
   let data={};
   if(L.sport==="strength"){
     data.template=L.template||"";
+    // 只存真的有次數的組（避免課表自動帶入的重量被當成做過）
     data.exercises=L.exercises.map(x=>({name:x.name,part:x.part,
-      sets:x.sets.filter(s=>s.w!==""||s.reps!=="").map(s=>({w:num(s.w),reps:num(s.reps)}))})).filter(x=>x.sets.length);
-    if(!data.exercises.length){ toast("請至少填一組重量與次數"); return; }
+      sets:x.sets.filter(s=>s.reps!=="" && num(s.reps)>0).map(s=>({w:num(s.w),reps:num(s.reps)}))})).filter(x=>x.sets.length);
+    if(!data.exercises.length){ toast("請至少填一組的次數"); return; }
   } else {
     data=Object.assign({},L.data);
     if(!L.duration && !Object.keys(data).length){ toast("請至少填寫時長"); return; }
@@ -1359,6 +1375,7 @@ function renderPad(){
 function padKey(k,prev){
   const s=cur(); if(!s) return;
   const field=KP.f;
+  if(k!=="下一組") s.t=true;   // 使用者動過這一組
   const curv=String(s[field]===""?"":s[field]);
   if(/^[0-9.]$/.test(k)){
     const base = KP.buf==null ? "" : curv;
@@ -1993,10 +2010,11 @@ function mergeDB(local,remote){
   [remote.customExercises,local.customExercises].forEach(src=>{
     for(const k in src) ce[k]=[...new Set((ce[k]||[]).concat(src[k]||[]))]; });
   out.customExercises=ce;
-  const tm={};
-  remote.templates.forEach(t=> tm[t.id||t.name]=t);
-  local.templates.forEach(t=> tm[t.id||t.name]=t);
-  out.templates=Object.keys(tm).map(k=>tm[k]);
+  const tm={};                                   // 以名稱為識別，避免新舊 id 造成同名重複
+  remote.templates.forEach(t=> tm[String(t.name||t.id)]=t);
+  local.templates.forEach(t=> tm[String(t.name||t.id)]=t);
+  out.templates=dedupeTemplates(Object.keys(tm).map(k=>tm[k]));
+  out.tplSeed=Math.max(local.tplSeed||0, remote.tplSeed||0, TPL_SEED);
   out.draft=local.draft||null;                 // 草稿屬於這台裝置
   out.theme=local.theme||remote.theme||"system";
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
@@ -2019,6 +2037,7 @@ async function afterSignIn(){
   load(); applyTheme();
   $("#gate").hidden=true; $("#app").hidden=false;
   $("#betabar").hidden=!APP.beta;
+  $("#betaver").textContent=APP.ver;
   $("#top-date").textContent=mdw(today());
   paintAvatar(); go("home");
   Cloud.badge("saving");
