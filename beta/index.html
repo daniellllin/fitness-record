@@ -66,6 +66,7 @@ main{padding:0 18px}
 .sub{font-size:13px;color:var(--mut);margin-top:8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .rowcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:block;width:100%;text-align:left}
+a.rowcard{text-decoration:none;color:var(--ink)}
 .rowcard .t{display:flex;align-items:baseline;gap:8px}
 .rowcard .t b{font-size:15px;font-weight:650}
 .rowcard .t .tag{font-size:11.5px;color:var(--mut)}
@@ -287,6 +288,11 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .race .ri .st{font-size:12.5px;margin-top:2px;color:var(--ink2)}
 .race .ri .st.acc{color:var(--acc)} .race .ri .st.crit{color:var(--crit)} .race .ri .st.ok{color:var(--good)} .race .ri .st.dim{color:var(--mut)}
 .race .cd{font-size:14px;font-weight:650;color:var(--acc);white-space:nowrap}
+.race.pub .ri b{font-size:14.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.race.pub .cd{font-size:13px;font-weight:600;color:var(--mut)}
+.newb{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;font-size:11px;font-weight:650;background:var(--acc);color:#fff;vertical-align:1px}
+.pubf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.pubf select{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .rp-head{font-size:21px;margin:4px 0 4px;line-height:1.35}
 .rp-head.lv-high{color:var(--crit)} .rp-head.lv-low{color:var(--warn)} .rp-head.lv-ok{color:var(--good)}
 .rp-ratio{font-size:38px;font-weight:650;letter-spacing:-.02em}
@@ -326,12 +332,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m2-beta.1</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m3-beta.1</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m2-beta.1</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m3-beta.1</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -376,7 +382,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m2-beta.1" };
+const APP = { beta:true, ver:"m3-beta.1" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -2481,7 +2487,7 @@ function logHasContent(Lg){
    賽事（5f / 5g）
    公開賽事行事曆的自動抓取需要後端排程（M3），這裡先做手動加入
    ============================================================ */
-const RACE_TYPES=["路跑","鐵人兩項","鐵人三項","健身・HYROX","自行車","游泳","其他"];
+const RACE_TYPES=["路跑","越野跑","鐵人兩項","鐵人三項","健身・HYROX","自行車","游泳","其他"];
 let raceFilter="全部";
 function daysUntil(ds){
   const a=new Date(today()+"T00:00:00"), b=new Date(ds+"T00:00:00");
@@ -2544,17 +2550,174 @@ function renderRaces(){
     past.slice(0,6).forEach(r=>v.appendChild(raceCard(r,false,true)));
   }
 
-  v.appendChild(el("div",{class:"lab"},"找賽事"));
-  const yr=new Date().getFullYear();
+  renderPublicRaces(v);              // 每週自動更新的公開賽事（M3）
+}
+
+/* ============================================================
+   公開賽事行事曆（M3）
+   GitHub Actions 每週一抓三個網站、去除重複後寫成 data/races.json
+   ============================================================ */
+const RACES_URL=(APP.beta?"../":"")+"data/races.json";
+const PUB_SRC={ctrun:"全統運動報名網",sportsnet:"中華民國路跑協會",biji:"運動筆記"};
+const PUB_REGIONS=["全台","北部","中部","南部","東部","離島","海外"];
+const PUB_RANGE=[["1","未來 1 個月"],["3","未來 3 個月"],["6","未來 6 個月"],["12","未來 1 年"]];
+const PUB={state:"idle",data:null,err:"",type:"全部",region:"全台",range:"6",open:false,limit:40};
+function loadPublicRaces(){
+  if(PUB.state==="loading"||PUB.state==="ok") return;
+  PUB.state="loading";
+  fetch(RACES_URL,{cache:"no-cache"})
+    .then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(j=>{ if(!j||!Array.isArray(j.races)) throw new Error("格式不符"); PUB.data=j; PUB.state="ok"; })
+    .catch(e=>{ PUB.err=String(e.message||e); PUB.state="err"; })
+    .finally(()=>{ if(view==="races") renderRaces(); });
+}
+function pubStatus(r){
+  if(r.status==="full") return {t:"已額滿",cls:"dim"};
+  if(r.status==="closed") return {t:"報名已截止",cls:"dim"};
+  if(r.status==="tbd") return {t:"報名時間未定",cls:""};
+  if(r.status==="open"){
+    if(r.deadline){ const d=daysUntil(r.deadline);
+      if(d<0) return {t:"報名已截止",cls:"dim"};
+      return {t:(d<=7?"即將截止 ":"報名中 · 截止 ")+md(r.deadline),cls:d<=7?"crit":"acc"}; }
+    return {t:"報名中",cls:"acc"};
+  }
+  return {t:"",cls:""};
+}
+function pubFiltered(){
+  const t=today(), until=new Date(); until.setMonth(until.getMonth()+num(PUB.range));
+  const u=dstr(until);
+  return (PUB.data.races||[]).filter(r=> r.date>=t && r.date<=u
+    && (PUB.type==="全部"||r.type===PUB.type)
+    && (PUB.region==="全台"?(r.region!=="海外"):r.region===PUB.region)
+    && (!PUB.open || pubStatus(r).cls==="acc"||pubStatus(r).cls==="crit"));
+}
+/* 第一次執行時每場都是「新」，就不標示 */
+function pubShowNew(D){ const n=D&&D.meta&&D.meta.newCount; return !!n && n<(D.races||[]).length; }
+function myRaceFor(r){ return (DB.races||[]).find(x=>x.ext===r.id)||null; }
+function renderPublicRaces(v){
+  v.appendChild(el("div",{class:"lab"},"即將舉辦"));
+  if(PUB.state==="idle"||PUB.state==="loading"){
+    v.appendChild(el("div",{class:"sub"},"讀取公開賽事行事曆…"));
+    loadPublicRaces(); return;
+  }
+  if(PUB.state==="err"){
+    v.appendChild(el("div",{class:"sub"},"公開賽事行事曆還沒有資料（"+PUB.err+"）。排程第一次執行後就會出現。"));
+    pubFallback(v); return;
+  }
+  const D=PUB.data, up=new Date(D.updated);
+  const head=el("div",{class:"sub",style:"margin:0 0 10px"},
+    "↻ "+(up.getMonth()+1)+"/"+up.getDate()+" 週"+WD[up.getDay()]+" "+pad2(up.getHours())+":"+pad2(up.getMinutes())+" 已更新"
+    +(pubShowNew(D)?" · 新增 "+D.meta.newCount+" 場":"")+" · 共 "+(D.races||[]).length+" 場");
+  v.appendChild(head);
+
+  const types=["全部"].concat(RACE_TYPES.filter(t=>(D.races||[]).some(r=>r.type===t)));
+  const tc=el("div",{class:"chips",style:"margin-bottom:8px"});
+  types.forEach(t=>{ const b=el("button",{class:"chip","aria-pressed":String(PUB.type===t)},t);
+    b.addEventListener("click",()=>{ PUB.type=t; PUB.limit=40; renderRaces(); }); tc.appendChild(b); });
+  v.appendChild(tc);
+  const fr=el("div",{class:"pubf"});
+  const rs=el("select"); PUB_REGIONS.forEach(x=>rs.appendChild(el("option",{value:x,selected:x===PUB.region?"":null},x)));
+  rs.addEventListener("change",()=>{ PUB.region=rs.value; PUB.limit=40; renderRaces(); });
+  const ms=el("select"); PUB_RANGE.forEach(([k,n])=>ms.appendChild(el("option",{value:k,selected:k===PUB.range?"":null},n)));
+  ms.addEventListener("change",()=>{ PUB.range=ms.value; PUB.limit=40; renderRaces(); });
+  const ob=el("button",{class:"chip","aria-pressed":String(PUB.open)},"只看可報名");
+  ob.addEventListener("click",()=>{ PUB.open=!PUB.open; PUB.limit=40; renderRaces(); });
+  fr.append(rs,ms,ob); v.appendChild(fr);
+
+  const list=pubFiltered();
+  if(!list.length) v.appendChild(el("div",{class:"empty",style:"margin:8px 0"},"沒有符合條件的賽事"));
+  list.slice(0,PUB.limit).forEach(r=>v.appendChild(pubCard(r,D)));
+  if(list.length>PUB.limit){
+    const more=el("button",{class:"btn wide",style:"margin:4px 0 8px"},"顯示更多（還有 "+(list.length-PUB.limit)+" 場）");
+    more.addEventListener("click",()=>{ PUB.limit+=40; renderRaces(); });
+    v.appendChild(more);
+  }
+  const srcs=Object.values((D.meta&&D.meta.sources)||{}).map(s=>s.name+(s.ok?"":s.stale?"（沿用上次）":"（本次失敗）"));
+  v.appendChild(el("div",{class:"sub",style:"margin-top:10px;font-size:12px"},
+    "資料來自公開賽事行事曆網站："+srcs.join("、")+"。每週一自動更新，報名資訊以主辦單位公告為準。"));
+  pubFallback(v);
+}
+function pubFallback(v){
+  v.appendChild(el("div",{class:"lab"},"其他賽事"));
   [["HYROX 官方網站","https://hyrox.com/"],
-   ["搜尋：台灣路跑賽事行事曆","https://www.google.com/search?q="+encodeURIComponent("台灣 路跑 賽事行事曆 "+yr)],
-   ["搜尋：台灣鐵人三項賽事","https://www.google.com/search?q="+encodeURIComponent("台灣 鐵人三項 賽事 "+yr)]].forEach(([t,u])=>{
+   ["全統運動報名網","https://www.ctrun.com.tw/"],
+   ["中華民國路跑協會","https://www.sportsnet.org.tw/"],
+   ["運動筆記賽事專區","https://running.biji.co/?q=competition"]].forEach(([t,u])=>{
     const a=el("a",{class:"rowcard",href:u,target:"_blank",rel:"noopener"});
     const r=el("div",{class:"t"}); r.appendChild(el("b",null,t)); r.appendChild(el("span",{class:"dt"},"開啟 ↗"));
     a.appendChild(r); v.appendChild(a);
   });
-  v.appendChild(el("div",{class:"sub",style:"margin-top:10px"},
-    "自動更新的公開賽事行事曆需要後端排程，規劃中。賽事資訊以主辦方公告為準。"));
+}
+function pubCard(r,D){
+  const c=el("button",{class:"race pub"});
+  const dt=new Date(r.date+"T00:00:00");
+  const dd=el("div",{class:"rd"});
+  dd.appendChild(el("span",{class:"m"},(dt.getMonth()+1)+"月"));
+  dd.appendChild(el("span",{class:"d"},String(dt.getDate())));
+  c.appendChild(dd);
+  const info=el("div",{class:"ri"});
+  const nm=el("b",null,r.name);
+  info.appendChild(nm);
+  const meta=[r.city||r.place, (r.dist||[]).slice(0,4).join(" / ")].filter(Boolean).join(" · ");
+  if(meta) info.appendChild(el("div",{class:"m"},meta));
+  const st=pubStatus(r), mine=myRaceFor(r);
+  const line=el("div",{class:"st "+(mine?"ok":st.cls)}, mine?(mine.registered?"已報名":"已加入關注"):st.t);
+  if(pubShowNew(D) && r.firstSeen && r.firstSeen>=dstr(new Date(new Date(D.updated).getTime()-6*864e5)))
+    line.appendChild(el("span",{class:"newb"},"新"));
+  info.appendChild(line);
+  c.appendChild(info);
+  const n=daysUntil(r.date);
+  c.appendChild(el("span",{class:"cd"},n===0?"今天":n+" 天"));
+  c.addEventListener("click",()=>pubDetail(r));
+  return c;
+}
+function pubDetail(r){
+  openSheet(s=>{
+    s.appendChild(el("div",{class:"sub",style:"margin:0"},[r.type,r.city].filter(Boolean).join(" · ")));
+    s.appendChild(el("h2",{style:"margin-top:4px"},r.name));
+    const n=daysUntil(r.date);
+    s.appendChild(el("div",{style:"font-size:14px;color:var(--ink2);margin:6px 0 2px"},mdw(r.date)+"　· 還有 "+n+" 天"));
+    if(r.place) s.appendChild(el("div",{style:"font-size:13px;color:var(--mut)"},"地點："+r.place));
+    if((r.dist||[]).length) s.appendChild(el("div",{style:"font-size:13px;color:var(--mut)"},"組別："+r.dist.join(" / ")));
+    const st=pubStatus(r);
+    if(st.t) s.appendChild(el("div",{class:"st "+st.cls,style:"font-size:13px;margin-top:2px"},st.t));
+
+    s.appendChild(el("div",{class:"lab"},"報名與詳細資訊"));
+    (r.sources||[]).forEach(x=>{
+      const a=el("a",{class:"rowcard",href:x.url,target:"_blank",rel:"noopener"});
+      const t=el("div",{class:"t"});
+      t.appendChild(el("b",null,(PUB_SRC[x.key]||x.key)+(x.key==="sportsnet"&&!/sportsnet\.org\.tw/.test(x.url)?"（賽事官網）":"")));
+      t.appendChild(el("span",{class:"dt"},"開啟 ↗"));
+      a.appendChild(t); s.appendChild(a);
+    });
+    if((r.sources||[]).length>1)
+      s.appendChild(el("div",{class:"sub",style:"font-size:12px"},"這場比賽同時出現在 "+r.sources.length+" 個網站，已合併成一筆。"));
+
+    const mine=myRaceFor(r);
+    const row=el("div",{class:"chips",style:"margin-top:16px"});
+    if(mine){
+      const go2=el("button",{class:"btn sm pri"},"查看我的賽事");
+      go2.addEventListener("click",()=>{ closeSheet(); setTimeout(()=>raceDetail(mine),220); });
+      row.appendChild(go2);
+    } else {
+      const add=(registered)=>{
+        const reg=(r.sources||[]).find(x=>x.key==="ctrun")||(r.sources||[])[0]||{};
+        const x={ id:"race-"+r.id, ext:r.id, name:r.name, type:r.type, date:r.date, time:"",
+          place:r.place||r.city||"", division:"", deadline:r.status==="open"?(r.deadline||""):"",
+          url:reg.url||"", registered:registered, updatedAt:new Date().toISOString() };
+        DB.races=(DB.races||[]).filter(y=>y.ext!==r.id).concat([x]);
+        save(); closeSheet(); toast(registered?"已加入我的賽事，可以補上報名組別":"已加入關注，可以設定行事曆提醒"); renderRaces();
+      };
+      const b1=el("button",{class:"btn sm"},"加入關注");
+      b1.addEventListener("click",()=>add(false));
+      const b2=el("button",{class:"btn sm pri"},"我已報名");
+      b2.addEventListener("click",()=>add(true));
+      row.append(b1,b2);
+    }
+    s.appendChild(row);
+    s.appendChild(el("div",{class:"sub",style:"font-size:12px;margin-top:12px"},
+      "報名與付款請在主辦單位網站完成。加入後可以在「我的賽事」設定 Google 行事曆提醒。"));
+  });
 }
 function raceCard(r,mine,past){
   const c=el("button",{class:"race"+(mine?" mine":"")+(past?" past":"")});
