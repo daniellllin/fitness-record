@@ -1,0 +1,44 @@
+# 每週一台北時間 08:00 更新賽事行事曆，結果寫到 data/races.json
+# 也可以到 Actions 分頁選「更新賽事行事曆」→「Run workflow」手動執行
+name: 更新賽事行事曆
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"        # 週一 00:00 UTC = 台北 08:00（GitHub 排程尖峰時可能延遲數分鐘）
+  workflow_dispatch:
+
+permissions:
+  contents: write              # 需要把 data/races.json 寫回 repo
+
+concurrency:
+  group: races
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 安裝解析套件
+        run: npm install --no-save --no-package-lock cheerio@1.0.0
+
+      - name: 抓取並整理賽事
+        run: node scripts/fetch-races.mjs
+
+      - name: 有變動才提交
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/races.json
+          if git diff --cached --quiet; then
+            echo "賽事資料沒有變動"
+          else
+            git commit -m "更新賽事行事曆 $(TZ=Asia/Taipei date +%F)"
+            git push
+          fi
