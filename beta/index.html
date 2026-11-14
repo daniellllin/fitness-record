@@ -291,6 +291,9 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .race.pub .ri b{font-size:14.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .race.pub .cd{font-size:13px;font-weight:600;color:var(--mut)}
 .newb{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;font-size:11px;font-weight:650;background:var(--acc);color:#fff;vertical-align:1px}
+.mhead{display:flex;align-items:baseline;gap:8px;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;color:var(--ink)}
+.mhead span{font-size:12px;font-weight:400;color:var(--mut)}
+.mhead:first-of-type{margin-top:6px}
 .pubf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .pubf select{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .rp-head{font-size:21px;margin:4px 0 4px;line-height:1.35}
@@ -332,12 +335,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m3-beta.1</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m3-beta.2</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m3-beta.1</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m3-beta.2</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -382,7 +385,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m3-beta.1" };
+const APP = { beta:true, ver:"m3-beta.2" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -2626,7 +2629,16 @@ function renderPublicRaces(v){
 
   const list=pubFiltered();
   if(!list.length) v.appendChild(el("div",{class:"empty",style:"margin:8px 0"},"沒有符合條件的賽事"));
-  list.slice(0,PUB.limit).forEach(r=>v.appendChild(pubCard(r,D)));
+  /* 依月份分段顯示，標題帶出該月符合條件的場數 */
+  const perMonth={}; list.forEach(r=>{ const k=r.date.slice(0,7); perMonth[k]=(perMonth[k]||0)+1; });
+  let curM="";
+  list.slice(0,PUB.limit).forEach(r=>{
+    const k=r.date.slice(0,7);
+    if(k!==curM){ curM=k;
+      const h=el("div",{class:"mhead"},k.slice(0,4)+" 年 "+(+k.slice(5,7))+" 月");
+      h.appendChild(el("span",null,perMonth[k]+" 場")); v.appendChild(h); }
+    v.appendChild(pubCard(r,D));
+  });
   if(list.length>PUB.limit){
     const more=el("button",{class:"btn wide",style:"margin:4px 0 8px"},"顯示更多（還有 "+(list.length-PUB.limit)+" 場）");
     more.addEventListener("click",()=>{ PUB.limit+=40; renderRaces(); });
@@ -2704,9 +2716,10 @@ function pubDetail(r){
         const reg=(r.sources||[]).find(x=>x.key==="ctrun")||(r.sources||[])[0]||{};
         const x={ id:"race-"+r.id, ext:r.id, name:r.name, type:r.type, date:r.date, time:"",
           place:r.place||r.city||"", division:"", deadline:r.status==="open"?(r.deadline||""):"",
-          url:reg.url||"", registered:registered, updatedAt:new Date().toISOString() };
+          url:reg.url||"", registered:registered, dists:(r.dist||[]).slice(), updatedAt:new Date().toISOString() };
         DB.races=(DB.races||[]).filter(y=>y.ext!==r.id).concat([x]);
-        save(); closeSheet(); toast(registered?"已加入我的賽事，可以補上報名組別":"已加入關注，可以設定行事曆提醒"); renderRaces();
+        save(); closeSheet(); toast(registered?"已加入我的賽事，請選擇報名組別":"已加入關注，可以設定行事曆提醒"); renderRaces();
+        if(registered && x.dists.length) setTimeout(()=>raceForm(x),260);
       };
       const b1=el("button",{class:"btn sm"},"加入關注");
       b1.addEventListener("click",()=>add(false));
@@ -2736,6 +2749,12 @@ function raceCard(r,mine,past){
   c.addEventListener("click",()=>raceDetail(r));
   return c;
 }
+/* 這場比賽有哪些組別可選：加入時存下來的，或從公開賽事資料對回去 */
+function raceDivOpts(x){
+  if(x.dists&&x.dists.length) return x.dists;
+  const p=x.ext&&PUB.data&&(PUB.data.races||[]).find(y=>y.id===x.ext);
+  return (p&&p.dist)||[];
+}
 function raceForm(r){
   const isNew=!r;
   const x=r?Object.assign({},r):{id:"race-"+Date.now()+"-"+Math.random().toString(36).slice(2,6),
@@ -2749,9 +2768,19 @@ function raceForm(r){
       fieldInput("比賽日期","date",x.date,v=>x.date=v,""),
       fieldInput("起跑時間（選填）","time",x.time,v=>x.time=v,""));
     box.appendChild(fieldInput("地點","text",x.place,v=>x.place=v,"南港展覽館"));
-    box.appendChild(el("div",{class:"fgrid"})).append(
-      fieldInput("組別","text",x.division,v=>x.division=v,"Open 男子"),
+    const divF=fieldInput("組別","text",x.division,v=>{ x.division=v; syncDiv(); },"Open 男子");
+    box.appendChild(el("div",{class:"fgrid"})).append(divF,
       fieldInput("報名截止（選填）","date",x.deadline,v=>x.deadline=v,""));
+    const divOpts=raceDivOpts(x); let divChips=null;
+    function syncDiv(){ if(divChips) $$("button",divChips).forEach(b=>b.setAttribute("aria-pressed",String(b.textContent===(x.division||"").trim()))); }
+    if(divOpts.length){
+      box.appendChild(el("div",{class:"sub",style:"margin:2px 0 6px;font-size:12px"},"這場比賽的組別，點一下帶入（也可以自己輸入）"));
+      divChips=el("div",{class:"chips",style:"margin-bottom:10px"});
+      divOpts.forEach(o=>{ const b=el("button",{class:"chip",type:"button","aria-pressed":String(o===x.division)},o);
+        b.addEventListener("click",()=>{ x.division=(x.division===o?"":o); divF.querySelector("input").value=x.division; syncDiv(); });
+        divChips.appendChild(b); });
+      box.appendChild(divChips);
+    }
     box.appendChild(fieldInput("官網 / 報名連結（選填）","url",x.url,v=>x.url=v,"https://"));
     box.appendChild(el("div",{class:"lab"},"報名狀態"));
     box.appendChild(chipRow(["尚未報名","我已報名"],x.registered?"我已報名":"尚未報名",v=>x.registered=(v==="我已報名")));
@@ -2861,8 +2890,10 @@ function raceDetail(r){
       const reg=el("button",{class:"btn sm"+(r.registered?"":" pri")},r.registered?"改為尚未報名":"我已報名");
       reg.addEventListener("click",()=>{
         r.registered=!r.registered; r.updatedAt=new Date().toISOString();
-        if(r.registered && !r.division){ const dv=prompt("報名的組別（選填）",""); if(dv) r.division=dv.trim(); }
-        save(); closeSheet(); toast(r.registered?"已加入我的賽事":"已改為尚未報名"); go(view==="home"?"home":"races");
+        const pick=r.registered && !r.division && raceDivOpts(r).length>0;
+        if(r.registered && !r.division && !pick){ const dv=prompt("報名的組別（選填）",""); if(dv) r.division=dv.trim(); }
+        save(); closeSheet(); toast(r.registered?(pick?"已加入我的賽事，請選擇報名組別":"已加入我的賽事"):"已改為尚未報名"); go(view==="home"?"home":"races");
+        if(pick) setTimeout(()=>raceForm(r),260);
       });
       row.appendChild(reg);
     }
