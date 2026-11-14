@@ -4,7 +4,7 @@
 //
 // 規則：
 //   1. 每次執行前先讀 robots.txt，不允許的網站或路徑直接跳過
-//   2. 每個網站只抓一頁列表，間隔 3 秒，使用可辨識的 User-Agent
+//   2. 每個網站只抓列表頁（路跑協會多抓一頁明年的行事曆），間隔 3 秒，使用可辨識的 User-Agent
 //   3. 只存「事實資訊」（名稱、日期、地點、距離、報名狀態）與原網站連結，不轉載圖片與內文
 //   4. 某個來源這次抓不到時，沿用上一次的資料，避免網站改版時整批消失
 // =============================================================
@@ -19,7 +19,9 @@ const OUT = path.join(ROOT, "data", "races.json");
 
 export const SOURCES = [
   { key: "ctrun",     name: "全統運動報名網",   url: "https://www.ctrun.com.tw/" },
-  { key: "sportsnet", name: "中華民國路跑協會", url: "https://www.sportsnet.org.tw/schedule.php" },
+  { key: "sportsnet", name: "中華民國路跑協會", url: "https://www.sportsnet.org.tw/schedule.php",
+    // 預設頁只有今年的行事曆，另外抓明年那一頁（還沒公布時會是空的，不算失敗）
+    extra: today => ["https://www.sportsnet.org.tw/schedule.php?schedule_year=" + (+today.slice(0, 4) + 1)] },
   { key: "biji",      name: "運動筆記",         url: "https://running.biji.co/?q=competition" },
 ];
 // 同一場比賽出現在多個來源時，名稱與報名狀態以排前面的為準（報名平台的資訊最直接）
@@ -166,7 +168,7 @@ function cardsByLink($, linkSel, idOf) {
   });
   return groups;
 }
-const JUNK = /^(加入行事曆|填寫參賽紀錄|我要報名|立即報名|早鳥報名|報名|詳情|詳細資訊|more|更多|活動照片|成績查詢|報名截止|已額滿|活動簡章|線上報名|查看|ad|熱門)$/i;
+const JUNK = /^(加入行事曆|填寫參賽紀錄|我要報名|立即報名|早鳥報名|報名|詳情|詳細資訊|more|更多|活動照片|成績查詢|報名截止|已額滿|活動簡章|線上報名|查看|ad|熱門|活動規範|免責聲明|選手須知|活動須知|注意事項|交通資訊|活動資訊|最新消息|常見問題)$/i;
 function bestName($, items) {
   const cands = [];
   items.forEach(({ a }) => {
@@ -218,6 +220,28 @@ export function parseCtrun(html, today, base = "https://www.ctrun.com.tw/") {
   const $ = cheerio.load(html);
   const idOf = h => { const m = h.match(/EventMain_ID=(\d+)/i); return m ? m[1] : ""; };
   const out = [];
+  // 首頁每場比賽是一張 id="eventId_數字" 的卡片：h6 主標＋h4 副標（場次）、日期、距離、地點、報名按鈕
+  $('[id^="eventId_"]').each((_, el) => {
+    const card = $(el);
+    const id = (card.attr("id").match(/(\d+)/) || [])[1]; if (!id) return;
+    const btn = card.find("button").first();
+    const h6 = norm(card.find("h6").first().text()), h4 = norm(card.find("h4").first().text());
+    const name = norm([h6, h4].filter(Boolean).join(" ")) || norm(btn.attr("data-eventmaintitle"));
+    const text = blockText($, el);
+    const date = parseDate(text, today);
+    if (!name || name.length < 4 || !date) return;
+    let place = "";
+    card.find("li").each((_, li) => { if (!place && $(li).find('[class*="map-marker"]').length) place = norm($(li).text()); });
+    const badges = card.find("li .badge").map((_, b) => norm($(b).text())).get().join(" ");
+    const status = parseStatus(norm(btn.text()) + " " + norm(btn.attr("title"))) || parseStatus(text);
+    out.push({
+      src: "ctrun", sid: id, name, date, city: findCity(place) || findCity(name), place,
+      dist: parseDist(badges || text), status, deadline: "",
+      url: new URL(`Activity?EventMain_ID=${id}`, base).href
+    });
+  });
+  if (out.length) return out;
+  // 找不到卡片（網站改版）時，退回用詳細頁連結找區塊的舊方法
   cardsByLink($, 'a[href*="EventMain_ID="], a[href*="eventmain_id="]', idOf).forEach((items, id) => {
     // 同一場會出現在卡片與表格兩處：各自解析後取資訊最多的那份
     let best = null;
@@ -248,15 +272,21 @@ export function parseCtrun(html, today, base = "https://www.ctrun.com.tw/") {
 export function parseSportsnet(html, today, base = "https://www.sportsnet.org.tw/schedule.php") {
   const $ = cheerio.load(html);
   const out = [];
+  // 頁面上的年度下拉選單會標出這一頁是哪一年，表格本身只有月日
+  const sel = $('option[selected][value*="schedule_year="]').attr("value") || "";
+  const pageYear = +((sel.match(/schedule_year=(20\d{2})/) || [])[1] || 0);
   $("table").each((_, t) => {
     let map = null;
     $(t).find("tr").each((_, tr) => {
       const cells = $(tr).children("th,td");
       const texts = cells.map((_, c) => norm($(c).text())).get();
       if (!map) {
-        const di = texts.findIndex(x => /^日\s*期$/.test(x)), ni = texts.findIndex(x => /名\s*稱/.test(x));
-        if (di >= 0 && ni >= 0) map = { date: di, name: ni,
-          place: texts.findIndex(x => /地\s*點/.test(x)), items: texts.findIndex(x => /項\s*目/.test(x)) };
+        // 表頭是中英並列（日期 / Date），第一格還會跨兩欄，所以用 colspan 算出實際欄位位置
+        const pos = []; let p = 0;
+        cells.each((_, c) => { pos.push(p); p += Math.max(1, +($(c).attr("colspan") || 1)); });
+        const at = re => { const i = texts.findIndex(x => re.test(x)); return i < 0 ? -1 : pos[i]; };
+        const di = at(/^日\s*期/), ni = at(/^(?:賽事|活動)?名\s*稱/);
+        if (di >= 0 && ni >= 0) map = { date: di, name: ni, place: at(/^地\s*點/), items: at(/^項\s*目/) };
         return;
       }
       // 有些列會少一格（例如沒有晶片圖示），從右邊對齊欄位
@@ -269,7 +299,7 @@ export function parseSportsnet(html, today, base = "https://www.sportsnet.org.tw
       const nameCell = col("name"); if (!nameCell) return;
       const name = norm(nameCell.text()); if (!name || name.length < 4) return;
       const href = nameCell.find("a").first().attr("href") || "";
-      const y = inferYear(+md[1], +md[2], today);
+      const y = pageYear || +((name.match(/(?<!\d)(20\d{2})(?!\d)/) || [])[1] || 0) || inferYear(+md[1], +md[2], today);
       const place = col("place") ? norm(col("place").text()) : "";
       const items = col("items") ? norm(col("items").text()) : "";
       let url = "";
@@ -404,7 +434,16 @@ export async function main() {
       if (!rb.ok) throw new Error(rb.why);
       const html = await fetchText(s.url);
       const parse = { biji: parseBiji, ctrun: parseCtrun, sportsnet: parseSportsnet }[s.key];
-      const rows = parse(html, today).filter(r => r.date >= today);
+      const parsed = parse(html, today);
+      for (const u of (s.extra ? s.extra(today) : [])) {
+        try {
+          await sleep(3000);
+          if (!(await robotsOk(u)).ok) continue;
+          const seen = new Set(parsed.map(r => r.date + "|" + r.name));
+          parse(await fetchText(u), today, u).forEach(r => { if (!seen.has(r.date + "|" + r.name)) parsed.push(r); });
+        } catch (e) { console.warn(`[${s.key}] 額外頁面略過：${e.message || e}`); }
+      }
+      const rows = parsed.filter(r => r.date >= today);
       m.count = rows.length; m.ok = rows.length > 0;
       m.sample = rows.slice(0, 2).map(r => ({ name: r.name, date: r.date, city: r.city, dist: r.dist, status: r.status }));
       if (!rows.length) throw new Error("頁面讀到了，但沒有解析出任何賽事（網站可能改版）");
