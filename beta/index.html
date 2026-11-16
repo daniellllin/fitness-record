@@ -8,50 +8,65 @@
 <style>
 :root{
   color-scheme: light dark;
-  --bg:#f7f7f5; --card:#ffffff; --card2:#f1f1ee; --line:rgba(11,11,11,.10);
-  --ink:#111113; --ink2:#55555c; --mut:#696970;
-  --acc:#09748f; --acc-ink:#ffffff; --acc-soft:rgba(9,116,143,.12);
-  --good:#0ca30c; --warn:#d98b00; --crit:#c93232;
-  --good-ink:#0a7a0a; --warn-ink:#8a5a00;      /* 當文字色用的深色版，對比 4.5:1 以上 */
-  --bar:#09748f; --bar-dim:#dcdcd7;
-  --r:14px; --r2:10px; --r3:6px;
-  --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:40px;
+  /* Broadsheet 設計系統：紙白底、灰色塊卡片、直角、青色為主、洋紅為第二強調色 */
+  --bg:#f3f2f2; --card:#eae9e9; --card2:#e0dcdc; --line:rgba(32,30,29,.14);
+  --ink:#201e1d; --ink2:#605d5d; --mut:#646060;        /* 設計稿的 #9b9797 對比不足，次要灰字改用 #646060 */
+  --acc:#006786; --acc-ink:#f3f2f2; --acc-soft:rgba(0,136,176,.14);
+  --acc-fill:#0088b0;                                   /* 色塊與長條用；當文字色對比不夠，文字一律用 --acc */
+  --acc2:#d6006c; --acc2-ink:#b8005c;                   /* 洋紅：只用在少數需要突顯的數值 */
+  --good:#0ca30c; --warn:#d98b00; --crit:#b3261e;
+  --good-ink:#0a6e0a; --warn-ink:#7d5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
+  --bar:#0088b0; --bar-dim:#d7d3d3;
+  --surface:#f3f2f2;                                    /* 底部面板與對話框 */
+  --r:2px; --r2:2px; --r3:2px; --r-float:12px;
+  --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px;
+  --sans:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --font:var(--sans); --font-num:var(--sans);
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --serif: ui-serif, "Noto Serif TC", "Songti TC", Georgia, serif;
+  --serif: "Source Serif 4", ui-serif, "New York", Georgia, "Songti TC", "Noto Serif TC", "Noto Serif CJK TC", "Source Han Serif TC", serif;
 }
+/* 裝置有內建中文襯線字時（iPhone、Mac 的宋體等）整個介面改用襯線；沒有的裝置維持黑體，避免英數襯線配中文黑體 */
+:root.serif{ --font:var(--serif); --font-num:"Source Serif 4", ui-serif, "New York", Georgia, var(--serif); }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0b0b0c; --card:#18181a; --card2:#232326; --line:rgba(255,255,255,.09);
-    --ink:#ffffff; --ink2:#c9c9cf; --mut:#85858c;
-    --acc:#19a3c9; --acc-ink:#04202a; --acc-soft:rgba(25,163,201,.16);
-    --bar:#19a3c9; --bar-dim:#2a2a2d;
-    --good:#2fbf2f; --warn:#f0b429; --crit:#e26060;
-    --good-ink:#2fbf2f; --warn-ink:#f0b429;
+    --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
+    --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
+    --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
+    --acc-fill:#0088b0;
+    --acc2:#ff90b1; --acc2-ink:#ff90b1;
+    --bar:#62c5ee; --bar-dim:#444141;
+    --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
+    --good-ink:#5fd35f; --warn-ink:#f0b429;
+    --surface:#201e1d;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0b0b0c; --card:#18181a; --card2:#232326; --line:rgba(255,255,255,.09);
-  --ink:#ffffff; --ink2:#c9c9cf; --mut:#85858c;
-  --acc:#19a3c9; --acc-ink:#04202a; --acc-soft:rgba(25,163,201,.16);
-  --bar:#19a3c9; --bar-dim:#2a2a2d;
-  --good:#2fbf2f; --warn:#f0b429; --crit:#e26060;
-  --good-ink:#2fbf2f; --warn-ink:#f0b429;
+  --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
+  --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
+  --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
+  --acc-fill:#0088b0;
+  --acc2:#ff90b1; --acc2-ink:#ff90b1;
+  --bar:#62c5ee; --bar-dim:#444141;
+  --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
+  --good-ink:#5fd35f; --warn-ink:#f0b429;
+  --surface:#201e1d;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
   background:var(--bg); color:var(--ink); font-size:var(--fs-base); line-height:1.5;
-  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  font-family:var(--font);
   -webkit-font-smoothing:antialiased;
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
+h1,h2,.rowcard .t b,.race .ri b{font-family:var(--font)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r3)}
 button:disabled,input:disabled,select:disabled,.btn[disabled]{opacity:.45;cursor:not-allowed}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important} }
 .dlgwrap{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}
 .dlgwrap[hidden]{display:none}
-.dlg{background:var(--card);border-radius:var(--r);padding:20px;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.dlg{background:var(--surface);border-radius:var(--r-float);padding:20px;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
 .dlg-msg{font-size:var(--fs-lg);font-weight:600;line-height:1.4}
 .dlg-sub{font-size:var(--fs-md);color:var(--ink2);margin-top:6px}
 .dlg input{width:100%;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:12px;font-size:16px}
@@ -74,10 +89,10 @@ button:disabled,input:disabled,select:disabled,.btn[disabled]{opacity:.45;cursor
 @keyframes pls{50%{opacity:.3}}
 /* 版面元件 */
 main{padding:0 18px}
-.lab{font-size:var(--fs-xs);color:var(--mut);letter-spacing:.06em;margin:22px 0 8px}
+.lab{font-size:var(--fs-xs);color:var(--ink2);letter-spacing:.18em;margin:24px 0 10px}
 .lab:first-child{margin-top:8px}
 .big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.big .n{font-size:var(--fs-num);font-weight:600;letter-spacing:-.02em;line-height:1}
+.big .n{font-family:var(--font-num);font-size:var(--fs-num);font-weight:600;letter-spacing:-.03em;line-height:1}
 .big .u{font-size:var(--fs-sm);color:var(--mut);margin-left:-8px}
 .sub{font-size:var(--fs-sm);color:var(--mut);margin-top:8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
@@ -127,8 +142,8 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 /* 底部抽屜 */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:opacity .18s}
 .scrim.on{opacity:1}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--card);
-  border-radius:var(--r) var(--r) 0 0;padding:18px 18px calc(18px + var(--safe-b));max-width:520px;margin:0 auto;
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--surface);
+  border-radius:var(--r-float) var(--r-float) 0 0;padding:18px 18px calc(18px + var(--safe-b));max-width:520px;margin:0 auto;
   transform:translateY(100%);transition:transform .22s cubic-bezier(.3,.8,.4,1);max-height:88dvh;overflow:auto}
 .sheet.on{transform:translateY(0)}
 .sheet h2{font-size:var(--fs-xl);margin:0 0 2px;display:flex;align-items:baseline;gap:8px}
@@ -309,9 +324,9 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .newb{display:inline-block;margin-left:6px;padding:0 6px;border-radius:var(--r2);font-size:var(--fs-xs);font-weight:600;background:var(--acc);color:#fff;vertical-align:1px}
 .fbar{height:10px;border-radius:var(--r3);background:var(--bar-dim);overflow:hidden;margin-top:10px}
 .fbar i{display:block;height:100%;border-radius:var(--r3);background:var(--bar)}
-.fbar i.over{background:var(--warn)}
+.fbar i.over{background:var(--acc2)}
 .fnum{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.fnum .n{font-size:var(--fs-num);font-weight:600;letter-spacing:-.02em;line-height:1}
+.fnum .n{font-family:var(--font-num);font-size:var(--fs-num);font-weight:600;letter-spacing:-.03em;line-height:1}
 .fnum .u{font-size:var(--fs-sm);color:var(--mut)}
 .frow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-md)}
 .frow:last-child{border-bottom:0}
@@ -321,7 +336,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .fweek .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
 .fweek .b{width:100%;border-radius:var(--r3) var(--r3) 0 0;background:var(--bar)}
 .fweek .b.z{height:3px;background:var(--bar-dim)}
-.fweek .b.over{background:var(--warn)}
+.fweek .b.over{background:var(--acc2)}
 .fweek .k{font-size:var(--fs-xs);color:var(--mut);margin-top:4px}
 .fweek .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--mut);opacity:.6}
 .steps{counter-reset:s;margin:12px 0 0;padding:0;list-style:none}
@@ -351,6 +366,22 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
   opacity:0;transition:.2s;pointer-events:none;max-width:88vw;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 [hidden]{display:none !important}
+.fxfig{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px}
+.fxfig figure{margin:0;position:relative;background:var(--card2)}
+.fxfig img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;background:var(--card2)}
+.fxfig figcaption{position:absolute;left:6px;top:6px;font-size:var(--fs-xs);background:var(--surface);color:var(--ink2);padding:2px 6px;border-radius:var(--r3)}
+.fxfig.play{grid-template-columns:1fr}
+.fxfig.play figure+figure{display:none}
+.fxrow{display:flex;gap:12px;align-items:center}
+.fxrow .th{flex:none;width:72px;height:48px;object-fit:cover;background:var(--card2)}
+.fxrow .tx{flex:1;min-width:0}
+/* Broadsheet：卡片是色塊不是外框 */
+.card,.rowcard,.race,.empty{border-color:transparent}
+.empty{background:var(--card);border-style:solid}
+.fab{background:var(--acc-fill);color:#f3f2f2}
+.tabbar{background:var(--card);border-top:1px solid var(--line)}
+.race .rd .d,.rp-ratio{font-family:var(--font-num)}
+.vol{color:var(--acc2-ink)}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -372,12 +403,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.2</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.4</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.2</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.4</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -423,7 +454,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.2" };
+const APP = { beta:true, ver:"m4-beta.4" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -875,6 +906,7 @@ function normalize(d){
     d.tplSeed=TPL_SEED;
   }
   d.customExercises=d.customExercises||{};
+  d.exLinks=(d.exLinks&&typeof d.exLinks==="object")?d.exLinks:{};      // 自訂動作名稱 → 動作庫 id（用來顯示示範圖）
   d.deleted=d.deleted||{};
   d.races=Array.isArray(d.races)?d.races.filter(r=>r&&r.id&&!d.deleted[r.id]):[];
   d.draft=d.draft||null;
@@ -1021,8 +1053,10 @@ function renderHome(){
   big.appendChild(el("span",{class:"n"},fmt(mins/60)));
   big.appendChild(el("span",{class:"u"},"小時"));
   v.appendChild(big);
-  v.appendChild(el("div",{class:"sub"},
-    (vol?"訓練量 "+fmt(vol)+" kg·次　":"")+"連續 "+streak()+" 天"));
+  const sb=el("div",{class:"sub"});
+  if(vol){ sb.appendChild(document.createTextNode("訓練量 ")); sb.appendChild(el("b",{class:"vol"},fmt(vol)+" kg·次")); sb.appendChild(document.createTextNode("　")); }
+  sb.appendChild(document.createTextNode("連續 "+streak()+" 天"));
+  v.appendChild(sb);
 
   homeFood(v);                        // 今日飲食（與訓練並列）
   homeCards(v);                       // 週報摘要
@@ -1835,6 +1869,143 @@ function hbar(k,ratio,val,dim){
    動作教學
    ============================================================ */
 let tutPart="chest", tutQuery="", tutBack="me";
+/* ============================================================
+   動作庫與示範圖：free-exercise-db（公有領域，https://github.com/yuhonas/free-exercise-db）
+   內建中文動作對應到動作庫的 id，教學頁顯示起始與結束兩張示範圖；
+   「完整動作庫」另外載入整份清單（約 870 個動作，英文名稱與步驟）
+   ============================================================ */
+const FX_BASE="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/";
+const FX_MAP={"槓鈴臥推":"Barbell_Bench_Press_-_Medium_Grip","上斜啞鈴臥推":"Incline_Dumbbell_Press","平板啞鈴臥推":"Dumbbell_Bench_Press","啞鈴飛鳥":"Dumbbell_Flyes","滑輪飛鳥":"Cable_Crossover","蝴蝶機夾胸":"Butterfly","雙槓撐體":"Dips_-_Chest_Version","伏地挺身":"Pushups","引體向上":"Pullups","滑輪下拉":"Wide-Grip_Lat_Pulldown","槓鈴划船":"Bent_Over_Barbell_Row","單臂啞鈴划船":"One-Arm_Dumbbell_Row","坐姿划船":"Seated_Cable_Rows","T 槓划船":"T-Bar_Row_with_Handle","直臂下壓":"Straight-Arm_Pulldown","傳統硬舉":"Barbell_Deadlift","槓鈴聳肩":"Barbell_Shrug","站姿肩推":"Standing_Military_Press","啞鈴肩推":"Dumbbell_Shoulder_Press","側平舉":"Side_Lateral_Raise","反向飛鳥":"Reverse_Flyes","臉拉":"Face_Pull","前平舉":"Front_Dumbbell_Raise","阿諾推舉":"Arnold_Dumbbell_Press","槓鈴彎舉":"Barbell_Curl","啞鈴彎舉":"Dumbbell_Bicep_Curl","錘式彎舉":"Hammer_Curls","斜托彎舉":"Incline_Dumbbell_Curl","牧師椅彎舉":"Preacher_Curl","滑輪下壓":"Triceps_Pushdown","過頭三頭伸展":"Cable_Rope_Overhead_Triceps_Extension","顱骨粉碎":"EZ-Bar_Skullcrusher","窄握臥推":"Close-Grip_Barbell_Bench_Press","背蹲舉":"Barbell_Squat","前蹲舉":"Front_Barbell_Squat","腿推":"Leg_Press","保加利亞分腿蹲":"Split_Squat_with_Dumbbells","弓箭步":"Dumbbell_Lunges","羅馬尼亞硬舉":"Romanian_Deadlift","腿彎舉":"Lying_Leg_Curls","腿伸展":"Leg_Extensions","站姿提踵":"Standing_Calf_Raises","六角槓硬舉":"Trap_Bar_Deadlift","槓鈴臀推":"Barbell_Hip_Thrust","臀橋":"Butt_Lift_Bridge","相撲硬舉":"Sumo_Deadlift","滑輪後踢":"One-Legged_Cable_Kickback","側走彈力帶":"Monster_Walk","棒式":"Plank","側棒式":"Side_Bridge","懸垂舉腿":"Hanging_Leg_Raise","死蟲":"Dead_Bug","滑輪捲腹":"Cable_Crunch","農夫走路":"Farmers_Walk","爆發上膊":"Power_Clean","抓舉":"Snatch","挺舉":"Clean_and_Jerk","土耳其起立":"Kettlebell_Turkish_Get-Up_Squat_style","登山者":"Mountain_Climbers","深蹲跳":"Freehand_Jump_Squat","跳箱":"Front_Box_Jump","彈力帶輔助引體":"Band_Assisted_Pull-Up","空氣深蹲":"Bodyweight_Squat","雪橇推":"Sled_Push","划船機":"Rowing_Stationary","農夫走路（HYROX）":"Farmers_Walk"};
+const FX_REV={}; Object.keys(FX_MAP).forEach(n=>{ if(!FX_REV[FX_MAP[n]]) FX_REV[FX_MAP[n]]=n; });
+const FX_MUS={abdominals:"腹肌",abductors:"髖外展肌",adductors:"內收肌",biceps:"二頭肌",calves:"小腿",chest:"胸",forearms:"前臂",glutes:"臀",hamstrings:"腿後側",lats:"闊背肌","lower back":"下背","middle back":"中背",neck:"頸",quadriceps:"股四頭肌",shoulders:"肩",traps:"斜方肌",triceps:"三頭肌"};
+const FX_PART={abdominals:"core",abductors:"legs",adductors:"legs",biceps:"arm",calves:"legs",chest:"chest",forearms:"arm",glutes:"glutes",hamstrings:"legs",lats:"back","lower back":"back","middle back":"back",neck:"shoulder",quadriceps:"legs",shoulders:"shoulder",traps:"back",triceps:"arm"};
+const FX_EQ={barbell:"槓鈴",dumbbell:"啞鈴",other:"其他","body only":"徒手",cable:"滑輪",machine:"機械",kettlebells:"壺鈴",bands:"彈力帶","medicine ball":"藥球","exercise ball":"抗力球","foam roll":"滾筒","e-z curl bar":"EZ 槓"};
+const FX_LV={beginner:"入門",intermediate:"中階",expert:"進階"};
+const FX_CAT={strength:"肌力",stretching:"伸展",plyometrics:"增強式",powerlifting:"健力","olympic weightlifting":"舉重",strongman:"大力士",cardio:"有氧"};
+const FX={state:"idle",data:null,byId:{},err:"",part:"all",eq:"all",q:"",limit:30};
+function fxId(name){ return FX_MAP[name] || (DB&&DB.exLinks&&DB.exLinks[name]) || null; }
+function fxImg(id,i){ return FX_BASE+"exercises/"+encodeURIComponent(id)+"/"+i+".jpg"; }
+function fxPart(x){ return FX_PART[(x.primaryMuscles||[])[0]]||"full"; }
+function loadFx(){
+  if(FX.state==="loading"||FX.state==="ok") return;
+  FX.state="loading";
+  fetch(FX_BASE+"dist/exercises.json")
+    .then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(j=>{ if(!Array.isArray(j)) throw new Error("格式不符"); FX.data=j.filter(x=>x&&x.id&&x.name); FX.byId={}; FX.data.forEach(x=>FX.byId[x.id]=x); FX.state="ok"; })
+    .catch(e=>{ FX.err=String(e.message||e); FX.state="err"; })
+    .finally(()=>{ if(view==="tut"&&tutMode==="lib") drawTut(); });
+}
+/* 起始／結束兩張示範圖；按「播放」會在兩張之間切換，模擬動作過程 */
+function fxFigure(id){
+  const box=el("div");
+  const fig=el("div",{class:"fxfig"});
+  let ok=0, timer=null, frame=0;
+  const imgs=[0,1].map(i=>{
+    const f=el("figure");
+    const im=el("img",{src:fxImg(id,i),alt:i?"結束姿勢示範":"起始姿勢示範",loading:"lazy",decoding:"async",referrerpolicy:"no-referrer"});
+    im.addEventListener("load",()=>{ ok++; });
+    im.addEventListener("error",()=>{ f.hidden=true; if(imgs.every(x=>x.f.hidden)) box.hidden=true; });
+    f.appendChild(im); f.appendChild(el("figcaption",null,i?"結束":"起始"));
+    fig.appendChild(f); return {f,im};
+  });
+  box.appendChild(fig);
+  const bar=el("div",{style:"display:flex;align-items:center;gap:12px;margin-bottom:14px"});
+  const play=el("button",{class:"btn sm","aria-pressed":"false"},"▶ 播放示範");
+  const stop=()=>{ clearInterval(timer); timer=null; fig.classList.remove("play"); imgs[0].im.src=fxImg(id,0); imgs[0].f.querySelector("figcaption").textContent="起始"; play.textContent="▶ 播放示範"; play.setAttribute("aria-pressed","false"); };
+  play.addEventListener("click",()=>{
+    if(timer){ stop(); return; }
+    fig.classList.add("play"); play.textContent="■ 停止"; play.setAttribute("aria-pressed","true"); frame=0;
+    timer=setInterval(()=>{ if(!box.isConnected){ clearInterval(timer); return; } frame^=1; imgs[0].im.src=fxImg(id,frame); imgs[0].f.querySelector("figcaption").textContent=frame?"結束":"起始"; },900);
+  });
+  bar.appendChild(play);
+  bar.appendChild(el("span",{class:"sub",style:"margin:0;font-size:var(--fs-xs)"},"示範圖：free-exercise-db（公有領域）"));
+  box.appendChild(bar);
+  return box;
+}
+let tutMode="zh";
+/* 完整動作庫的清單 */
+function drawFxList(list){
+  if(FX.state==="idle"||FX.state==="loading"){ list.appendChild(el("div",{class:"sub"},"讀取動作庫…")); loadFx(); return; }
+  if(FX.state==="err"){
+    const e=el("div",{class:"empty"}); e.appendChild(el("b",null,"讀不到動作庫")); e.appendChild(el("span",null,FX.err)); list.appendChild(e);
+    const b=el("button",{class:"btn sm pri",style:"margin-top:12px"},"再試一次"); b.addEventListener("click",()=>{ FX.state="idle"; drawTut(); }); list.appendChild(b); return;
+  }
+  const fr=el("div",{class:"pubf"});
+  const ps=el("select",{"aria-label":"訓練部位"}); [["all","全部部位"]].concat(PART_KEYS.filter(p=>p!=="hyrox").map(p=>[p,PARTS[p].n])).forEach(([k,n])=>ps.appendChild(el("option",{value:k,selected:k===FX.part?"":null},n)));
+  ps.addEventListener("change",()=>{ FX.part=ps.value; FX.limit=30; drawTut(); });
+  const es=el("select",{"aria-label":"器材"}); [["all","全部器材"]].concat(Object.keys(FX_EQ).map(k=>[k,FX_EQ[k]])).forEach(([k,n])=>es.appendChild(el("option",{value:k,selected:k===FX.eq?"":null},n)));
+  es.addEventListener("change",()=>{ FX.eq=es.value; FX.limit=30; drawTut(); });
+  fr.append(ps,es); list.appendChild(fr);
+  const q=tutQuery.toLowerCase();
+  const items=FX.data.filter(x=> (FX.part==="all"||fxPart(x)===FX.part) && (FX.eq==="all"||x.equipment===FX.eq)
+    && (!q || (x.name+" "+(FX_REV[x.id]||"")+" "+(x.primaryMuscles||[]).map(m=>FX_MUS[m]||m).join(" ")+" "+(FX_EQ[x.equipment]||"")).toLowerCase().includes(q)));
+  list.appendChild(el("div",{class:"sub",style:"margin:0 0 10px"},"共 "+items.length+" 個動作 · 名稱與步驟為英文原文"));
+  if(!items.length){ list.appendChild(el("div",{class:"empty"},"找不到相符的動作")); return; }
+  items.slice(0,FX.limit).forEach(x=>{
+    const b=el("button",{class:"rowcard fxrow"});
+    if((x.images||[]).length) b.appendChild(el("img",{class:"th",src:fxImg(x.id,0),alt:"",loading:"lazy",decoding:"async",referrerpolicy:"no-referrer"}));
+    const tx=el("div",{class:"tx"});
+    const t=el("div",{class:"t"}); t.appendChild(el("b",null,FX_REV[x.id]||x.name)); tx.appendChild(t);
+    if(FX_REV[x.id]) tx.appendChild(el("div",{class:"m"},x.name));
+    tx.appendChild(el("div",{class:"m",style:"color:var(--mut)"},[(x.primaryMuscles||[]).map(m=>FX_MUS[m]||m).join("、"),FX_EQ[x.equipment]||"",FX_LV[x.level]||""].filter(Boolean).join(" · ")));
+    b.appendChild(tx);
+    b.addEventListener("click",()=>openFx(x.id));
+    list.appendChild(b);
+  });
+  if(items.length>FX.limit){
+    const more=el("button",{class:"btn wide",style:"margin:4px 0 8px"},"顯示更多（還有 "+(items.length-FX.limit)+" 個）");
+    more.addEventListener("click",()=>{ FX.limit+=30; drawTut(); }); list.appendChild(more);
+  }
+}
+/* 動作庫的單一動作頁 */
+function openFx(id, backTo, title){
+  const x=FX.byId[id];
+  const v=$("#v-tutd"); v.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 返回"+(backTo==="log"?"紀錄":"列表"));
+  back.addEventListener("click",()=>{ if(backTo==="log"){ go("log"); renderLog(); } else go("tut"); });
+  v.appendChild(back);
+  if(!x){
+    v.appendChild(fxFigure(id));
+    v.appendChild(el("div",{class:"sub"},"動作庫還沒載入，先顯示示範圖。"));
+    if(FX.state!=="ok"){ loadFx(); }
+    go("tutd"); return;
+  }
+  const zh=FX_REV[id];
+  const h=el("div",{class:"tut-h"});
+  h.appendChild(el("div",{class:"part"},[PARTS[fxPart(x)]?PARTS[fxPart(x)].n:"",FX_CAT[x.category]||"",FX_LV[x.level]||""].filter(Boolean).join(" · ")));
+  h.appendChild(el("h1",null,title||zh||x.name));
+  if(title||zh) h.appendChild(el("div",{class:"en"},x.name));
+  v.appendChild(h);
+  if((x.images||[]).length) v.appendChild(fxFigure(id));
+  if(zh){
+    const b=el("button",{class:"btn wide",style:"margin-bottom:6px"},"看這個動作的中文教學");
+    b.addEventListener("click",()=>openTutorial(zh,"tut")); v.appendChild(b);
+  }
+  v.appendChild(el("div",{class:"lab"},"訓練部位 · 主要 / 協同"));
+  (x.primaryMuscles||[]).forEach(m=>{ const r=el("div",{class:"mus"}); r.appendChild(el("span",{class:"zh"},FX_MUS[m]||m)); r.appendChild(el("span",{class:"en"},m)); r.appendChild(el("span",{class:"pri"},"主要")); v.appendChild(r); });
+  (x.secondaryMuscles||[]).forEach(m=>{ const r=el("div",{class:"mus"}); r.appendChild(el("span",{class:"zh"},FX_MUS[m]||m)); r.appendChild(el("span",{class:"en"},m)); v.appendChild(r); });
+  if(x.equipment) v.appendChild(el("div",{class:"sub"},"器材："+(FX_EQ[x.equipment]||x.equipment)));
+  if((x.instructions||[]).length){
+    v.appendChild(el("div",{class:"lab"},"動作步驟（英文原文）"));
+    x.instructions.forEach((t,i)=>{ const s=el("div",{class:"step",lang:"en"}); s.appendChild(el("span",{class:"n"},String(i+1))); s.appendChild(el("span",{class:"t"},t)); v.appendChild(s); });
+  }
+  if(!zh){
+    const part=fxPart(x)==="full"?"full":fxPart(x);
+    const has=Object.keys(DB.exLinks).some(n=>DB.exLinks[n]===id && (DB.customExercises[part]||[]).includes(n));
+    const add=el("button",{class:"btn pri wide",style:"margin-top:16px"},has?"已在自訂動作裡":"加入自訂動作");
+    add.disabled=has;
+    add.addEventListener("click",async()=>{
+      const n=await ask("加入自訂動作",{sub:"會放在「"+PARTS[part].n+"」分類。名稱可以改成你習慣的中文。",input:{value:x.name,placeholder:"動作名稱"},ok:"加入"});
+      if(n==null) return; const name=n.trim(); if(!name){ toast("請輸入名稱"); return; }
+      if(EX_INDEX[name] || Object.keys(DB.customExercises).some(k=>(DB.customExercises[k]||[]).includes(name))){ toast("已經有同名的動作"); return; }
+      DB.customExercises[part]=DB.customExercises[part]||[]; DB.customExercises[part].push(name); DB.exLinks[name]=id; save();
+      toast("已加入「"+name+"」，記錄重訓時可以選到"); add.textContent="已在自訂動作裡"; add.disabled=true;
+    });
+    v.appendChild(add);
+  }
+  v.appendChild(el("div",{class:"sub",style:"margin-top:14px;font-size:var(--fs-xs)"},"資料來源：free-exercise-db（公有領域）"));
+  go("tutd");
+}
 function renderTutList(){
   const v=$("#v-tut"); v.innerHTML="";
   const head=el("div",{style:"display:flex;align-items:center;margin:8px 0 2px"});
@@ -1843,13 +2014,16 @@ function renderTutList(){
   back.addEventListener("click",()=>go("me"));
   v.appendChild(back);
   v.appendChild(head);
-  v.appendChild(el("div",{class:"sub",style:"margin:2px 0 14px"},"依訓練部位找動作 · 步驟與肌群為 App 內建整理"));
+  v.appendChild(el("div",{class:"sub",style:"margin:2px 0 12px"},tutMode==="lib"?"完整動作庫 · 可以加入自訂動作":"依訓練部位找動作 · 步驟與肌群為 App 內建整理"));
+  v.appendChild(segCtl([["zh","中文教學"],["lib","完整動作庫"]],tutMode,k=>{ tutMode=k; tutQuery=""; FX.limit=30; renderTutList(); }));
+  v.appendChild(el("div",{style:"height:12px"}));
 
   const sf=el("div",{class:"field"});
   const si=el("input",{type:"search",placeholder:"搜尋動作或肌群",value:tutQuery});
   si.addEventListener("input",()=>{ tutQuery=si.value.trim(); drawTut(); });
   sf.appendChild(si); v.appendChild(sf);
 
+  if(tutMode==="lib"){ si.placeholder="搜尋英文名稱、肌群或器材"; const list=el("div",{id:"tut-list",style:"margin-top:4px"}); v.appendChild(list); drawTut(); return; }
   v.appendChild(el("div",{class:"lab"},"訓練部位"));
   const pg=el("div",{class:"pgrid"});
   PART_KEYS.forEach(p=>{
@@ -1867,6 +2041,7 @@ function renderTutList(){
 function drawTut(){
   const list=$("#tut-list"); if(!list) return;
   list.innerHTML="";
+  if(tutMode==="lib"){ drawFxList(list); return; }
   $$("#v-tut .pgrid button").forEach(b=> b.setAttribute("aria-pressed", String(b.dataset.p===tutPart && !tutQuery)));
   let items;
   if(tutQuery){
@@ -1876,15 +2051,19 @@ function drawTut(){
   } else items=(EX[tutPart]||[]).map(x=>EX_INDEX[x.n]);
   if(!items.length){ list.appendChild(el("div",{class:"empty"},"找不到相符的動作")); return; }
   items.forEach(x=>{
-    const b=el("button",{class:"rowcard"});
+    const fid=fxId(x.n);
+    const b=el("button",{class:"rowcard"+(fid?" fxrow":"")});
+    if(fid) b.appendChild(el("img",{class:"th",src:fxImg(fid,0),alt:"",loading:"lazy",decoding:"async",referrerpolicy:"no-referrer"}));
+    const tx=fid?el("div",{class:"tx"}):b;
     const t=el("div",{class:"t"});
     t.appendChild(el("b",null,x.n));
     if(x.steps) t.appendChild(el("span",{class:"tag"},"完整教學"));
     if(tutQuery) t.appendChild(el("span",{class:"dt"},PARTS[x.part].n));
-    b.appendChild(t);
-    b.appendChild(el("div",{class:"m"},x.en));
+    tx.appendChild(t);
+    tx.appendChild(el("div",{class:"m"},x.en));
     const mus=parseMus(x.pri).map(m=>m.zh).join(" · ");
-    if(mus) b.appendChild(el("div",{class:"m",style:"color:var(--mut)"},mus));
+    if(mus) tx.appendChild(el("div",{class:"m",style:"color:var(--mut)"},mus));
+    if(fid) b.appendChild(tx);
     b.addEventListener("click",()=>openTutorial(x.n,"tut"));
     list.appendChild(b);
   });
@@ -1897,6 +2076,10 @@ function openTutorial(name, from){
   back.addEventListener("click",()=>{ go(tutBack==="log"?"log":"tut"); if(tutBack==="log") renderLog(); });
   v.appendChild(back);
 
+  if(!x && fxId(name)){ const id=fxId(name); if(FX.state!=="ok"){ loadFx(); } 
+    if(FX.byId[id]){ openFx(id,from,name); return; }
+    v.appendChild(el("h1",{style:"font-size:var(--fs-2xl);margin:0 0 12px"},name));
+    v.appendChild(fxFigure(id)); v.appendChild(extLinks(name,name)); go("tutd"); return; }
   if(!x){
     v.appendChild(el("h1",{style:"font-size:var(--fs-2xl);margin:0 0 8px"},name));
     v.appendChild(el("div",{class:"note",html:"<b>這個動作還沒有內建教學</b><span>可以用下面的連結查示範，我們整理好中文教學後這裡會更新。</span>"}));
@@ -1909,6 +2092,7 @@ function openTutorial(name, from){
   h.appendChild(el("div",{class:"en"}, x.en + (x.steps?" · 肌力 · 動態":"")));
   v.appendChild(h);
 
+  if(fxId(x.n)) v.appendChild(fxFigure(fxId(x.n)));
   if(x.cue) v.appendChild(el("div",{class:"note",html:"<b>一句話重點</b><span>"+x.cue+"</span>"}));
 
   const pri=parseMus(x.pri), sec=parseMus(x.sec);
@@ -3632,7 +3816,7 @@ function openCustomSheet(){
         t.appendChild(el("span",{class:"tag"},PARTS[k]?PARTS[k].n:k));
         t.appendChild(el("b",null,n));
         const del=el("button",{class:"btn sm crit",style:"margin-left:auto"},"移除");
-        del.addEventListener("click",()=>{ DB.customExercises[k].splice(i,1); save(); draw(); });
+        del.addEventListener("click",()=>{ DB.customExercises[k].splice(i,1); delete DB.exLinks[n]; save(); draw(); });
         t.appendChild(del); r.appendChild(t); list.appendChild(r);
       }));
     };
@@ -3831,6 +4015,7 @@ function mergeDB(local,remote){
   [remote.customExercises,local.customExercises].forEach(src=>{
     for(const k in src) ce[k]=[...new Set((ce[k]||[]).concat(src[k]||[]))]; });
   out.customExercises=ce;
+  out.exLinks=Object.assign({},remote.exLinks,local.exLinks);
   const tm={};                                   // 以名稱為識別，避免新舊 id 造成同名重複
   remote.templates.forEach(t=> tm[String(t.name||t.id)]=t);
   local.templates.forEach(t=> tm[String(t.name||t.id)]=t);
@@ -3973,7 +4158,20 @@ function showUpdate(v){
 /* ============================================================
    啟動
    ============================================================ */
+/* 偵測裝置有沒有內建的中文襯線字：用畫布量同一串字在「候選字型, monospace」和純 monospace 下的寬度，不同就代表有 */
+function hasCJKSerif(){
+  try{
+    const c=document.createElement("canvas").getContext("2d"), t="運動紀錄永字八法";
+    c.font="32px monospace"; const base=c.measureText(t).width;
+    c.font="32px sans-serif"; const sans=c.measureText(t).width;
+    return ["Songti TC","Noto Serif TC","Noto Serif CJK TC","Source Han Serif TC","Source Han Serif TW"].some(f=>{
+      c.font='32px "'+f+'", monospace'; const w=c.measureText(t).width;
+      c.font='32px "'+f+'", sans-serif'; const w2=c.measureText(t).width;
+      return w!==base || w2!==sans; });
+  }catch(e){ return false; }
+}
 (function init(){
+  if(hasCJKSerif()) document.documentElement.classList.add("serif");
   DB=normalize({}); applyTheme();
   $$(".appver").forEach(n=>n.textContent=APP.ver);
   setTimeout(checkUpdate,1200);
