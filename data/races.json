@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14T12:10:23.075Z",
+ "updated": "2026-11-16T04:04:03.532Z",
  "note": "資料整理自公開賽事行事曆網站，以主辦單位公告為準。",
  "meta": {
   "sources": {
@@ -7,7 +7,7 @@
     "name": "全統運動報名網",
     "url": "https://www.ctrun.com.tw/",
     "ok": true,
-    "count": 19,
+    "count": 17,
     "sample": [
      {
       "name": "PIKMIN : RUN FESTIVAL in Taiwan 2027 高雄場",
@@ -62,321 +62,37 @@
     "name": "運動筆記",
     "url": "https://running.biji.co/?q=competition",
     "ok": true,
-    "count": 130,
+    "count": 120,
     "sample": [
      {
-      "name": "2027 渣打公益臺北馬拉松",
-      "date": "2027-01-10",
+      "name": "2027 國家地理路跑-RUN FOR EARTH",
+      "date": "2027-03-14",
       "city": "臺北市",
       "dist": [
-       "42.195K",
-       "21.0975K",
-       "12K",
-       "3K"
+       "21K",
+       "10K",
+       "5K"
       ],
-      "status": "closed"
+      "status": ""
      },
      {
-      "name": "115年臺中市體育總會理事長盃北區路跑嘉年華",
-      "date": "2026-11-14",
-      "city": "臺中市",
+      "name": "2027 富邦人壽高雄馬拉松 DAY 2",
+      "date": "2027-01-10",
+      "city": "高雄市",
       "dist": [
-       "52.8K",
-       "42.4K",
-       "31.6K",
-       "21.2K",
-       "10.4K",
-       "6.4K"
+       "42.195K",
+       "21.0975K"
       ],
-      "status": "closed"
+      "status": "tbd"
      }
     ]
    }
   },
-  "total": 149,
-  "newCount": 149,
-  "merged": 13
+  "total": 139,
+  "newCount": 1,
+  "merged": 11
  },
  "races": [
-  {
-   "id": "rhqp9q3",
-   "name": "115年臺中市體育總會理事長盃北區路跑嘉年華",
-   "date": "2026-11-14",
-   "city": "臺中市",
-   "region": "中部",
-   "place": "",
-   "dist": [
-    "52.8K",
-    "42.4K",
-    "31.6K",
-    "21.2K",
-    "10.4K",
-    "6.4K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13151",
-     "name": "115年臺中市體育總會理事長盃北區路跑嘉年華"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "ru03j7d",
-   "name": "2026 SUPERACE 黑馬半程馬拉松",
-   "date": "2026-11-14",
-   "city": "臺北市",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "21K",
-    "10K",
-    "4K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13166",
-     "name": "2026 SUPERACE 黑馬半程馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rjg9xmx",
-   "name": "2026 冬山河馬拉松",
-   "date": "2026-11-14",
-   "city": "宜蘭縣",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "42K",
-    "21K",
-    "10K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12988",
-     "name": "2026 冬山河馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rciyeca",
-   "name": "2026 竹北半城路跑",
-   "date": "2026-11-14",
-   "city": "新竹縣",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "21K",
-    "12K",
-    "4K",
-    "1K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13130",
-     "name": "2026 竹北半城路跑"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "risgia0",
-   "name": "2026 ZEPRO RUN全國半程馬拉松 台南場",
-   "date": "2026-11-15",
-   "city": "臺南市",
-   "region": "南部",
-   "place": "台南觀夕平台停車場",
-   "dist": [
-    "21K",
-    "10K",
-    "3.5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "ctrun",
-     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=320",
-     "name": "2026 ZEPRO RUN全國半程馬拉松 台南場"
-    },
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13001",
-     "name": "2026 ZEPRO RUN全國半程馬拉松 - 台南場"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r92gfxb",
-   "name": "2026 神戶馬拉松 Kobe Marathon",
-   "date": "2026-11-15",
-   "city": "神戶市",
-   "region": "海外",
-   "place": "",
-   "dist": [
-    "42.195K"
-   ],
-   "type": "路跑",
-   "status": "tbd",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13007",
-     "name": "2026 神戶馬拉松 Kobe Marathon"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rgxvni4",
-   "name": "2026 第十二屆電器盃節能公益路跑",
-   "date": "2026-11-15",
-   "city": "臺北市",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "21K",
-    "10K",
-    "4K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13049",
-     "name": "2026 第十二屆電器盃節能公益路跑"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "ry304wc",
-   "name": "2026 蘆洲觀音山馬拉松",
-   "date": "2026-11-15",
-   "city": "新北市",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "42.195K",
-    "21K",
-    "10K",
-    "4K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12885",
-     "name": "2026 蘆洲觀音山馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "ryjc7dc",
-   "name": "2026屏東墾丁日本航空國際馬拉松",
-   "date": "2026-11-15",
-   "city": "屏東縣",
-   "region": "南部",
-   "place": "",
-   "dist": [
-    "42K",
-    "21K",
-    "12K",
-    "4K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12838",
-     "name": "2026屏東墾丁日本航空國際馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rnl5bmz",
-   "name": "2026慵懶跑者聚樂部 COZY RUNNER CLUB",
-   "date": "2026-11-15",
-   "city": "臺中市",
-   "region": "中部",
-   "place": "台中市中央球場",
-   "dist": [
-    "10K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "ctrun",
-     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=308",
-     "name": "2026慵懶跑者聚樂部 COZY RUNNER CLUB"
-    },
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13045",
-     "name": "慵懶跑者聚樂部-COZY RUNNER CLUB"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rjhg6qs",
-   "name": "2026鹿港馬拉松",
-   "date": "2026-11-15",
-   "city": "彰化縣",
-   "region": "中部",
-   "place": "",
-   "dist": [
-    "42K",
-    "21K",
-    "10K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12934",
-     "name": "2026鹿港馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
   {
    "id": "r5h2olr",
    "name": "最強市民飆5K－新北市5000公尺挑戰賽 十一月場",
@@ -388,8 +104,8 @@
     "5K"
    ],
    "type": "其他",
-   "status": "",
-   "deadline": "2026-11-15",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1140,8 +856,8 @@
     "3.5K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-15",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1494,8 +1210,8 @@
     "3K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-15",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1955,8 +1671,8 @@
     "4K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-15",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -2117,8 +1833,8 @@
     "5K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-15",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -3175,6 +2891,31 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r2zxrld",
+   "name": "2027海風馬拉松",
+   "date": "2027-03-28",
+   "city": "桃園市",
+   "region": "北部",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "21.1K",
+    "10K",
+    "5K"
+   ],
+   "type": "路跑",
+   "status": "",
+   "deadline": "2027-01-29",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13229",
+     "name": "2027海風馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-16"
   },
   {
    "id": "rn5l7ge",
