@@ -335,12 +335,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m3-beta.2</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m3-beta.3</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m3-beta.2</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m3-beta.3</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -385,7 +385,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m3-beta.2" };
+const APP = { beta:true, ver:"m3-beta.3" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3106,6 +3106,70 @@ function renderHyroxStats(v){
 /* ============================================================
    我的
    ============================================================ */
+/* ============================================================
+   Sparky 連接（試驗）
+   透過自己的轉接程式讀取 SparkyFitness 的資料，只讀不寫。
+   網址與金鑰只存在這台裝置，不會同步到雲端，也不會寫進匯出的備份。
+   ============================================================ */
+const Sparky={
+  key(){ return KEY+".sparky."+((Auth.user&&Auth.user.sub)||"local"); },
+  cfg(){ try{ return JSON.parse(localStorage.getItem(this.key())||"{}")||{}; }catch(e){ return {}; } },
+  set(c){ try{ localStorage.setItem(this.key(),JSON.stringify(c)); }catch(e){} },
+  clear(){ try{ localStorage.removeItem(this.key()); }catch(e){} },
+  async get(path,c){
+    c=c||this.cfg();
+    const r=await fetch(c.relay.replace(/\/+$/,"")+path,{headers:{"x-api-key":c.apiKey||""},credentials:"omit"});
+    if(r.status===401) throw new Error("金鑰不正確或已停用");
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }
+};
+function openSparkySheet(){
+  const c=Object.assign({relay:"",apiKey:"",site:""},Sparky.cfg());
+  openSheet(s=>{
+    s.appendChild(el("h2",null,"飲食與健康數據"));
+    s.appendChild(el("div",{class:"sub",style:"margin:4px 0 12px"},
+      "連接你自己的 SparkyFitness。這裡只會讀取資料，不會修改。網址與金鑰只存在這台裝置。"));
+    s.appendChild(fieldInput("轉接程式網址","url",c.relay,v=>c.relay=v.trim(),"https://xxx.workers.dev"));
+    s.appendChild(fieldInput("Sparky API 金鑰","password",c.apiKey,v=>c.apiKey=v.trim(),"在 Sparky 的 Settings 產生",{autocomplete:"off"}));
+    s.appendChild(fieldInput("Sparky 網址（選填，用來快速開啟）","url",c.site,v=>c.site=v.trim(),"https://"));
+    const out=el("div",{style:"margin-top:4px"});
+    const row=el("div",{class:"chips",style:"margin-top:4px"});
+    const t=el("button",{class:"btn sm pri"},"儲存並測試");
+    t.addEventListener("click",async()=>{
+      if(!/^https:\/\//i.test(c.relay)){ toast("轉接程式網址需以 https:// 開頭"); return; }
+      if(!c.apiKey){ toast("請輸入 API 金鑰"); return; }
+      if(c.site && !/^https:\/\//i.test(c.site)){ toast("Sparky 網址需以 https:// 開頭"); return; }
+      Sparky.set(c); out.innerHTML=""; out.appendChild(el("div",{class:"sub"},"讀取中…"));
+      const lines=[]; const end=today(), start=dstr(new Date(Date.now()-6*864e5));
+      const step=async(label,fn)=>{ try{ lines.push([label,await fn(),true]); }catch(e){ lines.push([label,"讀取失敗（"+(e.message||e)+"）",false]); } };
+      await step("連線",async()=>{ await Sparky.get("/api/health",c); return "正常"; });
+      await step("今日熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+end+"&endDate="+end,c);
+        const x=(d.days||[])[0]; if(!x) return "沒有資料"; return "吃進 "+Math.round(x.eaten||0)+" / 目標 "+Math.round(x.goal||0)+" 大卡，運動消耗 "+Math.round(x.burned||0); });
+      await step("今日紀錄",async()=>{ const d=await Sparky.get("/api/daily-summary?date="+end,c);
+        return "飲食 "+(d.foodEntries||[]).length+" 筆、運動 "+(d.exerciseSessions||[]).length+" 筆；蛋白質目標 "+Math.round((d.goals||{}).protein||0)+" g"; });
+      await step("近 7 天熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+start+"&endDate="+end,c);
+        const ds=(d.days||[]); const n=ds.filter(x=>x.eaten>0).length; return ds.length+" 天有資料，其中 "+n+" 天有記飲食"; });
+      await step("步數與體重",async()=>{ const d=await Sparky.get("/api/measurements/check-in-measurements-range/"+start+"/"+end,c);
+        const a=Array.isArray(d)?d:[]; const st=a.filter(x=>x.steps>0), w=a.filter(x=>x.weight!=null);
+        return "步數 "+st.length+" 天"+(st.length?"（平均 "+Math.round(st.reduce((p,x)=>p+x.steps,0)/st.length)+"）":"")+"、體重 "+w.length+" 筆"; });
+      await step("睡眠",async()=>{ const d=await Sparky.get("/api/sleep?startDate="+start+"&endDate="+end,c);
+        const n=Array.isArray(d)?d.length:0; return n?("近 7 天 "+n+" 筆"):"近 7 天沒有資料"; });
+      out.innerHTML="";
+      lines.forEach(([k,v,ok])=>{ const r=el("div",{style:"display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px"});
+        r.appendChild(el("span",{style:"flex:0 0 84px;color:var(--mut)"},k));
+        r.appendChild(el("span",{style:"flex:1;color:"+(ok?"var(--ink)":"var(--crit)")},v)); out.appendChild(r); });
+      toast(lines.every(x=>x[2])?"連接成功":"部分項目讀取失敗");
+    });
+    row.appendChild(t);
+    if(c.site){ row.appendChild(el("a",{class:"btn sm",href:c.site,target:"_blank",rel:"noopener"},"開啟 Sparky ↗")); }
+    if(Sparky.cfg().relay){ const x=el("button",{class:"btn sm dim"},"中斷連接");
+      x.addEventListener("click",()=>{ Sparky.clear(); closeSheet(); toast("已中斷連接，這台裝置上的金鑰已刪除"); if(view==="me") renderMe(); }); row.appendChild(x); }
+    s.appendChild(row); s.appendChild(out);
+    const cl=el("button",{class:"btn wide",style:"margin-top:16px"},"關閉");
+    cl.addEventListener("click",()=>{ closeSheet(); if(view==="me") renderMe(); }); s.appendChild(cl);
+  });
+}
 function renderMe(){
   const v=$("#v-me"); v.innerHTML="";
   const head=el("div",{style:"display:flex;align-items:center;margin:8px 0 2px"});
@@ -3154,7 +3218,8 @@ function renderMe(){
   v.appendChild(el("div",{class:"lab"},"內容"));
   [["動作教學庫","依部位瀏覽內建教學",()=>{ tutBack="me"; go("tut"); }],
    ["課表模板","管理胸日 / 背日 / 腿日等模板",openTemplateSheet],
-   ["自訂動作","新增資料庫裡沒有的動作",openCustomSheet]].forEach(([t,s,fn])=>{
+   ["自訂動作","新增資料庫裡沒有的動作",openCustomSheet],
+   ["飲食與健康數據",Sparky.cfg().relay?"已連接 Sparky，點一下測試或修改":"連接自己的 SparkyFitness，讀取營養、步數與睡眠",openSparkySheet]].forEach(([t,s,fn])=>{
     const b=el("button",{class:"rowcard"});
     const r=el("div",{class:"t"}); r.appendChild(el("b",null,t)); r.appendChild(el("span",{class:"dt"},"›"));
     b.appendChild(r); b.appendChild(el("div",{class:"m"},s));
