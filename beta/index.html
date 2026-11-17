@@ -63,6 +63,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 input,select,textarea{font-size:var(--fs-input)}
 input[type="date"],input[type="time"]{min-width:0;max-width:100%}
 html,body{max-width:100%;overflow-x:clip}
+/* 連點不放大畫面（iPhone 連點兩下預設會縮放）；雙指縮放不受影響 */
+*{touch-action:manipulation}
+/* iPhone 的日期欄位有自己的最小寬度，會把面板撐寬，這裡把它壓回容器寬度 */
+input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none;display:block;width:100%;box-sizing:border-box;min-height:48px}
+input::-webkit-date-and-time-value{text-align:left}
 button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
 h1,h2,.rowcard .t b,.race .ri b{font-family:var(--font)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r3)}
@@ -148,7 +153,7 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .scrim.on{opacity:1}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--surface);
   border-radius:var(--r-float) var(--r-float) 0 0;padding:18px 18px calc(18px + var(--safe-b));max-width:520px;margin:0 auto;
-  transform:translateY(100%);transition:transform .22s cubic-bezier(.3,.8,.4,1);max-height:88dvh;overflow:auto}
+  transform:translateY(100%);transition:transform .22s cubic-bezier(.3,.8,.4,1);max-height:88dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .sheet.on{transform:translateY(0)}
 .sheet h2{font-size:var(--fs-xl);margin:0 0 2px;display:flex;align-items:baseline;gap:8px}
 .sheet h2 .r{margin-left:auto;font-size:var(--fs-xs);color:var(--mut);font-weight:400}
@@ -200,11 +205,16 @@ a.rowcard{text-decoration:none;color:var(--ink)}
   transition:transform .2s cubic-bezier(.3,.8,.4,1)}
 .pad.on{transform:translateY(0)}
 .pad .st{display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--mut);padding:2px 4px 8px}
-.pad .st b{color:var(--ink);font-weight:600}
-.pad .st .rest{margin-left:auto}
+.pad .st b{color:var(--ink);font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pad .st span,.pad .st button{white-space:nowrap;flex:none}
+.pad{overscroll-behavior:contain}
+.dlgwrap{overscroll-behavior:contain}
+.pad .st .rest{margin-left:0}
 .pad .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pad .keys button{border:1px solid var(--line);border-radius:var(--r2);padding:14px 0;font-size:var(--fs-xl);font-weight:600;background:var(--card2)}
 .pad .keys button.alt{font-size:var(--fs-md);font-weight:600;color:var(--ink2);background:var(--card)}
+.field input[data-num]{cursor:pointer;color:var(--ink)}
+.field input[data-num].act{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
 .pad .keys button.go{background:var(--acc);border-color:transparent;color:var(--acc-ink)}
 /* 統計 */
 .kpis{display:flex;gap:22px;align-items:baseline;margin:2px 0 4px}
@@ -407,12 +417,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.5</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.6</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.5</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.6</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -458,7 +468,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.5" };
+const APP = { beta:true, ver:"m4-beta.6" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -519,6 +529,24 @@ chest:[
  {n:"雙槓撐體",en:"Chest dip",cue:"身體前傾、手肘不外翻",
   pri:"胸大肌 · 下緣|Pectoralis major (lower);肱三頭肌|Triceps brachii",
   sec:"三角肌前束|Anterior deltoid"},
+ {n:"機械平躺胸推",en:"Machine chest press",cue:"肩胛貼住椅背，推到手肘快打直就好",
+  pri:"胸大肌 · 胸骨部|Pectoralis major (sternal)",
+  sec:"三角肌前束|Anterior deltoid;肱三頭肌|Triceps brachii",
+  steps:["調整座椅，讓握把對齊胸口中段","背和肩胛貼緊椅背，雙腳踩穩","吐氣把握把往前推，手肘不要鎖死","吸氣慢慢放回，感覺胸口被拉開"],
+  cues:["肩膀不要往前聳，全程夾住肩胛","放回時不要讓配重片碰撞，保持張力"],
+  sim:["槓鈴臥推","平板啞鈴臥推","機械上斜胸推"]},
+ {n:"機械上斜胸推",en:"Incline machine chest press",cue:"推的方向斜向上，練上胸",
+  pri:"胸大肌 · 鎖骨部|Pectoralis major (clavicular)",
+  sec:"三角肌前束|Anterior deltoid;肱三頭肌|Triceps brachii",
+  steps:["調整座椅，讓握把約在鎖骨下方","背貼緊椅背，肩胛收好","吐氣沿機器軌道斜向上推","吸氣控制放回到胸口上緣"],
+  cues:["不要聳肩，手肘約在握把正下方","座椅太低會變成肩部主導"],
+  sim:["上斜啞鈴臥推","機械平躺胸推"]},
+ {n:"機械下斜胸推",en:"Decline machine chest press",cue:"推的方向斜向下，練下胸",
+  pri:"胸大肌 · 下緣|Pectoralis major (lower)",
+  sec:"肱三頭肌|Triceps brachii;三角肌前束|Anterior deltoid",
+  steps:["調整座椅，讓握把約在胸口下緣","背貼緊椅背，核心收緊","吐氣沿機器軌道斜向下推","吸氣控制放回，不要讓肩膀前傾"],
+  cues:["手肘不要外開超過肩膀高度","下放時保持胸口挺起"],
+  sim:["雙槓撐體","機械平躺胸推"]},
  {n:"伏地挺身",en:"Pushup",cue:"身體一直線，肩胛能收能開",
   pri:"胸大肌|Pectoralis major",
   sec:"肱三頭肌|Triceps brachii;核心|Core;前鋸肌|Serratus anterior",
@@ -623,6 +651,13 @@ arm:[
   pri:"肱三頭肌|Triceps brachii",sec:"胸大肌|Pectoralis major;三角肌前束|Anterior deltoid"}
 ],
 legs:[
+ {n:"深蹲",en:"Barbell squat",cue:"髖膝同時彎，蹲到大腿至少與地面平行",
+  pri:"股四頭肌|Quadriceps;臀大肌|Gluteus maximus",
+  sec:"內收肌群|Adductors;豎脊肌|Erector spinae;膕繩肌|Hamstrings",
+  steps:["槓放在上背斜方肌上，雙手等距握穩","出槓後站距略寬於肩，腳尖微微朝外","吸氣穩住核心，髖與膝同時彎曲往下蹲","蹲到大腿至少與地面平行，膝蓋順著腳尖方向","腳掌整個踩穩，推地站起，回到起始位置"],
+  cues:["膝蓋不要內塌，想像把地板往兩側推開","起身時胸口和臀部一起上來，不要先抬臀","腳跟不要離地"],
+  risk:"請在深蹲架內做並調好保護槓；膝或腰不適先降重量",
+  sim:["背蹲舉","前蹲舉","腿推","空氣深蹲"]},
  {n:"背蹲舉",en:"Back squat",cue:"蹲到髖低於膝，膝蓋順著腳尖方向",
   pri:"股四頭肌|Quadriceps;臀大肌|Gluteus maximus",
   sec:"內收肌群|Adductors;豎脊肌|Erector spinae;膕繩肌|Hamstrings",
@@ -961,8 +996,20 @@ $$("#tabbar button[data-tab]").forEach(b=> b.addEventListener("click",async()=>{
 $("#btn-add").addEventListener("click",openAddSheet);
 
 /* 抽屜 */
+/* 面板或對話框開著時把背景頁面固定住，避免在面板上滑動時連背景一起捲 */
+let lockY=0, lockN=0;
+function lockScroll(on){
+  const b=document.body;
+  if(on){ if(lockN++>0) return; lockY=window.scrollY||0;
+    b.style.position="fixed"; b.style.top=(-lockY)+"px"; b.style.left="0"; b.style.right="0"; b.style.width="100%"; }
+  else { if(lockN===0) return; if(--lockN>0) return;
+    b.style.position=""; b.style.top=""; b.style.left=""; b.style.right=""; b.style.width=""; window.scrollTo(0,lockY); }
+}
+let sheetOpen=false;
 function openSheet(build){
   const s=$("#sheet"), sc=$("#scrim");
+  if(!sheetOpen){ sheetOpen=true; lockScroll(true); }
+  s.scrollTop=0;
   s.innerHTML=""; build(s);
   sc.hidden=false; s.hidden=false;
   requestAnimationFrame(()=>{ sc.classList.add("on"); s.classList.add("on"); });
@@ -974,7 +1021,8 @@ function ask(msg,o){
   return new Promise(res=>{
     const w=$("#dlg"), d=$(".dlg",w); d.innerHTML="";
     const prev=document.activeElement;
-    const done=v=>{ w.hidden=true; document.removeEventListener("keydown",onKey,true); if(prev&&prev.focus) try{prev.focus();}catch(e){} res(v); };
+    lockScroll(true);
+    const done=v=>{ w.hidden=true; lockScroll(false); document.removeEventListener("keydown",onKey,true); if(prev&&prev.focus) try{prev.focus();}catch(e){} res(v); };
     const onKey=e=>{ if(e.key==="Escape"){ e.stopPropagation(); done(o.input||o.alt?null:false); } };
     d.appendChild(el("div",{class:"dlg-msg",id:"dlg-msg"},msg));
     if(o.sub) d.appendChild(el("div",{class:"dlg-sub"},o.sub));
@@ -1000,10 +1048,15 @@ function ask(msg,o){
 }
 function closeSheet(){
   const s=$("#sheet"), sc=$("#scrim");
+  if(sheetOpen){ sheetOpen=false; lockScroll(false); }
   s.classList.remove("on"); sc.classList.remove("on");
   setTimeout(()=>{ s.hidden=true; sc.hidden=true; },200);
 }
 $("#scrim").addEventListener("click",closeSheet);
+document.addEventListener("focusin",e=>{
+  const t=e.target; if(!t||!t.matches) return;
+  if(t.matches("#v-log input:not([readonly]),#v-log textarea,#v-log select") && !$("#pad").hidden){ closePad(); $$("#v-log .sel").forEach(x=>x.classList.remove("sel")); }
+});
 
 /* ============================================================
    首頁
@@ -1311,8 +1364,13 @@ function renderLog(){
   // 共用欄位
   v.appendChild(el("div",{class:"lab"},"時長與強度"));
   const g=el("div",{class:"fgrid"});
-  g.appendChild(fieldInput("時長（分鐘）","number",L.duration,x=>{L.duration=x;updateAuto();},"60",{id:"f-duration"}));
-  g.appendChild(fieldInput("自覺強度 1–10","number",L.rpe,x=>L.rpe=x,"1 輕鬆，10 極限",{min:"1",max:"10",inputmode:"numeric"}));
+  if(TOUCH){
+    g.appendChild(numField("時長（分鐘）","duration","60","f-duration"));
+    g.appendChild(numField("自覺強度 1–10","rpe","1 輕鬆，10 極限","f-rpe"));
+  } else {
+    g.appendChild(fieldInput("時長（分鐘）","number",L.duration,x=>{L.duration=x;updateAuto();},"60",{id:"f-duration"}));
+    g.appendChild(fieldInput("自覺強度 1–10","number",L.rpe,x=>L.rpe=x,"1 輕鬆，10 極限",{min:"1",max:"10",inputmode:"numeric"}));
+  }
   v.appendChild(g);
   const nf=el("div",{class:"field"});
   nf.appendChild(el("label",null,"備註 / 身體感受"));
@@ -1662,12 +1720,72 @@ function nextCell(){
   KP.buf=null;
 }
 function cur(){ return (KP.ex>=0 && L && L.exercises[KP.ex]) ? L.exercises[KP.ex].sets[KP.set] : null; }
-function openPad(){ $("#pad").hidden=false; $(".shell").classList.add("padopen");
+/* 觸控裝置：時長與自覺強度也用 App 自己的數字鍵盤，不叫出系統鍵盤（系統鍵盤會蓋住這個鍵盤和畫面）
+   有實體鍵盤的裝置維持一般輸入框 */
+const TOUCH = !!(window.matchMedia && window.matchMedia("(pointer:coarse)").matches);
+const NUMF = {
+  duration:{label:"時長（分鐘）",max:1440,dec:false,step:5,next:"rpe"},
+  rpe:{label:"自覺強度 1–10",max:10,dec:true,step:0.5,next:null}
+};
+function numField(label,key,ph,id){
+  const f=el("div",{class:"field"});
+  f.appendChild(el("label",{for:id},label));
+  const i=el("input",{type:"text",id:id,readonly:"",inputmode:"none",placeholder:ph,"data-num":key,"aria-haspopup":"true",autocomplete:"off"});
+  if(L[key]!=null&&L[key]!=="") i.value=L[key];
+  if(KP.num===key) i.classList.add("act");
+  i.addEventListener("click",()=>openNumPad(key));
+  f.appendChild(i); return f;
+}
+function openNumPad(key){
+  KP.ex=-1; KP.num=key; KP.buf=null;
+  $$("#v-log input[data-num]").forEach(i=>i.classList.toggle("act",i.dataset.num===key));
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  $("#pad").hidden=false; $(".shell").classList.add("padopen");
+  requestAnimationFrame(()=>$("#pad").classList.add("on")); renderPad();
+  const i=$('#v-log input[data-num="'+key+'"]'); if(i) setTimeout(()=>i.scrollIntoView({block:"center",behavior:"smooth"}),60);
+}
+function numPadKey(k){
+  const key=KP.num, c=NUMF[key]; if(!c||!L) return;
+  let v=String(L[key]==null?"":L[key]);
+  if(/^[0-9]$/.test(k)){ const b0=(KP.buf==null?"":v); if(b0.includes(".") && b0.split(".")[1].length>=1) return; v=b0+k; KP.buf="typing"; }
+  else if(k==="."){ if(!c.dec) return; v=(KP.buf==null?"":v); if(v.includes(".")) return; v=(v||"0")+"."; KP.buf="typing"; }
+  else if(k==="⌫"){ v=v.slice(0,-1); KP.buf="typing"; }
+  else if(k==="清除"){ v=""; KP.buf="typing"; }
+  else if(k[0]==="+"||k[0]==="−"){ const d=(k[0]==="+"?1:-1)*c.step; v=String(Math.max(0,Math.round((num(v)+d)*100)/100)); KP.buf=null; }
+  else if(k==="下一欄"){ openNumPad(c.next); return; }
+  else if(k==="完成"){ closePad(); return; }
+  if(v!==""&&!v.endsWith(".")&&num(v)>c.max) v=String(c.max);
+  if(v.replace(".","").length>5) return;
+  L[key]=v;
+  const i=$('#v-log input[data-num="'+key+'"]'); if(i) i.value=v;
+  if(key==="duration") updateAuto();
+}
+function openPad(){ KP.num=null; $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act"));
+  $("#pad").hidden=false; $(".shell").classList.add("padopen");
   requestAnimationFrame(()=>$("#pad").classList.add("on")); renderPad(); }
 function closePad(){ const p=$("#pad"); p.classList.remove("on"); setTimeout(()=>p.hidden=true,200);
-  $(".shell").classList.remove("padopen"); KP.ex=-1; }
+  $(".shell").classList.remove("padopen"); KP.ex=-1; KP.num=null;
+  $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act")); }
 function renderPad(){
   const p=$("#pad"); if(p.hidden) return;
+  if(KP.num){
+    const c=NUMF[KP.num]; p.innerHTML="";
+    const st=el("div",{class:"st"});
+    st.appendChild(el("span",null,"正在輸入"));
+    st.appendChild(el("b",null,c.label));
+    const close=el("button",{class:"btn sm",title:"收起鍵盤"},"✕ 收起");
+    close.addEventListener("click",closePad);
+    st.appendChild(close); p.appendChild(st);
+    const keys=el("div",{class:"keys"});
+    [["1"],["2"],["3"],["+"+c.step,"alt"],["4"],["5"],["6"],["−"+c.step,"alt"],
+     ["7"],["8"],["9"],["清除","alt"],[c.dec?".":"",""],["0"],["⌫",""],[c.next?"下一欄":"完成","go"]].forEach(([k,cls])=>{
+      const b=el("button",{class:cls||""},k);
+      if(!k){ b.disabled=true; b.setAttribute("aria-hidden","true"); b.style.visibility="hidden"; }
+      else b.addEventListener("click",()=>numPadKey(k));
+      keys.appendChild(b);
+    });
+    p.appendChild(keys); return;
+  }
   const x=L&&L.exercises[KP.ex]; if(!x){ closePad(); return; }
   p.innerHTML="";
   const st=el("div",{class:"st"});
@@ -1879,7 +1997,7 @@ let tutPart="chest", tutQuery="", tutBack="me";
    「完整動作庫」另外載入整份清單（約 870 個動作，英文名稱與步驟）
    ============================================================ */
 const FX_BASE="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/";
-const FX_MAP={"槓鈴臥推":"Barbell_Bench_Press_-_Medium_Grip","上斜啞鈴臥推":"Incline_Dumbbell_Press","平板啞鈴臥推":"Dumbbell_Bench_Press","啞鈴飛鳥":"Dumbbell_Flyes","滑輪飛鳥":"Cable_Crossover","蝴蝶機夾胸":"Butterfly","雙槓撐體":"Dips_-_Chest_Version","伏地挺身":"Pushups","引體向上":"Pullups","滑輪下拉":"Wide-Grip_Lat_Pulldown","槓鈴划船":"Bent_Over_Barbell_Row","單臂啞鈴划船":"One-Arm_Dumbbell_Row","坐姿划船":"Seated_Cable_Rows","T 槓划船":"T-Bar_Row_with_Handle","直臂下壓":"Straight-Arm_Pulldown","傳統硬舉":"Barbell_Deadlift","槓鈴聳肩":"Barbell_Shrug","站姿肩推":"Standing_Military_Press","啞鈴肩推":"Dumbbell_Shoulder_Press","側平舉":"Side_Lateral_Raise","反向飛鳥":"Reverse_Flyes","臉拉":"Face_Pull","前平舉":"Front_Dumbbell_Raise","阿諾推舉":"Arnold_Dumbbell_Press","槓鈴彎舉":"Barbell_Curl","啞鈴彎舉":"Dumbbell_Bicep_Curl","錘式彎舉":"Hammer_Curls","斜托彎舉":"Incline_Dumbbell_Curl","牧師椅彎舉":"Preacher_Curl","滑輪下壓":"Triceps_Pushdown","過頭三頭伸展":"Cable_Rope_Overhead_Triceps_Extension","顱骨粉碎":"EZ-Bar_Skullcrusher","窄握臥推":"Close-Grip_Barbell_Bench_Press","背蹲舉":"Barbell_Squat","前蹲舉":"Front_Barbell_Squat","腿推":"Leg_Press","保加利亞分腿蹲":"Split_Squat_with_Dumbbells","弓箭步":"Dumbbell_Lunges","羅馬尼亞硬舉":"Romanian_Deadlift","腿彎舉":"Lying_Leg_Curls","腿伸展":"Leg_Extensions","站姿提踵":"Standing_Calf_Raises","六角槓硬舉":"Trap_Bar_Deadlift","槓鈴臀推":"Barbell_Hip_Thrust","臀橋":"Butt_Lift_Bridge","相撲硬舉":"Sumo_Deadlift","滑輪後踢":"One-Legged_Cable_Kickback","側走彈力帶":"Monster_Walk","棒式":"Plank","側棒式":"Side_Bridge","懸垂舉腿":"Hanging_Leg_Raise","死蟲":"Dead_Bug","滑輪捲腹":"Cable_Crunch","農夫走路":"Farmers_Walk","爆發上膊":"Power_Clean","抓舉":"Snatch","挺舉":"Clean_and_Jerk","土耳其起立":"Kettlebell_Turkish_Get-Up_Squat_style","登山者":"Mountain_Climbers","深蹲跳":"Freehand_Jump_Squat","跳箱":"Front_Box_Jump","彈力帶輔助引體":"Band_Assisted_Pull-Up","空氣深蹲":"Bodyweight_Squat","雪橇推":"Sled_Push","划船機":"Rowing_Stationary","農夫走路（HYROX）":"Farmers_Walk"};
+const FX_MAP={"深蹲":"Barbell_Squat","機械平躺胸推":"Leverage_Chest_Press","機械上斜胸推":"Leverage_Incline_Chest_Press","機械下斜胸推":"Leverage_Decline_Chest_Press","槓鈴臥推":"Barbell_Bench_Press_-_Medium_Grip","上斜啞鈴臥推":"Incline_Dumbbell_Press","平板啞鈴臥推":"Dumbbell_Bench_Press","啞鈴飛鳥":"Dumbbell_Flyes","滑輪飛鳥":"Cable_Crossover","蝴蝶機夾胸":"Butterfly","雙槓撐體":"Dips_-_Chest_Version","伏地挺身":"Pushups","引體向上":"Pullups","滑輪下拉":"Wide-Grip_Lat_Pulldown","槓鈴划船":"Bent_Over_Barbell_Row","單臂啞鈴划船":"One-Arm_Dumbbell_Row","坐姿划船":"Seated_Cable_Rows","T 槓划船":"T-Bar_Row_with_Handle","直臂下壓":"Straight-Arm_Pulldown","傳統硬舉":"Barbell_Deadlift","槓鈴聳肩":"Barbell_Shrug","站姿肩推":"Standing_Military_Press","啞鈴肩推":"Dumbbell_Shoulder_Press","側平舉":"Side_Lateral_Raise","反向飛鳥":"Reverse_Flyes","臉拉":"Face_Pull","前平舉":"Front_Dumbbell_Raise","阿諾推舉":"Arnold_Dumbbell_Press","槓鈴彎舉":"Barbell_Curl","啞鈴彎舉":"Dumbbell_Bicep_Curl","錘式彎舉":"Hammer_Curls","斜托彎舉":"Incline_Dumbbell_Curl","牧師椅彎舉":"Preacher_Curl","滑輪下壓":"Triceps_Pushdown","過頭三頭伸展":"Cable_Rope_Overhead_Triceps_Extension","顱骨粉碎":"EZ-Bar_Skullcrusher","窄握臥推":"Close-Grip_Barbell_Bench_Press","背蹲舉":"Barbell_Squat","前蹲舉":"Front_Barbell_Squat","腿推":"Leg_Press","保加利亞分腿蹲":"Split_Squat_with_Dumbbells","弓箭步":"Dumbbell_Lunges","羅馬尼亞硬舉":"Romanian_Deadlift","腿彎舉":"Lying_Leg_Curls","腿伸展":"Leg_Extensions","站姿提踵":"Standing_Calf_Raises","六角槓硬舉":"Trap_Bar_Deadlift","槓鈴臀推":"Barbell_Hip_Thrust","臀橋":"Butt_Lift_Bridge","相撲硬舉":"Sumo_Deadlift","滑輪後踢":"One-Legged_Cable_Kickback","側走彈力帶":"Monster_Walk","棒式":"Plank","側棒式":"Side_Bridge","懸垂舉腿":"Hanging_Leg_Raise","死蟲":"Dead_Bug","滑輪捲腹":"Cable_Crunch","農夫走路":"Farmers_Walk","爆發上膊":"Power_Clean","抓舉":"Snatch","挺舉":"Clean_and_Jerk","土耳其起立":"Kettlebell_Turkish_Get-Up_Squat_style","登山者":"Mountain_Climbers","深蹲跳":"Freehand_Jump_Squat","跳箱":"Front_Box_Jump","彈力帶輔助引體":"Band_Assisted_Pull-Up","空氣深蹲":"Bodyweight_Squat","雪橇推":"Sled_Push","划船機":"Rowing_Stationary","農夫走路（HYROX）":"Farmers_Walk"};
 const FX_REV={}; Object.keys(FX_MAP).forEach(n=>{ if(!FX_REV[FX_MAP[n]]) FX_REV[FX_MAP[n]]=n; });
 const FX_MUS={abdominals:"腹肌",abductors:"髖外展肌",adductors:"內收肌",biceps:"二頭肌",calves:"小腿",chest:"胸",forearms:"前臂",glutes:"臀",hamstrings:"腿後側",lats:"闊背肌","lower back":"下背","middle back":"中背",neck:"頸",quadriceps:"股四頭肌",shoulders:"肩",traps:"斜方肌",triceps:"三頭肌"};
 const FX_PART={abdominals:"core",abductors:"legs",adductors:"legs",biceps:"arm",calves:"legs",chest:"chest",forearms:"arm",glutes:"glutes",hamstrings:"legs",lats:"back","lower back":"back","middle back":"back",neck:"shoulder",quadriceps:"legs",shoulders:"shoulder",traps:"back",triceps:"arm"};
