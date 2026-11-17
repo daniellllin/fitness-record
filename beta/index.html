@@ -19,7 +19,7 @@
   --bar:#0088b0; --bar-dim:#d7d3d3;
   --surface:#f3f2f2;                                    /* 底部面板與對話框 */
   --r:2px; --r2:2px; --r3:2px; --r-float:12px;
-  --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px;
+  --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px; --fs-input:16px;
   --sans:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --font:var(--sans); --font-num:var(--sans);
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -59,6 +59,10 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 button,input,select,textarea{font:inherit;color:inherit}
+/* 輸入欄位一律 16px：iPhone 的 Safari 遇到小於 16px 的欄位會自動放大畫面，放大後不會縮回去，整頁就會左右飄移 */
+input,select,textarea{font-size:var(--fs-input)}
+input[type="date"],input[type="time"]{min-width:0;max-width:100%}
+html,body{max-width:100%;overflow-x:clip}
 button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
 h1,h2,.rowcard .t b,.race .ri b{font-family:var(--font)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r3)}
@@ -157,8 +161,8 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:var(--fs-xs);color:var(--mut);margin-bottom:4px;letter-spacing:.04em}
 .field input,.field select,.field textarea{width:100%;background:var(--card);border:1px solid var(--line);
-  border-radius:var(--r2);padding:12px 12px;font-size:var(--fs-base)}
-.field textarea{min-height:76px;resize:vertical;font-size:var(--fs-base)}
+  border-radius:var(--r2);padding:12px 12px;font-size:var(--fs-input)}
+.field textarea{min-height:76px;resize:vertical;font-size:var(--fs-input)}
 .field input[readonly]{color:var(--mut)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .bigrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
@@ -267,7 +271,7 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .seg button{padding:8px 16px;border-radius:999px;font-size:var(--fs-md);color:var(--ink2);white-space:nowrap}
 .seg button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);font-weight:600}
 .stepper .u{font-size:var(--fs-xs);color:var(--mut);margin-left:-4px}
-.tin,.nin{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:8px 8px;font-size:var(--fs-base);
+.tin,.nin{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:8px 8px;font-size:var(--fs-input);
   font-variant-numeric:tabular-nums;text-align:right;width:76px;min-width:0}
 .field .tin{width:100%;text-align:left;padding:12px 12px}
 .tin.big{font-size:var(--fs-xl);font-weight:600;width:96px}
@@ -347,7 +351,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .mhead span{font-size:var(--fs-xs);font-weight:400;color:var(--mut)}
 .mhead:first-of-type{margin-top:6px}
 .pubf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.pubf select{font:inherit;font-size:var(--fs-md);padding:8px 10px;border-radius:var(--r2);border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.pubf select{font:inherit;font-size:var(--fs-input);padding:8px 10px;border-radius:var(--r2);border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .rp-head{font-size:var(--fs-xl);margin:4px 0 4px;line-height:1.35}
 .rp-head.lv-high{color:var(--crit)} .rp-head.lv-low{color:var(--warn-ink)} .rp-head.lv-ok{color:var(--good-ink)}
 .rp-ratio{font-size:var(--fs-num);font-weight:600;letter-spacing:-.02em}
@@ -403,12 +407,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.4</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.5</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.4</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.5</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -454,7 +458,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.4" };
+const APP = { beta:true, ver:"m4-beta.5" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3658,6 +3662,12 @@ function openSparkySheet(){
     const row=el("div",{class:"chips",style:"margin-top:4px"});
     const t=el("button",{class:"btn sm pri"},"儲存並測試");
     t.addEventListener("click",async()=>{
+      const looksSparky=u=>/pikapod\.net/i.test(u||""), looksRelay=u=>/workers\.dev/i.test(u||"");
+      if(looksSparky(c.relay) && (looksRelay(c.site)||!c.site)){
+        const y=await ask("兩個網址好像填反了",{sub:"「轉接程式網址」填的看起來是 Sparky 本身的網址。"+(looksRelay(c.site)?"要幫你對調嗎？":"這一欄要填結尾是 workers.dev 的轉接程式網址。"),ok:looksRelay(c.site)?"對調":"我知道了",cancel:"不用"});
+        if(y && looksRelay(c.site)){ const t0=c.relay; c.relay=c.site; c.site=t0; const ins=$$("input",s); ins[0].value=c.relay; ins[2].value=c.site; }
+        else return;
+      }
       if(!/^https:\/\//i.test(c.relay)){ toast("轉接程式網址需以 https:// 開頭"); return; }
       if(!c.apiKey){ toast("請輸入 API 金鑰"); return; }
       if(c.site && !/^https:\/\//i.test(c.site)){ toast("Sparky 網址需以 https:// 開頭"); return; }
