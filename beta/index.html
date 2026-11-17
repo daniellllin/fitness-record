@@ -396,6 +396,86 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .tabbar{background:var(--card);border-top:1px solid var(--line)}
 .race .rd .d,.rp-ratio{font-family:var(--font-num)}
 .vol{color:var(--acc2-ink)}
+
+/* ============================================================
+   版面：手機一欄；平板加寬；桌機（≥960px）左側導覽＋兩欄
+   ============================================================ */
+.cols{display:flex;flex-direction:column}
+.cols>div{display:contents}
+.hb>.lab:first-child,.fcols>div>.lab:first-child{margin-top:24px}
+.hb.first>.lab:first-child,.fcols>div:first-child>.lab:first-child{margin-top:8px}
+.hb-gap,.hc-gap{height:14px}
+.fabl{display:none}
+@media (hover:hover){
+  .rowcard:hover,.race:hover{background:var(--card2)}
+  .chip:hover{border-color:var(--acc)}
+  .tabbar button[data-tab]:hover{color:var(--ink)}
+}
+@media (min-width:640px) and (max-width:959px){
+  .shell,.tabbar,.sheet,.pad{max-width:680px}
+}
+@media (min-width:960px){
+  :root{--side:224px}
+  .shell{max-width:none;margin:0 0 0 var(--side);padding-bottom:56px}
+  .topbar,main{max-width:1040px;margin-left:auto;margin-right:auto}
+  .topbar{padding:22px 40px 6px}
+  main{padding:0 40px}
+  .shell.padopen{padding-bottom:360px}
+  .betabar{margin-left:var(--side)}
+  /* 左側導覽 */
+  .tabbar,#tabbar[hidden]{display:flex!important}
+  .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--side);max-width:none;margin:0;flex-direction:column;align-items:stretch;
+    gap:2px;padding:28px 14px;border-top:0;border-right:1px solid var(--line);background:var(--card);backdrop-filter:none}
+  .tabbar button[data-tab]{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:0 14px;min-height:46px;
+    font-size:var(--fs-md);color:var(--ink2);border-radius:var(--r2);order:2}
+  .tabbar button[data-tab] svg{width:21px;height:21px}
+  .tabbar button[aria-selected="true"]{background:var(--acc-soft);color:var(--acc)}
+  .fab{order:1;width:auto;height:48px;border-radius:var(--r2);margin:0 0 18px;gap:8px;font-size:var(--fs-xl);box-shadow:none}
+  .fabl{display:inline;font-size:var(--fs-md);font-weight:600}
+  /* 兩欄 */
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:48px;align-items:start}
+  .cols>div{display:block}
+  .hcols>div>.hb:first-child>.lab:first-child,.fcols>div>.lab:first-child,.fcols>div:first-child>.lab:first-child{margin-top:12px}
+  /* 清單類：卡片排兩欄，標題與其他元素佔滿整列 */
+  #v-races,#tut-list,#v-history{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px;align-items:start}
+  #v-races>*,#tut-list>*,#v-history>*{grid-column:1/-1}
+  #v-races>.race,#tut-list>.rowcard,#v-history>.rowcard{grid-column:auto}
+  /* 閱讀與輸入類頁面不必太寬 */
+  #v-stats,#v-me,#v-log,#v-tutd,#v-food>.sub,#v-food>.rowcard,#v-food>.card{max-width:760px}
+  /* 面板：桌機改成置中的視窗 */
+  .sheet{top:50%;bottom:auto;left:calc(50% + var(--side) / 2);right:auto;width:min(560px,calc(100vw - var(--side) - 64px));max-width:none;margin:0;
+    border-radius:var(--r-float);padding:24px;max-height:84vh;opacity:0;transform:translate(-50%,-46%);
+    transition:transform .2s cubic-bezier(.3,.8,.4,1),opacity .2s}
+  .sheet.on{transform:translate(-50%,-50%);opacity:1}
+  .dlgwrap{padding-left:calc(20px + var(--side))}
+  .scrim{left:0}
+  /* 鍵盤：放在內容欄下方 */
+  .pad{left:var(--side);max-width:560px;margin:0 auto;border-radius:var(--r-float) var(--r-float) 0 0}
+  .toast{left:calc(50% + var(--side) / 2);bottom:32px}
+  .gate .in{max-width:520px}
+}
+@media (min-width:1280px){
+  .topbar,main{max-width:1120px}
+}
+
+/* 記一餐 */
+.mtop input[type="date"]{margin:10px 0 8px}
+.msmsg{margin:10px 0 0;padding:10px 12px;border-radius:var(--r2);font-size:var(--fs-sm);background:var(--card2);color:var(--ink)}
+.msmsg.ok{background:var(--acc-soft);color:var(--acc)}
+.msmsg.err{color:var(--crit)}
+.msimg{display:block;width:100%;max-height:220px;object-fit:cover;border-radius:var(--r2);margin:6px 0 8px;background:var(--card2)}
+.prow{background:var(--card);border-radius:var(--r2);padding:10px 12px;margin-bottom:8px}
+.prow.off{opacity:.5}
+.ptop{display:flex;align-items:center;gap:8px}
+.ptop input[type="checkbox"]{width:22px;height:22px;flex:none;accent-color:var(--acc)}
+.pnm{flex:1;min-width:0}
+.pnm b{display:block;font-size:var(--fs-base);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plow{font-size:var(--fs-xs);color:var(--warn-ink)}
+.pg{width:64px;flex:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:8px;text-align:right;min-height:40px}
+.pu{font-size:var(--fs-sm);color:var(--ink2);flex:none}
+.pk{font-size:var(--fs-sm);color:var(--ink2);width:72px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.psrc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--fs-xs);color:var(--mut);margin-top:4px;padding-left:30px}
+.psrc .link{min-height:32px;font-size:var(--fs-xs)}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -417,12 +497,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.6</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.8</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.6</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.8</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -447,7 +527,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/></svg><span>首頁</span></button>
     <button data-tab="stats" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M21 20H3"/></svg><span>統計</span></button>
-    <button class="fab" id="btn-add" title="記一筆">＋</button>
+    <button class="fab" id="btn-add" title="記一筆" aria-label="記一筆">＋<span class="fabl">記一筆</span></button>
     <button data-tab="food" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v7a2.5 2.5 0 0 0 5 0V3M9.5 3v18M17 21V3c-2 1.5-3 4-3 7.5 0 1.5 1 2.5 3 2.5"/></svg><span>飲食</span></button>
     <button data-tab="me" aria-selected="false">
@@ -468,7 +548,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.6" };
+const APP = { beta:true, ver:"m4-beta.8" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1053,6 +1133,20 @@ function closeSheet(){
   setTimeout(()=>{ s.hidden=true; sc.hidden=true; },200);
 }
 $("#scrim").addEventListener("click",closeSheet);
+/* 有實體鍵盤時，數字鍵盤開著就能直接打：數字、小數點、Backspace、Enter（下一組）、Esc（收起） */
+document.addEventListener("keydown",e=>{
+  const p=$("#pad"); if(!p||p.hidden||e.metaKey||e.ctrlKey||e.altKey) return;
+  const t=e.target; if(t&&t.matches&&t.matches("input:not([readonly]),textarea,select")) return;
+  if(!$("#dlg").hidden || !$("#sheet").hidden) return;
+  let k=null;
+  if(/^[0-9]$/.test(e.key)) k=e.key; else if(e.key==="."||e.key===",") k=".";
+  else if(e.key==="Backspace") k="⌫";
+  else if(e.key==="Enter"||e.key==="Tab") k=KP.num?(NUMF[KP.num].next?"下一欄":"完成"):"下一組";
+  else if(e.key==="Escape"){ e.preventDefault(); const y=KP.ex>=0; closePad(); if(y) renderLog(); return; }
+  if(!k) return;
+  e.preventDefault();
+  if(KP.num) numPadKey(k); else padKey(k,lastSetsFor((L.exercises[KP.ex]||{}).name));
+});
 document.addEventListener("focusin",e=>{
   const t=e.target; if(!t||!t.matches) return;
   if(t.matches("#v-log input:not([readonly]),#v-log textarea,#v-log select") && !$("#pad").hidden){ closePad(); $$("#v-log .sel").forEach(x=>x.classList.remove("sel")); }
@@ -1100,9 +1194,18 @@ function renderHome(){
   const mins=wk.reduce((a,e)=>a+num(e.duration),0);
   const vol=wk.reduce((a,e)=>a+entryVolume(e),0);
 
-  const rc=homeRace();                 // 比賽當週，賽事卡片移到最上面
-  if(rc && rc.top) rc.draw(v);
+  const rc=homeRace();
+  /* 每一塊各自一個容器：手機依 order 排成一欄（原本的順序），桌機分成左「訓練」右「飲食與賽事」兩欄 */
+  const cols=el("div",{class:"cols hcols"}), colA=el("div"), colB=el("div");
+  cols.append(colA,colB); v.appendChild(cols);
+  const blk=(col,o)=>{ const b=el("div",{class:"hb",style:"order:"+o}); col.appendChild(b); return b; };
+  const bTrain=blk(colA,2), bWeek=blk(colA,6), bRecent=blk(colA,7);
+  const bFood=blk(colB,3), bReport=blk(colB,4), bRace=blk(colB,rc&&rc.top?1:5);
+  if(rc && rc.top){ colB.removeChild(bRace); colB.insertBefore(bRace,colB.firstChild); }
+  ((rc&&rc.top)?bRace:bTrain).classList.add("first");
+  if(rc) rc.draw(bRace);
 
+  { const v=bTrain;
   v.appendChild(el("div",{class:"lab"},"本週訓練"));
   const big=el("div",{class:"big"});
   big.appendChild(el("span",{class:"n"},String(wk.length)));
@@ -1115,10 +1218,11 @@ function renderHome(){
   sb.appendChild(document.createTextNode("連續 "+streak()+" 天"));
   v.appendChild(sb);
 
-  homeFood(v);                        // 今日飲食（與訓練並列）
-  homeCards(v);                       // 週報摘要
-  if(rc && !rc.top) rc.draw(v);       // 下一場賽事
+  }
+  homeFood(bFood);                    // 今日飲食（與訓練並列）
+  homeCards(bReport);                 // 週報摘要
 
+  { const v=bWeek;
   // 本週每日時長
   v.appendChild(el("div",{class:"lab"},"本週每日時間（分鐘）"));
   const wrap=el("div",{class:"week"});
@@ -1134,7 +1238,8 @@ function renderHome(){
     c.appendChild(b); c.appendChild(el("div",{class:"k"},d.k)); wrap.appendChild(c);
   });
   v.appendChild(wrap);
-
+  }
+  { const v=bRecent;
   // 最近紀錄
   const head=el("div",{class:"lab",style:"display:flex;align-items:center"});
   head.appendChild(el("span",null,"最近紀錄"));
@@ -1162,6 +1267,7 @@ function renderHome(){
     x.addEventListener("click",async()=>{ if(await ask("丟棄這筆草稿？",{sub:"丟棄後無法復原。",ok:"丟棄",danger:true})){ DB.draft=null; save(); renderHome(); } });
     d.appendChild(x);
     v.appendChild(d);
+  }
   }
 }
 function entryRow(e){
@@ -3427,7 +3533,7 @@ function homeCards(v){
     c.appendChild(t);
     c.appendChild(el("div",{class:"m"},last.head+(last.tips.length?" · "+last.tips.length+" 則建議":"")));
     c.addEventListener("click",()=>{ reportOff=1; go("stats",{tab:"report"}); });
-    v.appendChild(el("div",{style:"height:14px"}));
+    v.appendChild(el("div",{class:"hc-gap"}));
     v.appendChild(c);
   }
 }
@@ -3547,7 +3653,8 @@ const Sparky={
     c=c||this.cfg();
     const r=await fetch(c.relay.replace(/\/+$/,"")+path,{headers:{"x-api-key":c.apiKey||""},credentials:"omit"});
     if(r.status===401) throw new Error("金鑰不正確或已停用");
-    if(!r.ok) throw new Error("HTTP "+r.status);
+    if(!r.ok){ let m=""; try{ m=(await r.json()).error||""; }catch(e){}
+      throw new Error(/沒有開放/.test(m)?"轉接程式還是舊版，請先更新轉接程式":(m||"HTTP "+r.status)); }
     return r.json();
   }
 };
@@ -3578,12 +3685,11 @@ Sparky.macros=function(entries,eaten){
 function kc(x){ return Math.round(num(x)).toLocaleString("en-US"); }
 /* 「記一餐」：有設定 Sparky 網址就直接開，沒有就引導去設定 */
 function mealButton(after){
-  const c=Sparky.cfg();
-  if(Sparky.on() && c.site){
-    const a=el("a",{class:"rowcard",href:c.site,target:"_blank",rel:"noopener"});
-    const t=el("div",{class:"t"}); t.appendChild(el("b",null,"記一餐")); t.appendChild(el("span",{class:"dt"},"開啟 Sparky ↗"));
-    a.appendChild(t); a.appendChild(el("div",{class:"m"},"在 SparkyFitness 記錄，可拍照辨識或搜尋食物"));
-    a.addEventListener("click",()=>{ Sparky.reset(); if(after) after(); });
+  if(Sparky.on()){
+    const a=el("button",{class:"rowcard"});
+    const t=el("div",{class:"t"}); t.appendChild(el("b",null,"記一餐")); t.appendChild(el("span",{class:"dt"},"›"));
+    a.appendChild(t); a.appendChild(el("div",{class:"m"},"拍照辨識或搜尋食物，存進你的 SparkyFitness"));
+    a.addEventListener("click",()=>openMealSheet());
     return a;
   }
   const b=el("button",{class:"rowcard"});
@@ -3660,6 +3766,9 @@ function renderFood(){
     const x=days.find(d=>String(d.date).slice(0,10)===t0)||days[days.length-1]||{};
     const goal=num(x.goal), eaten=num(x.eaten), left=goal-eaten;
 
+    const outer=box, fcols=el("div",{class:"cols fcols"}), fA=el("div"), fB=el("div");
+    fcols.append(fA,fB); outer.appendChild(fcols);
+    { const box=fA;
     box.appendChild(el("div",{class:"lab"},"今天"));
     const fn=el("div",{class:"fnum"});
     fn.appendChild(el("span",{class:"n"},kc(eaten)));
@@ -3671,7 +3780,7 @@ function renderFood(){
       (eaten>0?(left>=0?"還可以吃 "+kc(left)+" 大卡":"超過目標 "+kc(-left)+" 大卡"):"今天還沒有記飲食")
       +(num(x.burned)>0?"　運動消耗 "+kc(x.burned)+" 大卡":"")));
 
-    const g=(day&&day.goals)||{}, entries=(day&&day.foodEntries)||[];
+    var g=(day&&day.goals)||{}, entries=(day&&day.foodEntries)||[];
     const m=Sparky.macros(entries,eaten);
     box.appendChild(el("div",{class:"lab"},"三大營養素"));
     if(m){
@@ -3683,6 +3792,8 @@ function renderFood(){
         entries.length?"這些項目的營養素算不出可靠的總和，請到 Sparky 查看":"目標：蛋白質 "+Math.round(num(g.protein))+" g、碳水 "+Math.round(num(g.carbs))+" g、脂肪 "+Math.round(num(g.fat))+" g。記了飲食之後會顯示進度"));
     }
 
+    }
+    { const box=fB;
     if(entries.length){
       box.appendChild(el("div",{class:"lab"},"今天吃了什麼"));
       const c=el("div",{class:"card",style:"padding:4px 14px"});
@@ -3714,11 +3825,12 @@ function renderFood(){
       ?"有記飲食的 "+logged.length+" 天，平均吃進 "+kc(logged.reduce((a,d)=>a+num(d.eaten),0)/logged.length)+" 大卡（虛線是目標）"
       :"這 7 天還沒有飲食紀錄"));
 
+    }
     const ft=el("div",{class:"sub",style:"display:flex;align-items:center;gap:14px;margin-top:18px;font-size:var(--fs-xs)"});
     ft.appendChild(el("span",{style:"flex:1"},"資料來自你的 SparkyFitness"));
     const rf=el("button",{class:"link"},"重新整理"); rf.addEventListener("click",()=>{ Sparky.reset(); renderFood(); });
     const st=el("button",{class:"link"},"連接設定"); st.addEventListener("click",openSparkySheet);
-    ft.append(rf,st); box.appendChild(ft);
+    ft.append(rf,st); outer.appendChild(ft);
   }).catch(e=>{
     if(seq!==foodSeq||view!=="food") return;
     box.innerHTML="";
@@ -3766,6 +3878,276 @@ function reportNutrition(v,R){
     box.appendChild(el("div",{class:"sub"},tip));
   }).catch(e=>{ if(!box.isConnected) return; box.innerHTML="";
     box.appendChild(el("div",{class:"sub",style:"margin:0;color:var(--crit)"},"飲食數據讀取失敗（"+(e.message||e)+"）")); });
+}
+/* ============================================================
+   記一餐（App 內，寫回 Sparky）＋ 拍照辨識
+   搜尋：Sparky 食物庫（含匯入的食藥署資料）→ 輸入份量 → POST /api/food-entries
+   拍照：照片縮小後交給轉接程式的 /ai/estimate（Gemini）→ 逐項對到 Sparky 食物庫 → 確認份量
+         → POST /api/food-entry-meals/from-photo-estimate（Sparky 公開的「記錄確認過的拍照估計」）
+   ============================================================ */
+const MEALS=[["breakfast","早餐"],["lunch","午餐"],["snacks","點心"],["dinner","晚餐"]];
+const MEAL_ZH={}; MEALS.forEach(([k,n])=>MEAL_ZH[k]=n);
+function mealNow(){ const h=new Date().getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
+Sparky.post=async function(path,body){
+  const c=this.cfg();
+  let r;
+  try{ r=await fetch(c.relay.replace(/\/+$/,"")+path,{method:"POST",headers:{"x-api-key":c.apiKey||"","content-type":"application/json"},body:JSON.stringify(body),credentials:"omit"}); }
+  catch(e){ throw new Error("連不到轉接程式，請確認網路"); }
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(r.ok) return j;
+  const m=(j&&(j.error||j.message))||"";
+  if(r.status===401) throw new Error(m||"金鑰不正確或已停用");
+  if(r.status===405&&/只允許讀取/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
+  if(r.status===404&&/沒有開放/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
+  const e=new Error(m||("HTTP "+r.status)); e.code=j&&j.code; throw e;
+};
+Sparky.me=async function(){
+  const k=this.key(); if(this._me&&this._me.k===k) return this._me.v;
+  const d=await this.get("/api/identity/user"); const v={id:d.activeUserId||d.authenticatedUserId};
+  if(!v.id) throw new Error("讀不到 Sparky 帳號"); this._me={k,v}; return v;
+};
+Sparky.mealTypes=async function(){ const d=await this.cached("/api/meal-types"); return Array.isArray(d)?d:[]; };
+Sparky.search=async function(q,limit){
+  const d=await this.get("/api/foods/search?name="+encodeURIComponent(q)+"&broadMatch=true&limit="+(limit||25));
+  return ((d&&d.searchResults)||(Array.isArray(d)?d:[])).filter(f=>f&&f.id&&f.default_variant&&f.default_variant.id);
+};
+function foodPer(v,q){ const ss=num(v.serving_size)||1, k=num(q)/ss; return {kcal:num(v.calories)*k,p:num(v.protein)*k,c:num(v.carbs)*k,f:num(v.fat)*k}; }
+function unitZh(u){ return ({g:"克",ml:"毫升",serving:"份",piece:"個",slice:"片",cup:"杯",bowl:"碗",tbsp:"大匙",tsp:"小匙"})[String(u||"").toLowerCase()]||u||""; }
+function refreshFoodViews(){ Sparky.reset(); if(view==="food") renderFood(); else if(view==="home") renderHome(); else if(view==="stats") renderStats(); }
+
+let MS=null;
+function openMealSheet(){
+  if(!Sparky.on()){ openSparkySheet(); return; }
+  MS={date:today(), meal:mealNow(), q:"", seq:0, recent:null, pick:null, photo:null, msg:""};
+  openSheet(s=>{
+    const h=el("h2",null,"記一餐");
+    const c=Sparky.cfg();
+    if(c.site) h.appendChild(el("a",{class:"r",href:c.site,target:"_blank",rel:"noopener",style:"color:var(--acc)"},"在 Sparky 開啟 ↗"));
+    s.appendChild(h);
+    const top=el("div",{class:"mtop"});
+    const di=el("input",{type:"date",value:MS.date,max:today(),"aria-label":"日期"});
+    di.addEventListener("change",()=>{ MS.date=(di.value&&di.value<=today())?di.value:today(); di.value=MS.date; });
+    top.appendChild(di);
+    s.appendChild(top);
+    s.appendChild(chipRow(MEALS.map(m=>m[1]),MEAL_ZH[MS.meal],v=>{ MS.meal=MEALS.find(m=>m[1]===v)[0];
+      $$("[data-mealbtn]").forEach(b=>{ if(!b.disabled) b.textContent="記錄到"+MEAL_ZH[MS.meal]; }); }));
+    s.appendChild(el("div",{id:"ms-msg",class:"msmsg",hidden:""}));
+    s.appendChild(el("div",{id:"ms-body"}));
+    const done=el("button",{class:"btn wide",style:"margin-top:14px"},"完成");
+    done.addEventListener("click",closeSheet);
+    s.appendChild(done);
+  });
+  drawMealList();
+  loadRecentFoods();
+}
+function msNote(t,kind){ const m=$("#ms-msg"); if(!m) return; m.hidden=!t; m.textContent=t||""; m.className="msmsg"+(kind?" "+kind:""); }
+function drawMealList(){
+  const b=$("#ms-body"); if(!b||!MS) return; b.innerHTML=""; MS.pick=null; MS.photo=null;
+  const ph=el("button",{class:"btn pri wide",style:"margin:14px 0 10px"},"📷 拍照辨識");
+  const fi=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
+  ph.addEventListener("click",()=>fi.click());
+  fi.addEventListener("change",()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(f) startPhoto(f); });
+  b.append(ph,fi);
+  const sf=el("div",{class:"field",style:"margin-bottom:8px"});
+  const si=el("input",{type:"search",placeholder:"搜尋食物，例如 白飯、茶葉蛋",value:MS.q,"aria-label":"搜尋食物",autocomplete:"off",enterkeyhint:"search"});
+  let t=null;
+  si.addEventListener("input",()=>{ MS.q=si.value.trim(); clearTimeout(t); t=setTimeout(drawMealResults,300); });
+  sf.appendChild(si); b.appendChild(sf);
+  b.appendChild(el("div",{id:"ms-res"}));
+  drawMealResults();
+}
+function foodRow(f,sub,onClick){
+  const v=f.default_variant||{};
+  const r=el("button",{class:"rowcard"});
+  const t=el("div",{class:"t"}); t.appendChild(el("b",null,f.name||"食物"));
+  t.appendChild(el("span",{class:"dt"},kc(v.calories)+" 大卡／"+fmt(num(v.serving_size))+" "+unitZh(v.serving_unit)));
+  r.appendChild(t);
+  const m=[f.brand,sub].filter(Boolean).join(" · "); if(m) r.appendChild(el("div",{class:"m"},m));
+  r.addEventListener("click",onClick); return r;
+}
+async function drawMealResults(){
+  const box=$("#ms-res"); if(!box||!MS) return;
+  const seq=++MS.seq;
+  if(!MS.q){
+    box.innerHTML="";
+    if(MS.recent==null){ box.appendChild(el("div",{class:"sub"},"讀取最近吃過的食物…")); return; }
+    if(!MS.recent.length){ box.appendChild(el("div",{class:"sub"},"輸入食物名稱開始搜尋，或用拍照辨識")); return; }
+    box.appendChild(el("div",{class:"lab",style:"margin-top:8px"},"最近吃過"));
+    MS.recent.forEach(x=>box.appendChild(foodRow(x.food,"上次 "+fmt(x.qty)+" "+unitZh(x.food.default_variant.serving_unit),()=>pickFood(x.food,x.qty))));
+    return;
+  }
+  box.innerHTML=""; box.appendChild(el("div",{class:"sub"},"搜尋中…"));
+  try{
+    const list=await Sparky.search(MS.q);
+    if(seq!==MS.seq) return;
+    box.innerHTML="";
+    if(!list.length){ box.appendChild(el("div",{class:"sub"},"找不到「"+MS.q+"」。換個說法試試，例如「雞腿」而不是「滷雞腿便當」，或用拍照辨識")); return; }
+    list.sort((a,b)=>(b.brand==="台灣食藥署")-(a.brand==="台灣食藥署")||(a.name.length-b.name.length));
+    list.forEach(f=>box.appendChild(foodRow(f,"",()=>pickFood(f))));
+  }catch(e){ if(seq!==MS.seq) return; box.innerHTML=""; box.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"搜尋失敗："+(e.message||e))); }
+}
+async function loadRecentFoods(){
+  try{
+    const end=today(), start=dstr(new Date(Date.now()-20*864e5));
+    const d=await Sparky.cached("/api/food-entries/range/"+start+"/"+end);
+    const seen=new Set(), out=[];
+    (Array.isArray(d)?d:[]).slice().sort((a,b)=>String(b.entry_date+b.entry_time).localeCompare(String(a.entry_date+a.entry_time))).forEach(e=>{
+      if(!e.food_id||!e.variant_id||e.food_entry_meal_id) return;
+      const k=e.food_id+"|"+e.variant_id; if(seen.has(k)) return; seen.add(k);
+      out.push({qty:num(e.quantity),food:{id:e.food_id,name:e.food_name,brand:e.brand_name,default_variant:{id:e.variant_id,serving_size:e.serving_size,serving_unit:e.serving_unit||e.unit,calories:e.calories,protein:e.protein,carbs:e.carbs,fat:e.fat}}});
+    });
+    if(MS){ MS.recent=out.slice(0,8); if(!MS.q&&!MS.pick&&!MS.photo) drawMealResults(); }
+  }catch(e){ if(MS){ MS.recent=[]; if(!MS.q&&!MS.pick&&!MS.photo) drawMealResults(); } }
+}
+function pickFood(f,qty){
+  const b=$("#ms-body"); if(!b) return; MS.pick=f;
+  const v=f.default_variant, u=v.serving_unit, isG=/^(g|ml)$/i.test(u||"");
+  let amt=qty?String(qty):(isG?"100":String(num(v.serving_size)||1));
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 換一個"); back.addEventListener("click",drawMealList); b.appendChild(back);
+  b.appendChild(el("div",{style:"font-size:var(--fs-lg);font-weight:600;margin:4px 0 2px"},f.name));
+  b.appendChild(el("div",{class:"sub",style:"margin:0 0 12px"},[f.brand,"每 "+fmt(num(v.serving_size))+" "+unitZh(u)+" "+kc(v.calories)+" 大卡"].filter(Boolean).join(" · ")));
+  const fr=el("div",{class:"field"});
+  fr.appendChild(el("label",{for:"ms-amt"},"吃了多少（"+unitZh(u)+"）"));
+  const ai=el("input",{id:"ms-amt",type:"text",inputmode:"decimal",value:amt,autocomplete:"off"});
+  fr.appendChild(ai); b.appendChild(fr);
+  const quick=isG?[50,100,150,200,300]:[0.5,1,1.5,2].map(x=>x*(num(v.serving_size)||1));
+  const qc=el("div",{class:"chips",style:"margin-bottom:12px"});
+  quick.forEach(q=>{ const c=el("button",{class:"chip",type:"button"},fmt(q)+" "+unitZh(u)); c.addEventListener("click",()=>{ ai.value=String(q); upd(); }); qc.appendChild(c); });
+  b.appendChild(qc);
+  const pv=el("div",{class:"card",style:"padding:12px 14px"}); b.appendChild(pv);
+  const upd=()=>{ const q=num(ai.value), n=foodPer(v,q); pv.innerHTML="";
+    const t=el("div",{class:"t",style:"display:flex;align-items:baseline;gap:8px"}); t.appendChild(el("b",{style:"font-size:var(--fs-xl)"},kc(n.kcal))); t.appendChild(el("span",{class:"sub",style:"margin:0"},"大卡"));
+    pv.appendChild(t); pv.appendChild(el("div",{class:"sub",style:"margin-top:4px"},"蛋白質 "+fmt(Math.round(n.p*10)/10)+" g · 碳水 "+fmt(Math.round(n.c*10)/10)+" g · 脂肪 "+fmt(Math.round(n.f*10)/10)+" g")); };
+  ai.addEventListener("input",upd); upd();
+  const sv=el("button",{class:"btn pri wide",style:"margin-top:14px","data-mealbtn":""},"記錄到"+MEAL_ZH[MS.meal]);
+  b.appendChild(sv);
+  sv.addEventListener("click",async()=>{
+    const q=num(ai.value); if(!(q>0)){ toast("請輸入份量"); return; }
+    sv.disabled=true; sv.textContent="記錄中…";
+    try{
+      const [me,types]=await Promise.all([Sparky.me(),Sparky.mealTypes()]);
+      const mt=types.find(x=>String(x.name).toLowerCase()===MS.meal);
+      await Sparky.post("/api/food-entries",{user_id:me.id,food_id:f.id,variant_id:v.id,meal_type:MS.meal,meal_type_id:mt?mt.id:null,
+        quantity:q,unit:u,entry_date:MS.date,entry_time:null,notes:null});
+      const n=foodPer(v,q);
+      refreshFoodViews(); MS.recent=null; MS.q=""; drawMealList(); loadRecentFoods();
+      msNote("已記錄："+f.name+" "+fmt(q)+" "+unitZh(u)+"（"+kc(n.kcal)+" 大卡）到"+(MS.date===today()?"今天":md(MS.date))+MEAL_ZH[MS.meal]+"，可以繼續加","ok");
+    }catch(e){ sv.disabled=false; sv.textContent="記錄到"+MEAL_ZH[MS.meal]; msNote("沒有記錄成功："+(e.message||e),"err"); }
+  });
+}
+
+/* ---- 拍照辨識 ---- */
+function shrinkImage(file,max){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ try{
+      const k=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+      const w=Math.max(1,Math.round(img.naturalWidth*k)), h=Math.max(1,Math.round(img.naturalHeight*k));
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg",0.82)); }catch(e){ rej(e); } };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("讀不到這張照片")); };
+    img.src=url;
+  });
+}
+function nameKey(s){ return String(s||"").replace(/[（(].*?[）)]/g,"").replace(/\s+/g,"").replace(/台/g,"臺"); }
+function matchScore(item,f){
+  const a=nameKey(item), b=nameKey(f.name); if(!a||!b) return 0;
+  if(a===b) return 3;
+  if(b.startsWith(a)||a.startsWith(b)) return 2;
+  return 0;
+}
+async function matchFood(name){
+  try{
+    const list=(await Sparky.search(name,10)).filter(f=>/^g$/i.test(f.default_variant.serving_unit||"")&&num(f.default_variant.serving_size)>0);
+    let best=null, bs=0;
+    list.forEach(f=>{ const s=matchScore(name,f)+(f.brand==="台灣食藥署"?0.5:0); if(s>bs&&matchScore(name,f)>=2){ bs=s; best=f; } });
+    return best;
+  }catch(e){ return null; }
+}
+async function startPhoto(file){
+  const b=$("#ms-body"); if(!b) return;
+  MS.photo={state:"busy"}; msNote("");
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  const st=el("div",{class:"sub",style:"margin:6px 0 10px"},"處理照片中…"); b.appendChild(st);
+  let data;
+  try{ data=await shrinkImage(file,1024); }catch(e){ st.textContent=e.message||"讀不到這張照片"; return; }
+  const im=el("img",{class:"msimg",src:data,alt:"要辨識的照片"}); b.insertBefore(im,st);
+  st.textContent="辨識中，大約需要 5–15 秒…";
+  const token=MS.photo;
+  let est;
+  try{ est=await Sparky.post("/ai/estimate",{image:data.split(",")[1],mime:"image/jpeg"}); }
+  catch(e){ if(MS.photo!==token) return; st.textContent=""; st.appendChild(el("span",{style:"color:var(--crit)"},"辨識失敗："+(e.message||e)));
+    if(e.code==="no_gemini_key") st.appendChild(el("div",{style:"margin-top:4px"},"需要先在 Cloudflare 的轉接程式設定 Gemini 金鑰。"));
+    return; }
+  if(MS.photo!==token) return;
+  const items=(est&&est.items)||[];
+  if(!items.length){ st.textContent="照片裡看不出食物，換個角度再拍一次，或用搜尋。"; return; }
+  st.textContent="對照食物庫中…";
+  const matched=await Promise.all(items.map(x=>matchFood(x.name)));
+  if(MS.photo!==token) return;
+  MS.photo={state:"review",dish:est.dish||"拍照餐點",rows:items.map((x,i)=>({ai:x,food:matched[i],useFood:!!matched[i],on:true,g:x.grams}))};
+  st.remove(); drawPhotoReview(im);
+}
+function drawPhotoReview(im){
+  const b=$("#ms-body"); if(!b||!MS.photo) return;
+  const P=MS.photo; b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  if(im) b.appendChild(im);
+  b.appendChild(el("div",{class:"sub",style:"margin:4px 0 8px"},"確認每一項和份量，不對的可以取消勾選或改克數。數值是估計，僅供參考。"));
+  const nf=el("div",{class:"field"}); nf.appendChild(el("label",{for:"ms-dish"},"這一餐的名稱"));
+  const ni=el("input",{id:"ms-dish",type:"text",value:P.dish,maxlength:"40"}); ni.addEventListener("input",()=>P.dish=ni.value); nf.appendChild(ni); b.appendChild(nf);
+  const list=el("div"); b.appendChild(list);
+  const tot=el("div",{class:"card",style:"padding:12px 14px;margin-top:6px"}); b.appendChild(tot);
+  const per=r=>r.useFood&&r.food?r.food.default_variant:{serving_size:100,calories:r.ai.kcal,protein:r.ai.protein,carbs:r.ai.carbs,fat:r.ai.fat};
+  const calc=()=>{ let k=0,p=0,c=0,f=0; P.rows.forEach(r=>{ if(!r.on) return; const n=foodPer(per(r),r.g); k+=n.kcal; p+=n.p; c+=n.c; f+=n.f; });
+    tot.innerHTML=""; const t=el("div",{style:"display:flex;align-items:baseline;gap:8px"}); t.appendChild(el("b",{style:"font-size:var(--fs-xl)"},kc(k))); t.appendChild(el("span",{class:"sub",style:"margin:0"},"大卡（合計）"));
+    tot.appendChild(t); tot.appendChild(el("div",{class:"sub",style:"margin-top:4px"},"蛋白質 "+Math.round(p)+" g · 碳水 "+Math.round(c)+" g · 脂肪 "+Math.round(f)+" g")); };
+  P.rows.forEach(r=>{
+    const row=el("div",{class:"prow"+(r.on?"":" off")});
+    const top=el("div",{class:"ptop"});
+    const cb=el("input",{type:"checkbox","aria-label":"包含 "+r.ai.name}); cb.checked=r.on;
+    cb.addEventListener("change",()=>{ r.on=cb.checked; row.classList.toggle("off",!r.on); calc(); });
+    top.appendChild(cb);
+    const nm=el("div",{class:"pnm"}); nm.appendChild(el("b",null,r.ai.name));
+    if(r.ai.confidence==="low") nm.appendChild(el("span",{class:"plow"},"不太確定"));
+    top.appendChild(nm);
+    const gi=el("input",{type:"text",inputmode:"decimal",value:String(r.g),"aria-label":r.ai.name+" 克數",class:"pg"});
+    const kcel=el("span",{class:"pk"});
+    const upd=()=>{ r.g=num(gi.value); kcel.textContent=kc(foodPer(per(r),r.g).kcal)+" 大卡"; calc(); };
+    gi.addEventListener("input",upd);
+    top.append(gi,el("span",{class:"pu"},"克"),kcel);
+    row.appendChild(top);
+    const src=el("div",{class:"psrc"});
+    if(r.food){
+      const sw=el("button",{class:"link",type:"button"},r.useFood?"改用 AI 估計值":"改用食物庫「"+r.food.name+"」");
+      src.appendChild(el("span",null,r.useFood?"食物庫："+r.food.name+(r.food.brand?"（"+r.food.brand+"）":""):"AI 估計：每 100 克 "+kc(r.ai.kcal)+" 大卡"));
+      sw.addEventListener("click",()=>{ r.useFood=!r.useFood; drawPhotoReview(im); });
+      src.appendChild(sw);
+    } else src.appendChild(el("span",null,"食物庫沒有對到，使用 AI 估計：每 100 克 "+kc(r.ai.kcal)+" 大卡"));
+    row.appendChild(src);
+    list.appendChild(row); upd();
+  });
+  calc();
+  const sv=el("button",{class:"btn pri wide",style:"margin-top:14px","data-mealbtn":""},"記錄到"+MEAL_ZH[MS.meal]);
+  b.appendChild(sv);
+  sv.addEventListener("click",async()=>{
+    const rows=P.rows.filter(r=>r.on&&num(r.g)>0);
+    if(!rows.length){ toast("至少要留一項"); return; }
+    sv.disabled=true; sv.textContent="記錄中…";
+    try{
+      const types=await Sparky.mealTypes(); const mt=types.find(x=>String(x.name).toLowerCase()===MS.meal);
+      const items=rows.map(r=> r.useFood&&r.food
+        ? {source:"existing",food_id:r.food.id,variant_id:r.food.default_variant.id,quantity:num(r.g),unit:"g"}
+        : {source:"new",quantity:num(r.g),unit:"g",food:{name:r.ai.name,serving_size:100,serving_unit:"g",calories:r.ai.kcal,protein:r.ai.protein,carbs:r.ai.carbs,fat:r.ai.fat}});
+      await Sparky.post("/api/food-entry-meals/from-photo-estimate",{mode:"grouped",entry_date:MS.date,meal_type:MS.meal,meal_type_id:mt?mt.id:null,name:(P.dish||"拍照餐點").trim().slice(0,40),items});
+      const k=rows.reduce((a,r)=>a+foodPer(per(r),r.g).kcal,0);
+      refreshFoodViews(); MS.recent=null; MS.q=""; drawMealList(); loadRecentFoods();
+      msNote("已記錄："+(P.dish||"拍照餐點")+"，共 "+rows.length+" 項（"+kc(k)+" 大卡）","ok");
+    }catch(e){ sv.disabled=false; sv.textContent="記錄到"+MEAL_ZH[MS.meal]; msNote("沒有記錄成功："+(e.message||e),"err"); }
+  });
 }
 function openSparkySheet(){
   const c=Object.assign({relay:"",apiKey:"",site:""},Sparky.cfg());
@@ -4298,6 +4680,9 @@ function hasCJKSerif(){
       return w!==base || w2!==sans; });
   }catch(e){ return false; }
 }
+if(window.matchMedia){ const mq=window.matchMedia("(min-width:960px)");
+  const onMq=()=>{ if(Auth&&Auth.user&&view&&view!=="log") go(view); };
+  if(mq.addEventListener) mq.addEventListener("change",onMq); else if(mq.addListener) mq.addListener(onMq); }
 (function init(){
   if(hasCJKSerif()) document.documentElement.classList.add("serif");
   DB=normalize({}); applyTheme();
