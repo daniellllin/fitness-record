@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.17" };
+const APP = { beta:true, ver:"m4-beta.18" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -4281,7 +4281,7 @@ function secHead(v,title,linkText,onLink){
   if(linkText){ const a=el("button",{class:"link",style:"margin-left:auto;font-weight:400"},linkText); a.addEventListener("click",onLink); h.appendChild(a); }
   v.appendChild(h); return h;
 }
-function phaseText(rate){ return rate<0?"減脂期 · 每週 "+String(rate).replace("-","−")+" kg":rate>0?"增肌期 · 每週 +"+rate+" kg":"維持期"; }
+function phaseText(rate){ return rate<0?rateName(rate)+" · 每週 "+String(rate).replace("-","−")+" kg":rate>0?rateName(rate)+" · 每週 +"+rate+" kg":"維持體重"; }
 /* 熱量條：吃進／當天目標，標出 TDEE */
 function kcalBar(eaten,target,tdee){
   const sc=Math.max(target,tdee||0,eaten,1)*1.04;
