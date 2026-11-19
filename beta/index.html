@@ -476,6 +476,13 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .pk{font-size:var(--fs-sm);color:var(--ink2);width:72px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
 .psrc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--fs-xs);color:var(--mut);margin-top:4px;padding-left:30px}
 .psrc .link{min-height:32px;font-size:var(--fs-xs)}
+
+/* 身體 */
+.lchart{display:block;width:100%;height:auto;margin:2px 0 4px;overflow:visible}
+.lchart .lg{stroke:var(--line);stroke-width:1}
+.lchart .lt{fill:var(--mut);font-size:10px;font-family:var(--sans)}
+.lchart .ll{fill:none;stroke:var(--bar);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.lchart .lp{fill:var(--bar)}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -485,11 +492,11 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
   <div class="in">
     <div class="yr">2026</div>
     <h1>每日<br>運動紀錄</h1>
-    <p>重量訓練逐組追蹤、九種運動、動作教學、進步曲線。</p>
+    <p>訓練和飲食記在同一個地方，一起看。</p>
     <ul>
-      <li>紀錄自動存到<b>你自己的</b> Google 雲端硬碟</li>
-      <li>換手機、換電腦登入同一個帳號就看得到全部紀錄</li>
-      <li>資料放在 App 專用隱藏區，開發者也讀不到</li>
+      <li>運動紀錄存在<b>你自己的</b> Google 雲端硬碟（App 專用區，不會碰到其他檔案），換手機、換電腦登入同一個帳號就看得到</li>
+      <li>飲食與營養透過你們自己的 SparkyFitness 記錄，可拍照辨識，登入後在「飲食」分頁連接</li>
+      <li>重訓逐組紀錄、動作教學、賽事行事曆，每週一份訓練與飲食週報</li>
     </ul>
     <div id="gate-setup"></div>
     <button class="gbtn" id="btn-signin">
@@ -497,12 +504,12 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
       使用 Google 帳號登入
     </button>
     <p class="fine" id="gate-fine">首次登入時 Google 會詢問是否允許存取「App 專用資料」，那是雲端硬碟裡只有本應用程式能讀寫的隱藏空間，不會碰到你其他的檔案。</p>
-    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.8</span></p>
+    <p class="fine" style="margin-top:6px">版本 <span class="appver">m4-beta.10</span></p>
   </div>
 </div>
 
 <div id="app" hidden>
-<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.8</span> · 資料與正式版分開存放</div>
+<div class="betabar" id="betabar" hidden>測試版 BETA <span id="betaver" class="appver">m4-beta.10</span> · 資料與正式版分開存放</div>
 <div class="shell">
   <header class="topbar">
     <span class="d" id="top-date"></span>
@@ -548,7 +555,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.8" };
+const APP = { beta:true, ver:"m4-beta.12" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1027,6 +1034,7 @@ function normalize(d){
   d.customExercises=d.customExercises||{};
   d.exLinks=(d.exLinks&&typeof d.exLinks==="object")?d.exLinks:{};      // 自訂動作名稱 → 動作庫 id（用來顯示示範圖）
   d.deleted=d.deleted||{};
+  d.sx=(d.sx&&typeof d.sx==="object")?d.sx:{};            // 運動紀錄 → Sparky 運動紀錄的對應（entryId → {id,kcal} 或 {hk:1}）
   d.races=Array.isArray(d.races)?d.races.filter(r=>r&&r.id&&!d.deleted[r.id]):[];
   d.draft=d.draft||null;
   d.theme=d.theme||"system";
@@ -1073,7 +1081,7 @@ $$("#tabbar button[data-tab]").forEach(b=> b.addEventListener("click",async()=>{
   go(b.dataset.tab);
 }));
 
-$("#btn-add").addEventListener("click",openAddSheet);
+$("#btn-add").addEventListener("click",()=>openAddSheet());
 
 /* 抽屜 */
 /* 面板或對話框開著時把背景頁面固定住，避免在面板上滑動時連背景一起捲 */
@@ -1199,8 +1207,8 @@ function renderHome(){
   const cols=el("div",{class:"cols hcols"}), colA=el("div"), colB=el("div");
   cols.append(colA,colB); v.appendChild(cols);
   const blk=(col,o)=>{ const b=el("div",{class:"hb",style:"order:"+o}); col.appendChild(b); return b; };
-  const bTrain=blk(colA,2), bWeek=blk(colA,6), bRecent=blk(colA,7);
-  const bFood=blk(colB,3), bReport=blk(colB,4), bRace=blk(colB,rc&&rc.top?1:5);
+  const bTrain=blk(colA,2), bWeek=blk(colA,7), bRecent=blk(colA,8);
+  const bFood=blk(colB,3), bBody=blk(colB,4), bReport=blk(colB,5), bRace=blk(colB,rc&&rc.top?1:6);
   if(rc && rc.top){ colB.removeChild(bRace); colB.insertBefore(bRace,colB.firstChild); }
   ((rc&&rc.top)?bRace:bTrain).classList.add("first");
   if(rc) rc.draw(bRace);
@@ -1220,6 +1228,7 @@ function renderHome(){
 
   }
   homeFood(bFood);                    // 今日飲食（與訓練並列）
+  homeBody(bBody);                    // 身體（體重、BMI、體脂）
   homeCards(bReport);                 // 週報摘要
 
   { const v=bWeek;
@@ -1304,6 +1313,7 @@ function openEntrySheet(e){
     del.addEventListener("click",async()=>{
       if(!(await ask("刪除 "+md(e.date)+" 的"+SPORTS[e.sport].n+"紀錄？",{sub:"刪除後無法復原。",ok:"刪除",danger:true}))) return;
       DB.entries=DB.entries.filter(x=>x.id!==e.id); DB.deleted[e.id]=Date.now(); save();
+      SparkyEx.remove(e.id).catch(()=>{});
       closeSheet(); go(view);
     });
     const cl=el("button",{class:"btn"},"關閉");
@@ -1327,69 +1337,45 @@ function recentExercises(n){
     }));
   return out.slice(0,n||4);
 }
-function openAddSheet(){
+/* 記一筆：上方切換「運動｜飲食」，兩邊各自是完整的一頁
+   預設依時段：用餐時間（6–10、11–14、17–21 點）停在飲食，其他時間停在運動；還沒連接 Sparky 時一律停在運動 */
+function addSheetDefault(){
+  if(!Sparky.on()) return "workout";
+  const h=new Date().getHours();
+  return (h>=6&&h<10)||(h>=11&&h<14)||(h>=17&&h<21) ? "food" : "workout";
+}
+let ADD={tab:"workout",date:""};
+function openAddSheet(opt){
+  ADD={tab:(opt&&opt.tab)||addSheetDefault(), date:today()};
+  if(ADD.tab==="food") MS={date:ADD.date, meal:mealNow(), q:"", seq:0, recent:null, pick:null, photo:null};
   openSheet(s=>{
-    let date=today();
-    const h=el("h2",null,"記一筆");
-    const r=el("span",{class:"r"},md(date)+" · 可改日期");
-    h.appendChild(r); s.appendChild(h);
-
-    const dr=el("div",{class:"field",style:"margin:12px 0 4px"});
-    const di=el("input",{type:"date",value:date});
-    di.addEventListener("change",()=>{ date=di.value||today(); r.textContent=md(date)+" · 可改日期"; });
+    s.appendChild(el("h2",null,"記一筆"));
+    const segHost=el("div",{style:"margin:12px 0 4px"}); s.appendChild(segHost);
+    const drawSeg=()=>{ segHost.innerHTML=""; segHost.appendChild(segCtl([["workout","運動"],["food","飲食"],["body","身體"]],ADD.tab,k=>{
+      if(k===ADD.tab) return; ADD.tab=k; drawSeg(); drawPane(); },"display:flex;width:100%")); };
+    const dr=el("div",{class:"field",style:"margin:10px 0 4px"});
+    const di=el("input",{type:"date",value:ADD.date,max:today(),"aria-label":"日期"});
+    di.addEventListener("change",()=>{ ADD.date=(di.value&&di.value<=today())?di.value:today(); di.value=ADD.date; if(MS) MS.date=ADD.date; });
     dr.appendChild(di); s.appendChild(dr);
-
-    s.appendChild(el("div",{class:"lab"},"飲食"));
-    s.appendChild(mealButton(()=>closeSheet()));
-
-    const tpl=DB.templates||[];
-    if(tpl.length){
-      s.appendChild(el("div",{class:"lab"},"從課表模板"));
-      const c=el("div",{class:"chips"});
-      tpl.forEach(t=>{
-        const b=el("button",{class:"chip"},t.name);
-        b.addEventListener("click",()=>{ closeSheet(); startStrength(date, t); });
-        c.appendChild(b);
-      });
-      const last=DB.entries.filter(e=>e.sport==="strength").sort((a,b)=>b.date.localeCompare(a.date))[0];
-      if(last){
-        const b=el("button",{class:"chip"},"重複上次");
-        b.addEventListener("click",()=>{ closeSheet(); repeatLast(date,last); });
-        c.appendChild(b);
-      }
-      s.appendChild(c);
-    }
-
-    const rec=recentExercises(4);
-    if(rec.length){
-      s.appendChild(el("div",{class:"lab"},"最近常用"));
-      rec.forEach(x=>{
-        const b=el("button",{class:"rowcard"});
-        const t=el("div",{class:"t"});
-        t.appendChild(el("b",null,x.name));
-        t.appendChild(el("span",{class:"tag"},PARTS[x.part]?PARTS[x.part].n:""));
-        t.appendChild(el("span",{class:"dt"},"上次 "+x.last+" · "+md(x.date)));
-        b.appendChild(t);
-        b.addEventListener("click",()=>{ closeSheet(); startStrength(date,null,[x.name]); });
-        s.appendChild(b);
-      });
-    }
-
+    const pane=el("div",{id:"add-pane"}); s.appendChild(pane);
+    const f=el("div",{style:"display:flex;align-items:center;margin-top:18px"});
+    const cl=el("button",{class:"btn",style:"margin-left:auto"},"關閉");
+    cl.addEventListener("click",closeSheet);
+    f.appendChild(cl); s.appendChild(f);
+    const drawPane=()=>{ pane.innerHTML=""; if(ADD.tab==="food") mountMealPane(pane); else if(ADD.tab==="body") mountBodyPane(pane); else mountWorkoutPane(pane); };
+    drawSeg(); drawPane();
+  });
+}
+function mountWorkoutPane(s){
+    const date=()=>ADD.date||today();
     s.appendChild(el("div",{class:"lab"},"選擇運動"));
     const g=el("div",{class:"grid3"});
     SPORT_KEYS.forEach(k=>{
       const b=el("button",null,SPORTS[k].n);
-      b.addEventListener("click",()=>{ closeSheet(); k==="strength"? startStrength(date) : startSport(k,date); });
+      b.addEventListener("click",()=>{ closeSheet(); k==="strength"? startStrength(date()) : startSport(k,date()); });
       g.appendChild(b);
     });
     s.appendChild(g);
-
-    const f=el("div",{style:"display:flex;align-items:center;margin-top:18px"});
-    const cl=el("button",{class:"btn sm",style:"margin-left:auto"},"關閉");
-    cl.addEventListener("click",closeSheet);
-    f.appendChild(cl);
-    s.appendChild(f);
-  });
 }
 
 /* ============================================================
@@ -1543,15 +1529,34 @@ function renderStrengthBody(v){
     [mdw(L.date), parts.join(" · "), L.exercises.length?L.exercises.length+" 動作":"", sets?sets+" 組":"",
      vol?"訓練量 "+fmt(vol)+" kg·次":""].filter(Boolean).join(" · ");
 
-  if(!L.exercises.length && (DB.templates||[]).length){
-    v.appendChild(el("div",{class:"lab",style:"margin:14px 0 6px"},"套用課表"));
-    const tc=el("div",{class:"chips",style:"margin:0 0 14px"});
-    (DB.templates||[]).forEach(t=>{
-      const b=el("button",{class:"chip","aria-pressed":String(L.template===t.name)},t.name);
-      b.addEventListener("click",()=>applyTemplate(t));
-      tc.appendChild(b);
-    });
-    v.appendChild(tc);
+  /* 還沒有動作時：快速開始（課表模板、重複上次、最近常用） */
+  if(!L.exercises.length){
+    const tpl=DB.templates||[], last=DB.entries.filter(e=>e.sport==="strength").sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(tpl.length||last){
+      v.appendChild(el("div",{class:"lab",style:"margin:14px 0 6px"},"快速開始"));
+      const tc=el("div",{class:"chips",style:"margin:0 0 6px"});
+      if(last){ const b=el("button",{class:"chip"},"重複上次（"+md(last.date)+"）"); b.addEventListener("click",()=>{ const d=L.date; repeatLast(d,last); }); tc.appendChild(b); }
+      tpl.forEach(t=>{
+        const b=el("button",{class:"chip","aria-pressed":String(L.template===t.name)},t.name);
+        b.addEventListener("click",()=>applyTemplate(t));
+        tc.appendChild(b);
+      });
+      v.appendChild(tc);
+    }
+    const rec=recentExercises(4);
+    if(rec.length){
+      v.appendChild(el("div",{class:"lab",style:"margin:14px 0 6px"},"最近常用"));
+      rec.forEach(x=>{
+        const b=el("button",{class:"rowcard"});
+        const t=el("div",{class:"t"});
+        t.appendChild(el("b",null,x.name));
+        t.appendChild(el("span",{class:"tag"},PARTS[x.part]?PARTS[x.part].n:""));
+        t.appendChild(el("span",{class:"dt"},"上次 "+x.last+" · "+md(x.date)));
+        b.appendChild(t);
+        b.addEventListener("click",()=>addExercise(x.name));
+        v.appendChild(b);
+      });
+    }
   }
 
   L.exercises.forEach((x,xi)=> v.appendChild(excCard(x,xi)));
@@ -1789,6 +1794,7 @@ function saveLog(){
     data, createdAt:new Date().toISOString() };
   DB.entries.push(e); DB.draft=null; L=null;
   stopRest(); save();
+  SparkyEx.syncOne(e).catch(()=>{});
   toast("已儲存 "+mdw(e.date)+" " + SPORTS[e.sport].n);
   go("home");
 }
@@ -2002,13 +2008,14 @@ function renderStats(opt){
   if(opt&&opt.tab) statsTab=opt.tab;
   // 總覽 / 週報 切換（5h：週報放在統計分頁）
   const seg=el("div",{class:"seg",style:"margin:10px 0 4px"});
-  [["overview","總覽"],["report","週報"]].forEach(([k,n])=>{
+  [["overview","總覽"],["report","週報"],["body","身體"]].forEach(([k,n])=>{
     const b=el("button",{"aria-pressed":String(statsTab===k)},n);
     b.addEventListener("click",()=>{ statsTab=k; renderStats(); });
     seg.appendChild(b);
   });
   v.appendChild(seg);
   if(statsTab==="report"){ renderReport(v); return; }
+  if(statsTab==="body"){ renderBodyStats(v); return; }
   const now=new Date(), mStart=now.getFullYear()+"-"+pad2(now.getMonth()+1)+"-01";
   const mon=DB.entries.filter(e=>e.date>=mStart);
   v.appendChild(el("div",{class:"lab"},"統計 · "+now.getFullYear()+" 年 "+(now.getMonth()+1)+" 月"));
@@ -3683,13 +3690,15 @@ Sparky.macros=function(entries,eaten){
   return null;
 };
 function kc(x){ return Math.round(num(x)).toLocaleString("en-US"); }
+/* 當天實際的熱量目標：Sparky 設成「運動加回」時，目標＝基礎目標＋當天運動；用 Sparky 算好的 remaining 回推，兩邊一定一致 */
+function effGoal(x){ const r=parseFloat(x&&x.remaining); return isFinite(r)&&x.remaining!==null ? num(x.eaten)+r : num(x&&x.goal); }
 /* 「記一餐」：有設定 Sparky 網址就直接開，沒有就引導去設定 */
 function mealButton(after){
   if(Sparky.on()){
     const a=el("button",{class:"rowcard"});
     const t=el("div",{class:"t"}); t.appendChild(el("b",null,"記一餐")); t.appendChild(el("span",{class:"dt"},"›"));
     a.appendChild(t); a.appendChild(el("div",{class:"m"},"拍照辨識或搜尋食物，存進你的 SparkyFitness"));
-    a.addEventListener("click",()=>openMealSheet());
+    a.addEventListener("click",()=>openAddSheet({tab:"food"}));
     return a;
   }
   const b=el("button",{class:"rowcard"});
@@ -3717,12 +3726,16 @@ function homeFood(v){
     const wrap=el("button",{style:"display:block;width:100%;text-align:left"});
     const big=el("div",{class:"big"});
     big.appendChild(el("span",{class:"n"},kc(x.eaten)));
-    big.appendChild(el("span",{class:"u"},"/ "+kc(x.goal)+" 大卡"));
+    big.appendChild(el("span",{class:"u"},"/ "+kc(effGoal(x))+" 大卡"));
     wrap.appendChild(big);
-    const left=num(x.goal)-num(x.eaten);
+    const left=effGoal(x)-num(x.eaten);
     wrap.appendChild(el("div",{class:"sub"},
       (num(x.eaten)>0?(left>=0?"還可以吃 "+kc(left)+" 大卡":"超過目標 "+kc(-left)+" 大卡"):"今天還沒有記飲食")
       +(num(x.burned)>0?"　運動消耗 "+kc(x.burned):"")));
+    const tl=el("div",{class:"sub",style:"margin-top:2px"}); wrap.appendChild(tl);
+    Sparky.energy().then(E=>{ const D=E.D; if(!tl.isConnected||!D) return;
+      tl.textContent="今天 TDEE "+kc(D.tdee)+" 大卡（"+(D.train?"運動日":"休息日")+"）"+(D.eaten>0?" · 熱量差 "+signKc(D.diff)+(D.ok==null?"":D.ok?" · 達成":" · "+okMark(D,E.rate)):""); }).catch(()=>{});
+    SparkyEx.maybeSync();
     wrap.addEventListener("click",()=>go("food")); box.appendChild(wrap);
   }).catch(e=>{
     if(seq!==homeFoodSeq||view!=="home") return;
@@ -3764,7 +3777,7 @@ function renderFood(){
     if(seq!==foodSeq||view!=="food") return;
     box.innerHTML="";
     const x=days.find(d=>String(d.date).slice(0,10)===t0)||days[days.length-1]||{};
-    const goal=num(x.goal), eaten=num(x.eaten), left=goal-eaten;
+    const goal=effGoal(x), eaten=num(x.eaten), left=goal-eaten;
 
     const outer=box, fcols=el("div",{class:"cols fcols"}), fA=el("div"), fB=el("div");
     fcols.append(fA,fB); outer.appendChild(fcols);
@@ -3813,7 +3826,7 @@ function renderFood(){
     if(goal>0){ const gl=el("i",{class:"gl"}); gl.style.bottom=(18+Math.round(goal/mx*86))+"px"; gl.title="目標 "+kc(goal); wk.appendChild(gl); }
     days.forEach(d=>{
       const c=el("div",{class:"c"}); const e=num(d.eaten);
-      const b=el("div",{class:"b"+(e?(num(d.goal)>0&&e>num(d.goal)?" over":""):" z")});
+      const b=el("div",{class:"b"+(e?(effGoal(d)>0&&e>effGoal(d)?" over":""):" z")});
       if(e) b.style.height=Math.max(6,Math.round(e/mx*86))+"px";
       b.title=md(String(d.date).slice(0,10))+"：吃進 "+kc(e)+" 大卡";
       c.appendChild(b); c.appendChild(el("div",{class:"k"},WD[new Date(String(d.date).slice(0,10)+"T00:00:00").getDay()]));
@@ -3862,13 +3875,23 @@ function reportNutrition(v,R){
     const avg=k=>lg.reduce((a,d)=>a+num(d[k]),0)/lg.length;
     const c=el("div",{class:"card",style:"padding:4px 14px"});
     const row=(k,val)=>{ const r=el("div",{class:"frow"}); r.appendChild(el("span",{class:"k"},k)); r.appendChild(el("span",{class:"v"},val)); c.appendChild(r); };
-    const gap=avg("eaten")-avg("goal");
+    const gap=avg("eaten")-lg.reduce((a,d)=>a+effGoal(d),0)/lg.length;
     row("有記飲食的天數",lg.length+" / "+days.length+" 天");
     row("平均每天吃進",kc(avg("eaten"))+" 大卡");
-    row("平均每天目標",kc(avg("goal"))+" 大卡");
+    row("平均每天目標",kc(lg.reduce((a,d)=>a+effGoal(d),0)/lg.length)+" 大卡");
     row("與目標的差距",(gap>=0?"多 ":"少 ")+kc(Math.abs(gap))+" 大卡");
     row("平均每天運動消耗",kc(avg("burned"))+" 大卡");
     box.appendChild(c);
+    Promise.all([Sparky.body(120),Sparky.prefs().catch(()=>null)]).then(([B,P])=>{ if(!c.isConnected) return; const w=B.series("weight");
+      const rate=P&&P.goal_mode==="weekly"?(Number(P.goal_mode_weekly_change_kg)||0):0;
+      const xs=lg.map(d=>dayEnergy(d,rate)).filter(Boolean);
+      if(xs.length){ const diff=xs.reduce((a,x)=>a+x.diff,0), tr=xs.filter(x=>x.train), rs=xs.filter(x=>!x.train), av=a=>kc(a.reduce((s,x)=>s+x.tdee,0)/a.length);
+        row("平均 TDEE",(tr.length?"運動日 "+av(tr):"")+(tr.length&&rs.length?" · ":"")+(rs.length?"休息日 "+av(rs):"")+" 大卡");
+        row("達成目標（"+rateName(rate)+"）",xs.filter(x=>x.ok).length+" / "+xs.length+" 天");
+        row("熱量差合計",signKc(diff)+"（理論體重 "+(diff>0?"+":diff<0?"−":"±")+fmt(Math.round(Math.abs(diff)/KCAL_PER_KG*100)/100)+" kg）"); }
+      const a=valueOnOrBefore(w,dstr(new Date(new Date(R.ws+"T00:00:00").getTime()-864e5))), z=valueOnOrBefore(w,end);
+      if(z&&z.date>=R.ws){ row("體重", a&&a.date!==z.date ? fmt(a.v)+" → "+fmt(z.v)+" kg（"+diffText(z,a,"kg")+"）" : fmt(z.v)+" kg"); }
+    }).catch(()=>{});
     let tip="";
     if(lg.length<4) tip="只有 "+lg.length+" 天有紀錄，平均值僅供參考；記滿 4 天以上比較準";
     else if(gap<-300 && R.level!=="none" && R.ratio!=null && R.ratio>1.3) tip="這週訓練負荷偏高，吃進的熱量卻比目標少 "+kc(-gap)+" 大卡，恢復可能不足";
@@ -3888,10 +3911,10 @@ function reportNutrition(v,R){
 const MEALS=[["breakfast","早餐"],["lunch","午餐"],["snacks","點心"],["dinner","晚餐"]];
 const MEAL_ZH={}; MEALS.forEach(([k,n])=>MEAL_ZH[k]=n);
 function mealNow(){ const h=new Date().getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
-Sparky.post=async function(path,body){
+Sparky.post=async function(path,body,method){
   const c=this.cfg();
   let r;
-  try{ r=await fetch(c.relay.replace(/\/+$/,"")+path,{method:"POST",headers:{"x-api-key":c.apiKey||"","content-type":"application/json"},body:JSON.stringify(body),credentials:"omit"}); }
+  try{ r=await fetch(c.relay.replace(/\/+$/,"")+path,{method:method||"POST",headers:{"x-api-key":c.apiKey||"","content-type":"application/json"},body:body==null?undefined:JSON.stringify(body),credentials:"omit"}); }
   catch(e){ throw new Error("連不到轉接程式，請確認網路"); }
   let j=null; try{ j=await r.json(); }catch(e){}
   if(r.ok) return j;
@@ -3899,6 +3922,7 @@ Sparky.post=async function(path,body){
   if(r.status===401) throw new Error(m||"金鑰不正確或已停用");
   if(r.status===405&&/只允許讀取/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
   if(r.status===404&&/沒有開放/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
+  if(r.status===405&&/只允許|不能修改/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
   const e=new Error(m||("HTTP "+r.status)); e.code=j&&j.code; throw e;
 };
 Sparky.me=async function(){
@@ -3916,29 +3940,28 @@ function unitZh(u){ return ({g:"克",ml:"毫升",serving:"份",piece:"個",slice
 function refreshFoodViews(){ Sparky.reset(); if(view==="food") renderFood(); else if(view==="home") renderHome(); else if(view==="stats") renderStats(); }
 
 let MS=null;
-function openMealSheet(){
-  if(!Sparky.on()){ openSparkySheet(); return; }
-  MS={date:today(), meal:mealNow(), q:"", seq:0, recent:null, pick:null, photo:null, msg:""};
-  openSheet(s=>{
-    const h=el("h2",null,"記一餐");
-    const c=Sparky.cfg();
-    if(c.site) h.appendChild(el("a",{class:"r",href:c.site,target:"_blank",rel:"noopener",style:"color:var(--acc)"},"在 Sparky 開啟 ↗"));
-    s.appendChild(h);
-    const top=el("div",{class:"mtop"});
-    const di=el("input",{type:"date",value:MS.date,max:today(),"aria-label":"日期"});
-    di.addEventListener("change",()=>{ MS.date=(di.value&&di.value<=today())?di.value:today(); di.value=MS.date; });
-    top.appendChild(di);
-    s.appendChild(top);
-    s.appendChild(chipRow(MEALS.map(m=>m[1]),MEAL_ZH[MS.meal],v=>{ MS.meal=MEALS.find(m=>m[1]===v)[0];
+function openMealSheet(){ openAddSheet({tab:"food"}); }
+function mountMealPane(host){
+  if(!Sparky.on()){
+    const c=el("div",{class:"card",style:"margin-top:8px"});
+    c.appendChild(el("b",{style:"font-size:var(--fs-base)"},"先連接 SparkyFitness"));
+    c.appendChild(el("div",{class:"sub",style:"margin-top:4px"},"飲食紀錄存在你們自己的 SparkyFitness。連接後就能在這裡拍照辨識或搜尋食物。"));
+    const b=el("button",{class:"btn pri wide",style:"margin-top:12px"},"開始連接");
+    b.addEventListener("click",openSparkySheet); c.appendChild(b);
+    host.appendChild(c); return;
+  }
+  if(!MS) MS={date:ADD.date||today(), meal:mealNow(), q:"", seq:0, recent:null, pick:null, photo:null};
+  MS.date=ADD.date||today();
+  const row=el("div",{style:"display:flex;align-items:center;gap:8px;flex-wrap:wrap"});
+  row.appendChild(chipRow(MEALS.map(m=>m[1]),MEAL_ZH[MS.meal],v=>{ MS.meal=MEALS.find(m=>m[1]===v)[0];
       $$("[data-mealbtn]").forEach(b=>{ if(!b.disabled) b.textContent="記錄到"+MEAL_ZH[MS.meal]; }); }));
-    s.appendChild(el("div",{id:"ms-msg",class:"msmsg",hidden:""}));
-    s.appendChild(el("div",{id:"ms-body"}));
-    const done=el("button",{class:"btn wide",style:"margin-top:14px"},"完成");
-    done.addEventListener("click",closeSheet);
-    s.appendChild(done);
-  });
+  host.appendChild(row);
+  host.appendChild(el("div",{id:"ms-msg",class:"msmsg",hidden:""}));
+  host.appendChild(el("div",{id:"ms-body"}));
+  const c=Sparky.cfg();
+  if(c.site) host.appendChild(el("a",{class:"link",href:c.site,target:"_blank",rel:"noopener",style:"margin-top:6px"},"在 Sparky 開啟 ↗"));
   drawMealList();
-  loadRecentFoods();
+  if(MS.recent==null) loadRecentFoods();
 }
 function msNote(t,kind){ const m=$("#ms-msg"); if(!m) return; m.hidden=!t; m.textContent=t||""; m.className="msmsg"+(kind?" "+kind:""); }
 function drawMealList(){
@@ -4149,6 +4172,401 @@ function drawPhotoReview(im){
     }catch(e){ sv.disabled=false; sv.textContent="記錄到"+MEAL_ZH[MS.meal]; msNote("沒有記錄成功："+(e.message||e),"err"); }
   });
 }
+/* ============================================================
+   身體數據：體重、體脂、腰圍、身高 → BMI
+   來源：Sparky 的每日量測（check-in）。Apple 健康手動輸入的會經 Sparky iOS App 同步進來；
+   App 內「記一筆 → 身體」寫回 Sparky（只更新有填的欄位）
+   ============================================================ */
+const BODY_F=[["weight","體重","kg"],["body_fat_percentage","體脂率","%"],["waist","腰圍","cm"],["height","身高","cm"]];
+Sparky.body=async function(days){
+  const end=today(), start=dstr(new Date(Date.now()-(days||400)*864e5));
+  const d=await this.cached("/api/measurements/check-in-measurements-range/"+start+"/"+end);
+  const rows=(Array.isArray(d)?d:[]).map(r=>({date:String(r.entry_date||"").slice(0,10),weight:numOrNull(r.weight),
+    body_fat_percentage:numOrNull(r.body_fat_percentage),waist:numOrNull(r.waist),height:numOrNull(r.height)}))
+    .filter(r=>r.date).sort((a,b)=>a.date.localeCompare(b.date));
+  const series=k=>rows.filter(r=>r[k]!=null).map(r=>({date:r.date,v:r[k]}));
+  const last=k=>{ const s=series(k); return s.length?s[s.length-1]:null; };
+  return {rows,series,last};
+};
+function numOrNull(v){ if(v==null||v==="") return null; const n=Number(v); return Number.isFinite(n)&&n>0?n:null; }
+function bmiOf(w,hcm){ if(!w||!hcm) return null; const m=hcm/100; return Math.round(w/(m*m)*10)/10; }
+/* 衛福部國健署成人 BMI 標準 */
+function bmiLabel(b){ if(b==null) return ""; return b<18.5?"過輕":b<24?"正常範圍":b<27?"過重":"肥胖"; }
+/* 某一天以前（含）最近一筆，用來算「7 天前」「30 天前」的差距 */
+function valueOnOrBefore(series,ds){ let x=null; series.forEach(p=>{ if(p.date<=ds) x=p; }); return x; }
+function diffText(cur,prev,unit){ if(!cur||!prev||prev.date===cur.date) return ""; const d=Math.round((cur.v-prev.v)*10)/10; return (d>0?"+":d<0?"−":"±")+fmt(Math.abs(d))+" "+unit; }
+
+/* 記一筆的「身體」頁 */
+function mountBodyPane(host){
+  if(!Sparky.on()){
+    const c=el("div",{class:"card",style:"margin-top:8px"});
+    c.appendChild(el("b",{style:"font-size:var(--fs-base)"},"先連接 SparkyFitness"));
+    c.appendChild(el("div",{class:"sub",style:"margin-top:4px"},"體重與身體數據存在你們自己的 SparkyFitness，也會讀取 Apple 健康同步進來的紀錄。"));
+    const b=el("button",{class:"btn pri wide",style:"margin-top:12px"},"開始連接");
+    b.addEventListener("click",openSparkySheet); c.appendChild(b);
+    host.appendChild(c); return;
+  }
+  const msg=el("div",{class:"msmsg",hidden:""}); host.appendChild(msg);
+  const vals={};
+  const fields=el("div",{class:"fgrid",style:"margin-top:10px"});
+  const hints={};
+  BODY_F.forEach(([k,n,u])=>{
+    const f=el("div",{class:"field"+(k==="height"?" bh":"")});
+    f.appendChild(el("label",{for:"bd-"+k},n+"（"+u+"）"+(k==="weight"?"":"，選填")));
+    const i=el("input",{id:"bd-"+k,type:"text",inputmode:"decimal",autocomplete:"off"});
+    i.addEventListener("input",()=>{ vals[k]=i.value.trim(); });
+    f.appendChild(i); hints[k]=i; fields.appendChild(f);
+  });
+  host.appendChild(fields);
+  host.appendChild(el("div",{class:"sub",style:"margin:0 0 4px;font-size:var(--fs-xs)"},"同一天再記一次會覆蓋那一天的數值；沒填的欄位不會被改動。"));
+  Sparky.body(730).then(B=>{
+    BODY_F.forEach(([k,n,u])=>{ const l=B.last(k); if(l) hints[k].placeholder="上次 "+fmt(l.v)+" "+u+" · "+md(l.date); });
+    const h=B.last("height");
+    if(h){ const f=$(".bh",host); if(f) f.hidden=true;
+      const t=el("button",{class:"link",type:"button"},"身高 "+fmt(h.v)+" cm（更新）");
+      t.addEventListener("click",()=>{ const f=$(".bh",host); if(f) f.hidden=false; t.remove(); hints.height.focus(); });
+      fields.after(t); }
+  }).catch(()=>{});
+  const sv=el("button",{class:"btn pri wide",style:"margin-top:12px"},"記錄");
+  host.appendChild(sv);
+  sv.addEventListener("click",async()=>{
+    const body={entry_date:ADD.date||today()}; const bad=[];
+    const lim={weight:[20,300],body_fat_percentage:[2,70],waist:[30,200],height:[100,250]};
+    BODY_F.forEach(([k,n])=>{ const s=String(vals[k]||"").trim(); if(!s) return; const v=Number(s);
+      if(!Number.isFinite(v)||v<lim[k][0]||v>lim[k][1]) bad.push(n); else body[k]=Math.round(v*10)/10; });
+    if(bad.length){ toast(bad.join("、")+"的數值看起來不對"); return; }
+    if(Object.keys(body).length<2){ toast("請至少填一項"); return; }
+    sv.disabled=true; sv.textContent="記錄中…";
+    try{
+      await Sparky.post("/api/measurements/check-in",body);
+      Sparky.reset(); refreshFoodViews(); if(view==="stats") renderStats();
+      msg.hidden=false; msg.className="msmsg ok";
+      msg.textContent="已記錄"+(body.entry_date===today()?"今天":md(body.entry_date))+"："+BODY_F.filter(([k])=>body[k]!=null).map(([k,n,u])=>n+" "+fmt(body[k])+" "+u).join("、");
+      BODY_F.forEach(([k])=>{ hints[k].value=""; vals[k]=""; });
+    }catch(e){ msg.hidden=false; msg.className="msmsg err"; msg.textContent="沒有記錄成功："+(e.message||e); }
+    sv.disabled=false; sv.textContent="記錄";
+  });
+}
+
+/* 折線圖（SVG）：日期為橫軸，自動上下留白 */
+function lineChart(series,unit,opt){
+  opt=opt||{}; const W=320,H=opt.h||140,pl=34,pr=8,pt=10,pb=22;
+  const svgNS="http://www.w3.org/2000/svg", s=document.createElementNS(svgNS,"svg");
+  s.setAttribute("viewBox","0 0 "+W+" "+H); s.setAttribute("class","lchart"); s.setAttribute("role","img");
+  s.setAttribute("aria-label",(opt.label||"")+"趨勢，"+series.length+" 筆，最近 "+(series.length?fmt(series[series.length-1].v)+" "+unit:""));
+  if(series.length<1) return s;
+  const t=series.map(p=>new Date(p.date+"T00:00:00").getTime()), v=series.map(p=>p.v);
+  let lo=Math.min(...v), hi=Math.max(...v); const pad=Math.max((hi-lo)*0.15, opt.minPad||0.5); lo-=pad; hi+=pad;
+  const t0=opt.from?new Date(opt.from+"T00:00:00").getTime():Math.min(...t), t1=Math.max(Date.now(),...t);
+  const X=x=>pl+(t1===t0?0.5:(x-t0)/(t1-t0))*(W-pl-pr), Y=y=>pt+(1-(y-lo)/(hi-lo))*(H-pt-pb);
+  const mk=(n,a)=>{ const e=document.createElementNS(svgNS,n); Object.entries(a).forEach(([k,x])=>e.setAttribute(k,x)); s.appendChild(e); return e; };
+  [lo+pad,(lo+hi)/2,hi-pad].forEach(g=>{ mk("line",{x1:pl,x2:W-pr,y1:Y(g),y2:Y(g),class:"lg"}); const tx=mk("text",{x:pl-4,y:Y(g)+3,"text-anchor":"end",class:"lt"}); tx.textContent=fmt(Math.round(g*10)/10); });
+  const fl=mk("text",{x:pl,y:H-6,class:"lt"}); fl.textContent=md(dstr(new Date(t0)));
+  const fr=mk("text",{x:W-pr,y:H-6,"text-anchor":"end",class:"lt"}); fr.textContent="今天";
+  if(series.length>1) mk("polyline",{points:series.map((p,i)=>X(t[i])+","+Y(p.v)).join(" "),class:"ll"});
+  series.forEach((p,i)=>{ const c=mk("circle",{cx:X(t[i]),cy:Y(p.v),r:i===series.length-1?3.5:2.2,class:"lp"}); const ti=document.createElementNS(svgNS,"title"); ti.textContent=md(p.date)+"："+fmt(p.v)+" "+unit; c.appendChild(ti); });
+  return s;
+}
+
+/* 統計 › 身體 */
+let bodyRange=90, bodySeq=0;
+function renderBodyStats(v){
+  if(!Sparky.on()){
+    const e=el("div",{class:"empty",style:"margin-top:12px"}); e.appendChild(el("b",null,"還沒連接 SparkyFitness"));
+    e.appendChild(el("span",null,"體重與身體數據存在 SparkyFitness，連接後會出現在這裡"));
+    const b=el("button",{class:"btn pri",style:"margin-top:12px"},"開始連接"); b.addEventListener("click",openSparkySheet); e.appendChild(b);
+    v.appendChild(e); return;
+  }
+  const box=el("div"); v.appendChild(box); box.appendChild(el("div",{class:"sub"},"讀取中…"));
+  const seq=++bodySeq;
+  Sparky.body(730).then(B=>{
+    if(seq!==bodySeq||view!=="stats") return; box.innerHTML="";
+    const w=B.series("weight"), bf=B.series("body_fat_percentage"), wa=B.series("waist"), h=B.last("height");
+    const add=el("button",{class:"btn pri",style:"margin:12px 0 4px"},"＋ 記錄體重");
+    add.addEventListener("click",()=>openAddSheet({tab:"body"}));
+    if(!w.length && !bf.length){
+      const e=el("div",{class:"empty",style:"margin-top:12px"}); e.appendChild(el("b",null,"還沒有體重紀錄"));
+      e.appendChild(el("span",null,"可以在這裡記錄，或在 iPhone 的「健康」App 輸入，會自動同步進來")); e.appendChild(add);
+      box.appendChild(e); return;
+    }
+    const lw=w[w.length-1], lb=bf[bf.length-1], bmi=lw&&h?bmiOf(lw.v,h.v):null;
+    const k=el("div",{class:"kpis"});
+    const kp=(n,lab,cls)=>{ const d=el("div"); d.appendChild(el("span",{class:"n "+(cls||"")},n)); d.appendChild(el("span",{class:"k"},lab)); k.appendChild(d); };
+    if(lw) kp(fmt(lw.v),"體重 kg");
+    if(lb) kp(fmt(lb.v),"體脂 %");
+    if(bmi!=null) kp(bmi.toFixed(1),"BMI","acc");
+    box.appendChild(k);
+    const meta=[];
+    if(lw) meta.push("最近一筆 "+md(lw.date));
+    if(bmi!=null) meta.push("BMI "+bmiLabel(bmi)+"（國健署標準 18.5–24）");
+    else if(!h) meta.push("填一次身高就能算 BMI");
+    box.appendChild(el("div",{class:"sub",style:"margin-top:2px"},meta.join(" · ")));
+    if(lw){
+      const d7=diffText(lw,valueOnOrBefore(w,dstr(new Date(Date.now()-7*864e5))),"kg"), d30=diffText(lw,valueOnOrBefore(w,dstr(new Date(Date.now()-30*864e5))),"kg");
+      if(d7||d30) box.appendChild(el("div",{class:"sub",style:"margin-top:2px"},[d7&&"比 7 天前 "+d7,d30&&"比 30 天前 "+d30].filter(Boolean).join(" · ")));
+    }
+    box.appendChild(add);
+    box.appendChild(energyBlock());
+    const rs=el("div",{style:"margin-top:8px"});
+    rs.appendChild(segCtl([[30,"30 天"],[90,"90 天"],[365,"1 年"]],bodyRange,x=>{ bodyRange=x; renderStats(); }));
+    box.appendChild(rs);
+    const from=dstr(new Date(Date.now()-bodyRange*864e5)), cut=s=>s.filter(p=>p.date>=from);
+    [["體重",cut(w),"kg",0.5],["體脂率",cut(bf),"%",0.5],["腰圍",cut(wa),"cm",1]].forEach(([n,s,u,mp])=>{
+      if(!s.length) return;
+      box.appendChild(el("div",{class:"lab"},n+"（"+u+"）"));
+      box.appendChild(lineChart(s,u,{from,minPad:mp,label:n}));
+    });
+    const recent=B.rows.filter(r=>r.weight!=null||r.body_fat_percentage!=null||r.waist!=null).slice(-10).reverse();
+    if(recent.length){
+      box.appendChild(el("div",{class:"lab"},"最近紀錄"));
+      const c=el("div",{class:"card",style:"padding:4px 14px"});
+      recent.forEach(r=>{ const row=el("div",{class:"frow"}); row.appendChild(el("span",{class:"k"},mdw(r.date)));
+        row.appendChild(el("span",{class:"v"},[r.weight!=null&&fmt(r.weight)+" kg",r.body_fat_percentage!=null&&fmt(r.body_fat_percentage)+" %",r.waist!=null&&"腰 "+fmt(r.waist)].filter(Boolean).join(" · "))); c.appendChild(row); });
+      box.appendChild(c);
+    }
+    box.appendChild(el("div",{class:"sub",style:"margin-top:12px;font-size:var(--fs-xs)"},"資料來自你的 SparkyFitness，包含 Apple 健康同步進來的紀錄。家用體脂計是估算值，看趨勢比看單次數字準。"));
+  }).catch(e=>{ if(seq!==bodySeq) return; box.innerHTML=""; box.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"讀不到身體數據："+(e.message||e))); });
+}
+
+/* ============================================================
+   每日 TDEE 與熱量目標（m4-beta.12）
+   每日 TDEE = 基礎代謝 BMR × 1.2（日常生活）＋ 當天運動消耗（Sparky 的 burned：
+               Apple 健康同步進來的實際消耗、App 寫進去的估算、步數）
+   基礎目標 = BMR × 1.2 ＋ 階段調整（每週變化 kg × 7700 ÷ 7），不低於 BMR 與 1,200
+   當天目標 = 基礎目標 ＋ 當天運動消耗（Sparky 設成「運動加回」，兩邊一致）
+   ============================================================ */
+const BASE_FACTOR=1.2;
+const GOAL_RATE=[[0,"維持","維持現在的體重"],[-0.25,"慢慢減脂","每週約 −0.25 kg"],[-0.5,"減脂","每週約 −0.5 kg"],[0.25,"增肌","每週約 +0.25 kg"]];
+const KCAL_PER_KG=7700;
+function signKc(x){ x=Math.round(x); return (x>0?"+":x<0?"−":"±")+kc(Math.abs(x))+" 大卡"; }
+function rateName(r){ const g=GOAL_RATE.find(x=>x[0]===r); return g?g[1]:"維持"; }
+Sparky.prefs=function(){ return this.cached("/api/user-preferences"); };
+Sparky.profile=async function(){ const d=await this.cached("/api/identity/profiles"); return Array.isArray(d)?d[0]:d; };
+function baseGoal(bmr,rate){
+  const keep=Math.round(bmr*BASE_FACTOR), adj=Math.round(rate*KCAL_PER_KG/7), floor=Math.max(1200,Math.round(bmr));
+  return {keep,adj,base:Math.max(keep+adj,floor),floored:keep+adj<floor,floor};
+}
+/* 一天的熱量帳：TDEE、當天目標、熱量差、有沒有達成 */
+function dayEnergy(d,rate){
+  const bmr=num(d.bmr), burned=num(d.burned), eaten=num(d.eaten);
+  if(!(bmr>0)) return null;
+  const G=baseGoal(bmr,rate), tdee=G.keep+burned, target=G.base+burned, diff=eaten-tdee;
+  let ok=null;
+  if(eaten>0) ok = rate<0 ? eaten<=target+50 : rate>0 ? eaten>=target-50 : Math.abs(diff)<=200;
+  return {date:String(d.date).slice(0,10),bmr,burned,eaten,tdee,target,diff,ok,train:burned>=100,G};
+}
+Sparky.energy=async function(){
+  const t0=today();
+  const [p,days,prof]=await Promise.all([this.prefs(),this.range(t0,t0),this.profile().catch(()=>null)]);
+  const rate=p&&p.goal_mode==="weekly"?(Number(p.goal_mode_weekly_change_kg)||0):0;
+  const D=dayEnergy(days[0]||{},rate);
+  return {rate,D,goal:num((days[0]||{}).goal),mode:p&&p.calorie_goal_adjustment_mode,
+    ready:!!(p&&p.calorie_goal_adjustment_mode==="dynamic"&&p.activity_level==="not_much"),
+    noProfile:!(prof&&prof.date_of_birth&&prof.gender)};
+};
+function okMark(D,rate){
+  if(!D||D.ok==null) return "";
+  return D.ok ? "達成" : (rate<0?"超過目標":rate>0?"吃不夠":"偏離");
+}
+/* 統計 › 身體 裡的「熱量」區塊：今天＋最近 7 天 */
+function energyBlock(){
+  const w=el("div");
+  w.appendChild(el("div",{class:"lab"},"熱量收支"));
+  const box=el("div"); w.appendChild(box); box.appendChild(el("div",{class:"sub",style:"margin:0"},"讀取中…"));
+  const t0=today(), start=dstr(new Date(Date.now()-6*864e5));
+  Promise.all([Sparky.energy(),Sparky.range(start,t0)]).then(([E,days])=>{
+    if(!box.isConnected) return; box.innerHTML="";
+    const D=E.D;
+    if(!D){ box.appendChild(el("div",{class:"sub",style:"margin:0"},"Sparky 還算不出基礎代謝，記錄體重與身高後會出現")); return; }
+    const k=el("div",{class:"kpis"});
+    [[kc(D.tdee),"今天 TDEE","acc"],[kc(D.target),"今天目標"],[kc(D.eaten),"已吃"]].forEach(([n,l,c])=>{ const d=el("div"); d.appendChild(el("span",{class:"n "+(c||"")},n)); d.appendChild(el("span",{class:"k"},l)); k.appendChild(d); });
+    box.appendChild(k);
+    box.appendChild(el("div",{class:"sub",style:"margin-top:2px"},
+      "休息日 "+kc(D.G.keep)+" ＋ 今天運動 "+kc(D.burned)+" · 階段："+rateName(E.rate)+(D.G.adj?"（"+signKc(D.G.adj)+"／天）":"")));
+    if(E.noProfile) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 個人資料還沒填出生日期或性別，BMR 是估的"));
+    if(!E.ready) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 的熱量目標還沒改成每日計算，請按下方設定"));
+    // 最近 7 天
+    const c=el("div",{class:"card",style:"padding:4px 14px;margin-top:10px"});
+    days.slice().reverse().forEach(d=>{ const x=dayEnergy(d,E.rate); if(!x) return;
+      const r=el("div",{class:"frow"});
+      r.appendChild(el("span",{class:"k"},md(x.date)+" "+(x.train?"運動日":"休息日")));
+      r.appendChild(el("span",{class:"v"},x.eaten>0 ? kc(x.eaten)+" / "+kc(x.tdee)+" · "+signKc(x.diff)+(x.ok==null?"":(x.ok?" ✓":" ✕")) : "TDEE "+kc(x.tdee)+" · 未記飲食"));
+      c.appendChild(r); });
+    box.appendChild(el("div",{class:"sub",style:"margin:10px 0 0"},"最近 7 天：吃進 / TDEE · 熱量差"));
+    box.appendChild(c);
+    const b=el("button",{class:"btn"+(E.ready?"":" pri"),style:"margin:10px 0 4px"},E.ready?"調整階段目標":"設定每日熱量目標");
+    b.addEventListener("click",openEnergySheet); box.appendChild(b);
+  }).catch(e=>{ if(!box.isConnected) return; box.innerHTML="";
+    box.appendChild(el("div",{class:"sub",style:"margin:0;color:var(--crit)"},"讀不到熱量設定："+(e.message||e))); });
+  return w;
+}
+/* 蛋白質 = 體重 × 1.6 g；剩下的熱量照目前碳水與脂肪的熱量比例分配（以休息日目標計算） */
+function macroSplit(kcal,weight,cur){
+  const p=weight?Math.round(weight*1.6):Math.round(num(cur.protein)||kcal*0.25/4);
+  let ck=num(cur.carbs)*4, fk=num(cur.fat)*9; if(!(ck+fk>0)){ ck=1; fk=1; }
+  const rest=Math.max(0,kcal-p*4);
+  return {protein:p,carbs:Math.round(rest*ck/(ck+fk)/4),fat:Math.round(rest*fk/(ck+fk)/9)};
+}
+function openEnergySheet(){
+  openSheet(s=>{
+    s.appendChild(el("h2",null,"每日熱量目標"));
+    s.appendChild(el("div",{class:"sub",style:"margin:4px 0 12px"},"每天的 TDEE ＝ 基礎代謝 × 1.2（日常生活）＋ 當天運動消耗。休息日吃基礎目標，運動日自動多出當天運動的份量。"));
+    const body=el("div"); s.appendChild(body); body.appendChild(el("div",{class:"sub"},"讀取中…"));
+    Promise.all([Sparky.energy(),Sparky.body(400),Sparky.get("/api/goals/for-date?date="+today())]).then(([E,B,G])=>{
+      body.innerHTML="";
+      if(!E.D){ body.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"Sparky 還算不出基礎代謝，請先記錄體重與身高")); return; }
+      if(E.noProfile){ const c=el("div",{class:"card",style:"margin-bottom:12px"});
+        c.appendChild(el("b",null,"先補 Sparky 個人資料會更準"));
+        c.appendChild(el("div",{class:"sub",style:"margin-top:4px"},"出生日期或性別還沒填，現在的 BMR 是用預設值估的。到 Sparky 的 Settings › Profile 補上，再回來設定。"));
+        body.appendChild(c); }
+      const bmr=E.D.bmr, st={rate:E.rate}, lw=B.last("weight"), cur=G||{};
+      const rateWrap=el("div"), pv=el("div");
+      body.appendChild(el("div",{class:"lab"},"這個階段")); body.appendChild(rateWrap); body.appendChild(pv);
+      const btn=el("button",{class:"btn pri wide",style:"margin-top:12px"},"套用到 Sparky");
+      body.appendChild(btn);
+      body.appendChild(el("div",{class:"sub",style:"font-size:var(--fs-xs)"},"套用後 Sparky 會改成「運動加回」：Apple 健康同步的運動、App 記的訓練都會加進當天可吃的額度。從今天起生效，過去的紀錄不變。"));
+      let plan=null;
+      const draw=()=>{
+        rateWrap.innerHTML=""; pv.innerHTML="";
+        const rc=el("div",{class:"chips"});
+        GOAL_RATE.forEach(r=>{ const b=el("button",{class:"chip","aria-pressed":String(st.rate===r[0])},r[1]); b.addEventListener("click",()=>{ st.rate=r[0]; draw(); }); rc.appendChild(b); });
+        rateWrap.appendChild(rc); rateWrap.appendChild(el("div",{class:"sub",style:"margin-top:4px"},GOAL_RATE.find(r=>r[0]===st.rate)[2]));
+        const Gb=baseGoal(bmr,st.rate), M=macroSplit(Gb.base,lw&&lw.v,cur);
+        plan={Gb,M};
+        const c=el("div",{class:"card",style:"padding:4px 14px;margin-top:12px"});
+        const row=(k,v)=>{ const r=el("div",{class:"frow"}); r.appendChild(el("span",{class:"k"},k)); r.appendChild(el("span",{class:"v"},v)); c.appendChild(r); };
+        row("基礎代謝 BMR",kc(bmr)+" 大卡");
+        row("休息日 TDEE",kc(Gb.keep)+" 大卡（× 1.2）");
+        if(Gb.adj) row("階段調整",signKc(Gb.adj)+"／天");
+        row("休息日目標",kc(Gb.base)+" 大卡（目前 "+kc(cur.calories)+"）");
+        row("運動日目標","休息日目標 ＋ 當天運動消耗");
+        row("蛋白質",M.protein+" g"+(lw?"（體重 × 1.6）":""));
+        row("碳水化合物",M.carbs+" g（休息日）");
+        row("脂肪",M.fat+" g（休息日）");
+        pv.appendChild(c);
+        if(Gb.floored) pv.appendChild(el("div",{class:"sub",style:"color:var(--acc2-ink)"},"休息日目標會低於基礎代謝，已經調高到 "+kc(Gb.floor)+" 大卡；運動日的消耗仍會讓你有赤字。"));
+      };
+      draw();
+      btn.addEventListener("click",async()=>{
+        const {Gb,M}=plan;
+        const ok=await ask("套用到 Sparky？",{sub:"階段："+rateName(st.rate)+"。休息日目標 "+kc(cur.calories)+" → "+kc(Gb.base)+" 大卡，運動日再加上當天運動消耗。蛋白質 "+M.protein+" g、碳水 "+M.carbs+" g、脂肪 "+M.fat+" g，其他營養素不變。",ok:"套用"});
+        if(!ok) return;
+        btn.disabled=true; btn.textContent="套用中…";
+        try{
+          await Sparky.post("/api/user-preferences",{activity_level:"not_much",goal_mode:st.rate?"weekly":"maintain",goal_mode_weekly_change_kg:st.rate,calorie_goal_adjustment_mode:"dynamic"},"PUT");
+          const pl={p_start_date:today(),p_cascade:true};
+          Object.keys(cur).forEach(k=>{ const v=cur[k]; if(v===null||typeof v==="number"||(typeof v==="string"&&v!==""&&isFinite(v))) pl["p_"+k]=v===null?null:Number(v); });
+          Object.assign(pl,{p_calories:Gb.base,p_protein:M.protein,p_carbs:M.carbs,p_fat:M.fat,p_protein_percentage:null,p_carbs_percentage:null,p_fat_percentage:null,
+            custom_meal_percentages:cur.custom_meal_percentages||{},custom_nutrients:cur.custom_nutrients||{}});
+          await Sparky.post("/api/goals/manage-timeline",pl);
+          Sparky.reset(); closeSheet(); toast("已套用：休息日 "+kc(Gb.base)+" 大卡，運動日自動加上運動消耗"); refreshFoodViews();
+          SparkyEx.syncRecent(14).catch(()=>{});
+        }catch(e){ btn.disabled=false; btn.textContent="套用到 Sparky"; toast("套用失敗："+(e.message||e)); }
+      });
+    }).catch(e=>{ body.innerHTML=""; body.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"讀不到 Sparky 的設定："+(e.message||e))); });
+  });
+}
+
+/* ============================================================
+   App 的運動紀錄 → Sparky 運動紀錄（讓 Sparky 也知道你練了重訓）
+   - 消耗估算：(MET − 1) × 體重 × 小時；MET 依運動種類與 RPE（沒填以 5 計）。跑步有距離時用 體重 × 公里
+     減掉 1 是因為那段時間的基本消耗已經算在 BMR × 1.2 裡
+   - 同一天 Sparky 已有 Apple 健康同步的同類運動（例如 Nike 跑步）→ 不寫，用實際值
+   - 寫進 Sparky 的紀錄備註開頭都是「運動紀錄 App」，轉接程式只允許刪改這種紀錄
+   ============================================================ */
+const MET={strength:[3.5,5,6,6],hiit:[6,8,9,10],crossfit:[6,8,9,10],hyrox:[7,9,10,11],climb:[5,6.5,8,9],hike:[3.5,4.5,5.5,6.5],
+  run:[7,9,10.5,12],bike:[5,7,8.5,10],swim:[5.5,7,8.5,10],badminton:[4.5,5.5,7,7.5]};
+const HK_NAMES={strength:/strength|weight/i,hiit:/high intensity|hiit|interval/i,crossfit:/cross ?training|crossfit|functional/i,hyrox:/cross ?training|functional|mixed/i,
+  climb:/hik|climb/i,hike:/hik|walk/i,run:/run/i,bike:/cycl|bik/i,swim:/swim/i,badminton:/badminton/i};
+const SX_TAG="運動紀錄 App";
+function estKcal(e,kg){
+  const h=num(e.duration)/60; if(!(h>0)) return 0;
+  const r=e.rpe==null||e.rpe===""?5:num(e.rpe), band=r<=4?0:r<=6?1:r<=8?2:3;
+  const met=(MET[e.sport]||[4,5,6,7])[band];
+  let gross=met*kg*h;
+  const km=num(e.data&&e.data.dist);
+  if(e.sport==="run"&&km>0) gross=kg*km;
+  return Math.max(0,Math.round(gross-kg*h));
+}
+const SparkyEx={
+  exIds:{},
+  async weight(){ try{ const B=await Sparky.body(120); const w=B.last("weight"); return w?w.v:70; }catch(e){ return 70; } },
+  async exerciseId(sport){
+    const name=SPORTS[sport].n;
+    if(this.exIds[name]) return this.exIds[name];
+    const r=await Sparky.get("/api/exercises/search?searchTerm="+encodeURIComponent(name));
+    const list=Array.isArray(r)?r:(r&&(r.exercises||r.data))||[];
+    let x=list.find(v=>v&&v.name===name);
+    if(!x) x=await Sparky.post("/api/exercises",{name,category:sport==="strength"?"Strength":"Cardio"});
+    if(!x||!x.id) throw new Error("Sparky 建立運動項目失敗");
+    return this.exIds[name]=x.id;
+  },
+  async dayEntries(date){ const r=await Sparky.get("/api/exercise-entries/by-date?selectedDate="+date); return Array.isArray(r)?r:[]; },
+  isOurs(x){ return String(x&&x.notes||"").startsWith(SX_TAG); },
+  hkMatch(list,e){ const re=HK_NAMES[e.sport]; return list.some(x=>!this.isOurs(x)&&re&&re.test(String(x.exercise_name||(x.exercise_snapshot&&x.exercise_snapshot.name)||x.name||""))&&num(x.calories_burned)>0); },
+  async syncOne(e,list){
+    if(!Sparky.on()||!e||!SPORTS[e.sport]) return;
+    const m=DB.sx[e.id];
+    list=list||await this.dayEntries(e.date);
+    if(this.hkMatch(list,e)){                      // Apple 健康已有實際值
+      if(m&&m.id){ await this.del(m.id); }
+      if(!m||!m.hk){ DB.sx[e.id]={hk:1}; save({quiet:true}); }
+      return;
+    }
+    if(m&&(m.id||m.hk)){ if(m.id && !list.some(x=>x.id===m.id)){ delete DB.sx[e.id]; } else return; }
+    const kg=await this.weight(), kcal=estKcal(e,kg);
+    if(!(kcal>0)) return;
+    const mine=list.find(x=>this.isOurs(x)&&String(x.notes).includes("#"+e.id));
+    if(mine){ DB.sx[e.id]={id:mine.id,kcal:num(mine.calories_burned)}; save({quiet:true}); return; }
+    const exId=await this.exerciseId(e.sport);
+    const r=await Sparky.post("/api/exercise-entries",{exercise_id:exId,entry_date:e.date,duration_minutes:num(e.duration),calories_burned:kcal,
+      notes:SX_TAG+" #"+e.id+"（估算：RPE "+(e.rpe==null?"未填":e.rpe)+"）"});
+    if(r&&r.id){ DB.sx[e.id]={id:r.id,kcal}; save({quiet:true}); }
+    Sparky.reset();
+  },
+  async del(id){ try{ await Sparky.post("/api/exercise-entries/"+id,null,"DELETE"); }catch(err){ if(!/404|not found/i.test(err.message||"")) throw err; } Sparky.reset(); },
+  async remove(entryId){ const m=DB.sx[entryId]; if(!m) return; if(m.id&&Sparky.on()) await this.del(m.id); delete DB.sx[entryId]; save({quiet:true}); },
+  _busy:false, _last:0,
+  /* 最近幾天：補寫還沒進 Sparky 的訓練，並在 Apple 健康的實際紀錄晚到時撤掉估算 */
+  async syncRecent(days){
+    if(!Sparky.on()||this._busy) return; this._busy=true;
+    try{
+      const from=dstr(new Date(Date.now()-(days-1)*864e5));
+      const es=DB.entries.filter(e=>e.date>=from&&e.date<=today()&&num(e.duration)>0);
+      const dates=[...new Set(es.map(e=>e.date))];
+      let changed=false;
+      for(const d of dates){
+        const list=await this.dayEntries(d);
+        for(const e of es.filter(x=>x.date===d)){ const before=JSON.stringify(DB.sx[e.id]||null); await this.syncOne(e,list); if(JSON.stringify(DB.sx[e.id]||null)!==before) changed=true; }
+      }
+      this._last=Date.now();
+      if(changed){ Sparky.reset(); if(view==="home"||view==="stats"||view==="food") rerenderView(); }
+    } finally { this._busy=false; }
+  },
+  maybeSync(){ if(Sparky.on()&&Date.now()-this._last>15*60e3) this.syncRecent(7).catch(()=>{}); }
+};
+
+/* 首頁摘要卡 */
+let homeBodySeq=0;
+function homeBody(v){
+  if(!Sparky.on()) return;
+  v.appendChild(el("div",{class:"lab"},"身體"));
+  const box=el("div"); v.appendChild(box);
+  const seq=++homeBodySeq;
+  Sparky.body(400).then(B=>{
+    if(seq!==homeBodySeq||view!=="home") return;
+    const w=B.series("weight"), lw=w[w.length-1], h=B.last("height"), lb=B.last("body_fat_percentage");
+    const c=el("button",{class:"rowcard"});
+    const t=el("div",{class:"t"});
+    if(!lw){ t.appendChild(el("b",null,"記錄體重")); t.appendChild(el("span",{class:"dt"},"›")); c.appendChild(t);
+      c.appendChild(el("div",{class:"m"},"記下體重與體脂，飲控才看得到實際變化"));
+      c.addEventListener("click",()=>openAddSheet({tab:"body"})); box.appendChild(c); return; }
+    t.appendChild(el("b",null,fmt(lw.v)+" kg")); t.appendChild(el("span",{class:"dt"},md(lw.date)+" ›")); c.appendChild(t);
+    const bmi=h?bmiOf(lw.v,h.v):null, d7=diffText(lw,valueOnOrBefore(w,dstr(new Date(Date.now()-7*864e5))),"kg");
+    c.appendChild(el("div",{class:"m"},[d7&&"7 天 "+d7, bmi!=null&&"BMI "+bmi.toFixed(1)+"（"+bmiLabel(bmi)+"）", lb&&"體脂 "+fmt(lb.v)+"%"].filter(Boolean).join(" · ")||"點這裡看歷程"));
+    c.addEventListener("click",()=>go("stats",{tab:"body"})); box.appendChild(c);
+  }).catch(()=>{ if(seq===homeBodySeq) box.innerHTML=""; });
+}
 function openSparkySheet(){
   const c=Object.assign({relay:"",apiKey:"",site:""},Sparky.cfg());
   openSheet(s=>{
@@ -4254,21 +4672,21 @@ function renderMe(){
     b.addEventListener("click",fn); v.appendChild(b);
   });
 
-  v.appendChild(el("div",{class:"lab"},"備份"));
-  const bc=el("div",{class:"chips"});
-  const e1=el("button",{class:"btn sm"},"匯出 JSON");
-  e1.addEventListener("click",()=>{ download((APP.beta?"beta-":"")+"運動紀錄備份_"+today()+".json", JSON.stringify(DB,null,2)); toast("已匯出"); });
-  const e2=el("button",{class:"btn sm"},"匯出 CSV");
-  e2.addEventListener("click",exportCsv);
-  const e3=el("button",{class:"btn sm"},"匯出重訓逐組");
-  e3.addEventListener("click",exportSets);
-  const imp=el("label",{class:"btn sm",style:"cursor:pointer"});
-  imp.appendChild(document.createTextNode("匯入 JSON"));
-  const fi=el("input",{type:"file",accept:"application/json",hidden:""});
-  fi.addEventListener("change",importJson);
-  imp.appendChild(fi);
-  bc.appendChild(e1); bc.appendChild(e2); bc.appendChild(e3); bc.appendChild(imp);
-  v.appendChild(bc);
+  v.appendChild(el("div",{class:"lab"},"備份與匯出"));
+  const bk=(t,d,fn,file)=>{
+    const b=el(file?"label":"button",{class:"rowcard",style:file?"cursor:pointer":""});
+    const r=el("div",{class:"t"}); r.appendChild(el("b",null,t)); r.appendChild(el("span",{class:"dt"},"›"));
+    b.appendChild(r); b.appendChild(el("div",{class:"m"},d));
+    if(file){ const fi=el("input",{type:"file",accept:"application/json",hidden:""}); fi.addEventListener("change",fn); b.appendChild(fi); }
+    else b.addEventListener("click",fn);
+    v.appendChild(b);
+  };
+  bk("完整備份（JSON）","所有運動紀錄、課表模板、自訂動作、賽事與外觀設定，換裝置或還原時用",
+    ()=>{ download((APP.beta?"beta-":"")+"運動紀錄備份_"+today()+".json", JSON.stringify(DB,null,2)); toast("已匯出完整備份"); });
+  bk("運動紀錄表（CSV）","每筆運動一列：日期、運動、時長、強度、內容摘要、備註，可用 Excel 開",exportCsv);
+  bk("重訓逐組明細（CSV）","每一組一列：日期、部位、動作、重量、次數、訓練量",exportSets);
+  bk("從備份還原（JSON）","讀取「完整備份」檔，可以選擇合併或取代目前的資料",importJson,true);
+  v.appendChild(el("div",{class:"sub",style:"margin-top:2px"},"飲食與體重存在你的 SparkyFitness，不在這些檔案裡。"));
 
   const dz=el("div",{style:"margin-top:22px"});
   const clr=el("button",{class:"btn crit sm"},"清除所有資料");
@@ -4526,6 +4944,7 @@ function mergeDB(local,remote){
     for(const k in src) ce[k]=[...new Set((ce[k]||[]).concat(src[k]||[]))]; });
   out.customExercises=ce;
   out.exLinks=Object.assign({},remote.exLinks,local.exLinks);
+  out.sx=Object.assign({},remote.sx,local.sx);
   const tm={};                                   // 以名稱為識別，避免新舊 id 造成同名重複
   remote.templates.forEach(t=> tm[String(t.name||t.id)]=t);
   local.templates.forEach(t=> tm[String(t.name||t.id)]=t);
@@ -4568,7 +4987,12 @@ async function afterSignIn(){
     applyTheme();
     await Cloud.push();
   }catch(e){ Cloud.badge("err"); toast("雲端讀取失敗，先使用本機資料"); }
-  go("home");
+  rerenderView();
+}
+/* 雲端讀完後只重畫「現在這一頁」，不要把使用者拉回首頁；紀錄頁正在輸入就不動 */
+function rerenderView(){
+  if(view==="log") return;
+  const y=window.scrollY||0; go(view); window.scrollTo(0,y);
 }
 function signOut(){
   const t=Auth.token;
