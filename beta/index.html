@@ -445,6 +445,14 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
 .meal b{font-size:var(--fs-base);font-weight:600;width:40px;flex:none}
 .meal .m{flex:1;min-width:0;font-size:var(--fs-sm);color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.meal .m.none{color:var(--mut)}
 .meal .k{font-size:var(--fs-md);font-variant-numeric:tabular-nums;width:52px;text-align:right;flex:none}
+.meal .mm{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;color:inherit;min-height:44px}
+.daybtn{width:36px;height:36px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:18px;color:var(--ink2);font-weight:400}
+.daybtn[disabled]{opacity:.35}
+.fe{margin-bottom:8px}.fe .t{display:flex;align-items:baseline;gap:8px}.fe .t b{flex:1;font-size:var(--fs-base);font-weight:600}.fe .kc{font-size:var(--fs-sm);color:var(--ink2);white-space:nowrap}
+.fe.del{opacity:.6}.fe.del .t b{text-decoration:line-through}
+.qrow{display:flex;align-items:center;gap:8px;margin-top:10px}.qrow input{width:96px;text-align:center;background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:9px 8px;font-variant-numeric:tabular-nums}
+.qrow .u{font-size:var(--fs-sm);color:var(--mut);flex:1}.qb{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:20px;color:var(--ink)}
+.msel{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:8px 10px;color:var(--ink)}
 .meal .p{width:36px;height:36px;border-radius:50%;border:1px solid var(--acc);color:var(--acc);font-size:20px;line-height:1;flex:none;display:grid;place-items:center}
 /* ============================================================
    版面：手機一欄；平板加寬；桌機（≥960px）左側導覽＋兩欄
@@ -604,7 +612,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.13" };
+const APP = { beta:true, ver:"m4-beta.14" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1313,7 +1321,7 @@ function addSheetDefault(){
 }
 let ADD={tab:"workout",date:""};
 function openAddSheet(opt){
-  ADD={tab:(opt&&opt.tab)||addSheetDefault(), date:today()};
+  ADD={tab:(opt&&opt.tab)||addSheetDefault(), date:(opt&&opt.date&&opt.date<=today())?opt.date:today()};
   if(ADD.tab==="food") MS={date:ADD.date, meal:(opt&&opt.meal)||mealNow(), q:"", seq:0, recent:null, pick:null, photo:null};
   openSheet(s=>{
     s.appendChild(el("h2",null,"記一筆"));
@@ -4615,20 +4623,8 @@ function renderFood(){
     card.appendChild(el("div",{class:"sub"},(T.eaten>0?(left>=0?"還可以吃 "+kc(left)+" 大卡":"超過目標 "+kc(-left)+" 大卡"):"今天還沒有記飲食")
       +(T.D&&T.D.burned>0?" · 基礎 "+kc(T.target-T.D.burned)+" ＋ 運動 "+kc(T.D.burned):"")));
     card.appendChild(macroGrid(T.m,T.g));
-    // 今天吃了
-    secHead(meals,"今天吃了");
-    const mc=el("div",{class:"card",style:"padding:2px 14px"});
-    const sc=T.m&&T.m.scale;
-    const ek=e=>{ const q=num(e.quantity)||1, ss=num(e.serving_size)||1; return num(e.calories)*(sc===false?1:q/ss); };
-    [["breakfast","早餐"],["lunch","午餐"],["snacks","點心"],["dinner","晚餐"]].forEach(([k,n])=>{
-      const es=T.entries.filter(e=>String(e.meal_type||"").toLowerCase()===k);
-      const r=el("div",{class:"meal"}); r.appendChild(el("b",null,n));
-      const names=es.map(e=>String(e.food_name||e.name||"食物"));
-      r.appendChild(el("span",{class:"m"+(es.length?"":" none")},es.length?names.slice(0,3).join("、")+(names.length>3?" 等 "+names.length+" 項":""):"還沒記"));
-      r.appendChild(el("span",{class:"k"},es.length?kc(es.reduce((a,e)=>a+ek(e),0)):"—"));
-      const p=el("button",{class:"p","aria-label":"記錄"+n},"+"); p.addEventListener("click",()=>openAddSheet({tab:"food",meal:k})); r.appendChild(p);
-      mc.appendChild(r); });
-    meals.appendChild(mc);
+    // 今天吃了（可切換日期、可編輯）
+    foodMeals(meals,T);
     // 近 7 天
     secHead(week,"近 7 天","更多趨勢 ›",()=>go("stats",{tab:"trend"}));
     const W=353, H=170, N=days.length||7, gap=10, bw=(W-gap*(N-1))/N;
@@ -4658,6 +4654,105 @@ function renderFood(){
     const rf=el("button",{class:"btn sm pri"},"再試一次"); rf.addEventListener("click",()=>{ Sparky.reset(); renderFood(); });
     const st=el("button",{class:"btn sm"},"檢查連接設定"); st.addEventListener("click",openSparkySheet);
     row.append(rf,st); card.appendChild(row);
+  });
+}
+
+/* ---------------- 飲食：某一天吃了什麼（可切換日期、點一餐可編輯） ---------------- */
+let foodDay=null;
+function foodMeals(host,T){
+  host.innerHTML="";
+  const ds=foodDay||today(), isToday=ds===today();
+  const h=el("div",{class:"lab",style:"display:flex;align-items:center;gap:6px"});
+  h.appendChild(el("span",{style:"flex:1"},isToday?"今天吃了":mdw(ds)+" 吃了"));
+  const pv=el("button",{class:"daybtn","aria-label":"前一天"},"‹"), nx=el("button",{class:"daybtn","aria-label":"後一天"},"›");
+  pv.disabled=ds<=dstr(new Date(Date.now()-29*864e5)); nx.disabled=isToday;
+  const shift=d=>{ const x=new Date(ds+"T00:00:00"); x.setDate(x.getDate()+d); foodDay=dstr(x)>=today()?null:dstr(x); foodMeals(host,null); };
+  pv.addEventListener("click",()=>shift(-1)); nx.addEventListener("click",()=>shift(1));
+  h.append(pv,nx); host.appendChild(h);
+  const box=el("div"); host.appendChild(box);
+  const draw=(entries,eaten)=>{
+    box.innerHTML="";
+    const m=Sparky.macros(entries,eaten), scale=m?m.scale!==false:true;
+    const ek=e=>{ const q=num(e.quantity)||1, ss=num(e.serving_size)||1; return num(e.calories)*(scale?q/ss:1); };
+    const mc=el("div",{class:"card",style:"padding:2px 14px"});
+    MEALS.forEach(([k,n])=>{
+      const es=entries.filter(e=>String(e.meal_type||"").toLowerCase()===k);
+      const r=el("div",{class:"meal"});
+      const main=el("button",{class:"mm","aria-label":es.length?"編輯"+n:"記錄"+n});
+      main.appendChild(el("b",null,n));
+      const names=es.map(e=>String(e.food_name||e.name||"食物"));
+      main.appendChild(el("span",{class:"m"+(es.length?"":" none")},es.length?names.slice(0,3).join("、")+(names.length>3?" 等 "+names.length+" 項":""):"還沒記"));
+      main.appendChild(el("span",{class:"k"},es.length?kc(es.reduce((a,e)=>a+ek(e),0)):"—"));
+      main.addEventListener("click",()=> es.length ? openMealEdit(ds,k,es,scale,entries) : openAddSheet({tab:"food",meal:k,date:ds}));
+      r.appendChild(main);
+      const p=el("button",{class:"p","aria-label":"新增到"+n},"+"); p.addEventListener("click",()=>openAddSheet({tab:"food",meal:k,date:ds})); r.appendChild(p);
+      mc.appendChild(r); });
+    box.appendChild(mc);
+    if(entries.length) box.appendChild(el("div",{class:"sub",style:"margin-top:6px"},"點一餐可以修改份量、換餐別或刪除"));
+  };
+  if(T && isToday){ draw(T.entries,T.eaten); return; }
+  box.appendChild(el("div",{class:"sub",style:"margin:0"},"讀取中…"));
+  Promise.all([Sparky.day(ds),Sparky.range(ds,ds)]).then(([day,rs])=>{ if(!box.isConnected) return; draw((day&&day.foodEntries)||[],num((rs[0]||{}).eaten)); })
+    .catch(e=>{ box.innerHTML=""; box.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"讀不到這一天的紀錄："+(e.message||e))); });
+}
+/* 編輯一餐：改份量、換餐別、刪除；按「儲存變更」才寫回 Sparky */
+function openMealEdit(ds,meal,es,scale,allDay){
+  const st=es.map(e=>({e,q:String(num(e.quantity)),meal,del:false}));
+  openSheet(s=>{
+    s.appendChild(el("h2",null,MEAL_ZH[meal]+" · "+mdw(ds)));
+    s.appendChild(el("div",{class:"sub",style:"margin:4px 0 10px"},"修改後按「儲存變更」才會寫回 SparkyFitness。"));
+    const list=el("div"); s.appendChild(list);
+    const tot=el("div",{class:"sub",style:"margin-top:8px"}); s.appendChild(tot);
+    const foot=el("div",{style:"display:flex;gap:10px;margin-top:16px"});
+    const add=el("button",{class:"btn",style:"flex:none"},"＋ 再加一項"); add.addEventListener("click",()=>{ closeSheet(); setTimeout(()=>openAddSheet({tab:"food",meal,date:ds}),240); });
+    const ok=el("button",{class:"btn pri",style:"flex:1",disabled:""},"儲存變更");
+    foot.append(add,ok); s.appendChild(foot);
+    const cl=el("button",{class:"btn wide",style:"margin-top:8px"},"關閉"); cl.addEventListener("click",closeSheet); s.appendChild(cl);
+    const kcalOf=x=>{ const q=num(x.q), ss=num(x.e.serving_size)||1; return num(x.e.calories)*(scale?q/ss:1); };
+    const dirty=()=>st.some(x=>x.del||x.meal!==meal||num(x.q)!==num(x.e.quantity));
+    const valid=()=>st.every(x=>x.del||(num(x.q)>0&&num(x.q)<=5000));
+    const refresh=()=>{ ok.disabled=!(dirty()&&valid()); tot.textContent="這一餐合計約 "+kc(st.filter(x=>!x.del&&x.meal===meal).reduce((a,x)=>a+kcalOf(x),0))+" 大卡"; };
+    const draw=()=>{ list.innerHTML="";
+      st.forEach(x=>{
+        const c=el("div",{class:"card fe"+(x.del?" del":"")});
+        const t=el("div",{class:"t"}); t.appendChild(el("b",null,String(x.e.food_name||x.e.name||"食物")));
+        const kk=el("span",{class:"kc"},kc(kcalOf(x))+" 大卡"); t.appendChild(kk); c.appendChild(t);
+        if(x.del){ const u=el("button",{class:"link"},"復原"); u.addEventListener("click",()=>{ x.del=false; draw(); }); const r=el("div",{class:"sub",style:"margin-top:4px"}); r.append(document.createTextNode("這一項會被刪除 · "),u); c.appendChild(r); list.appendChild(c); return; }
+        const row=el("div",{class:"qrow"});
+        const step=(d)=>{ const v=Math.max(0,Math.round((num(x.q)+d)*10)/10); x.q=String(v); inp.value=x.q; kk.textContent=kc(kcalOf(x))+" 大卡"; refresh(); };
+        const unit=String(x.e.unit||"g"), inc=/^(g|ml)$/i.test(unit)?10:0.5;
+        const mi=el("button",{class:"qb","aria-label":"減少"},"−"); mi.addEventListener("click",()=>step(-inc));
+        const inp=el("input",{type:"text",inputmode:"decimal",value:x.q,"aria-label":"份量"});
+        inp.addEventListener("input",()=>{ x.q=inp.value.replace(/[^\d.]/g,""); kk.textContent=kc(kcalOf(x))+" 大卡"; refresh(); });
+        const pl=el("button",{class:"qb","aria-label":"增加"},"＋"); pl.addEventListener("click",()=>step(inc));
+        row.append(mi,inp,el("span",{class:"u"},unitZh(unit)),pl); c.appendChild(row);
+        const act=el("div",{class:"chips",style:"margin-top:8px;align-items:center"});
+        const sel=el("select",{"aria-label":"換餐別",class:"msel"}); MEALS.forEach(([k,n])=>{ const o=el("option",{value:k},n); if(k===x.meal) o.selected=true; sel.appendChild(o); });
+        sel.addEventListener("change",()=>{ x.meal=sel.value; refresh(); });
+        const del=el("button",{class:"btn sm crit"},"刪除"); del.addEventListener("click",()=>{ x.del=true; draw(); });
+        act.append(el("span",{class:"sub",style:"margin:0"},"餐別"),sel,del); c.appendChild(act);
+        list.appendChild(c); });
+      refresh(); };
+    draw();
+    ok.addEventListener("click",async()=>{
+      const dels=st.filter(x=>x.del), ups=st.filter(x=>!x.del&&(x.meal!==meal||num(x.q)!==num(x.e.quantity)));
+      if(dels.length && !(await ask("刪除 "+dels.length+" 項？",{sub:dels.map(x=>x.e.food_name||"食物").join("、")+"。刪除後無法復原。",ok:"刪除並儲存",danger:true}))) return;
+      ok.disabled=true; ok.textContent="儲存中…";
+      try{
+        const types=await Sparky.mealTypes();
+        for(const x of ups){
+          const body={quantity:num(x.q),unit:x.e.unit||"g"};
+          if(x.meal!==meal){ const mt=types.find(t=>String(t.name).toLowerCase()===x.meal); body.meal_type=x.meal; if(mt) body.meal_type_id=mt.id; }
+          await Sparky.post("/api/food-entries/"+x.e.id,body,"PUT");
+        }
+        for(const x of dels) await Sparky.post("/api/food-entries/"+x.e.id,null,"DELETE");
+        // 拍照記錄的一組，裡面的項目全刪光了，就把空的組也刪掉
+        const gone=new Set(dels.map(x=>x.e.id));
+        const groups=[...new Set(dels.map(x=>x.e.food_entry_meal_id).filter(Boolean))];
+        for(const g of groups){ if(!(allDay||[]).some(e=>e.food_entry_meal_id===g&&!gone.has(e.id))){ try{ await Sparky.post("/api/food-entry-meals/"+g,null,"DELETE"); }catch(e){} } }
+        Sparky.reset(); closeSheet(); toast("已更新"+MEAL_ZH[meal]); refreshFoodViews();
+      }catch(e){ ok.disabled=false; ok.textContent="儲存變更"; toast("儲存失敗："+(e.message||e)); Sparky.reset(); }
+    });
   });
 }
 
