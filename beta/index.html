@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.16" };
+const APP = { beta:true, ver:"m4-beta.17" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3649,7 +3649,7 @@ Sparky.search=async function(q,limit){
 };
 function foodPer(v,q){ const ss=num(v.serving_size)||1, k=num(q)/ss; return {kcal:num(v.calories)*k,p:num(v.protein)*k,c:num(v.carbs)*k,f:num(v.fat)*k}; }
 function unitZh(u){ return ({g:"克",ml:"毫升",serving:"份",piece:"個",slice:"片",cup:"杯",bowl:"碗",tbsp:"大匙",tsp:"小匙"})[String(u||"").toLowerCase()]||u||""; }
-function refreshFoodViews(){ Sparky.reset(); if(view==="food") renderFood(); else if(view==="home") renderHome(); else if(view==="stats") renderStats(); }
+function refreshFoodViews(){ Sparky.reset(); if(view==="food") renderFood(); else if(view==="home") renderHome(); else if(view==="stats") renderStats(); else if(view==="me") renderMe(); }
 
 let MS=null;
 function openMealSheet(){ openAddSheet({tab:"food"}); }
@@ -4956,9 +4956,11 @@ function openProfileSheet(){
     const body=el("div"); s.appendChild(body); body.appendChild(el("div",{class:"sub"},"讀取中…"));
     Promise.all([Sparky.profile().catch(()=>null),Sparky.body(400).catch(()=>null)]).then(([P,B])=>{
       body.innerHTML="";
-      const h=B&&B.last("height"), st={h:h?String(h.v):"", dob:P&&P.date_of_birth?String(P.date_of_birth).slice(0,10):"", g:(P&&P.gender)||""};
+      const h=B&&B.last("height"), wl=B&&B.last("weight"), st={h:h?String(h.v):"", w:wl?String(wl.v):"", dob:P&&P.date_of_birth?String(P.date_of_birth).slice(0,10):"", g:(P&&P.gender)||""};
       const orig=JSON.stringify(st);
       body.appendChild(fieldInput("身高（cm）","text",st.h,x=>{ st.h=x.replace(/[^\d.]/g,""); },"例如 178",{inputmode:"decimal"}));
+      body.appendChild(fieldInput("今天的體重（kg）","text",st.w,x=>{ st.w=x.replace(/[^\d.]/g,""); },"例如 82.6",{inputmode:"decimal"}));
+      if(wl) body.appendChild(el("div",{class:"sub",style:"margin:-4px 0 8px"},"最近一筆 "+fmt(wl.v)+" kg（"+md(wl.date)+"）。改了會記成今天的一筆新紀錄，歷史紀錄不會被改掉。"));
       const df=el("div",{class:"field"}); df.appendChild(el("label",null,"出生日期"));
       const di=el("input",{type:"date",value:st.dob,max:today(),min:"1920-01-01"}); di.addEventListener("change",()=>{ st.dob=di.value; }); df.appendChild(di); body.appendChild(df);
       body.appendChild(el("div",{class:"sub",style:"margin:4px 0 6px"},"性別（計算基礎代謝用）"));
@@ -4969,13 +4971,17 @@ function openProfileSheet(){
       ok.addEventListener("click",async()=>{
         const hv=num(st.h);
         if(st.h&&(hv<100||hv>250)){ toast("身高請輸入 100–250 cm"); return; }
+        const wv=num(st.w); if(st.w&&(wv<20||wv>300)){ toast("體重請輸入 20–300 kg"); return; }
         if(st.dob&&(st.dob>today()||st.dob<"1920-01-01")){ toast("出生日期不正確"); return; }
         if(JSON.stringify(st)===orig){ closeSheet(); return; }
         ok.disabled=true; ok.textContent="儲存中…";
         try{
           const prof={}; if(st.dob) prof.date_of_birth=st.dob; if(st.g) prof.gender=st.g;
           if(Object.keys(prof).length) await Sparky.post("/api/identity/profiles",prof,"PUT");
-          if(st.h && (!h||num(st.h)!==h.v)) await Sparky.post("/api/measurements/check-in",{entry_date:today(),height:hv});
+          const ck={entry_date:today()};
+          if(st.h && (!h||hv!==h.v)) ck.height=hv;
+          if(st.w && (!wl||wv!==wl.v)) ck.weight=wv;
+          if(Object.keys(ck).length>1) await Sparky.post("/api/measurements/check-in",ck);
           Sparky.reset(); closeSheet(); toast("已更新身體基本資料"); if(view==="me") renderMe(); else refreshFoodViews();
         }catch(e){ ok.disabled=false; ok.textContent="儲存"; toast("儲存失敗："+(e.message||e)); }
       });
