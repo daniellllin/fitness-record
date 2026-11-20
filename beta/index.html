@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.19" };
+const APP = { beta:true, ver:"m4-beta.20" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3589,6 +3589,28 @@ Sparky.cached=async function(path){
   const v=await this.get(path); this.mem[k]={t:Date.now(),v}; return v;
 };
 Sparky.reset=function(){ this.mem={}; };
+/* 預設的轉接程式與 Sparky 網址（都是公開網址，不含金鑰） */
+const SPARKY_RELAY="https://sparky-relay.daniel-lin0515.workers.dev", SPARKY_SITE="https://danieloffitness.pikapod.net";
+/* 問轉接程式：這個 Google 帳號是否已經保存過金鑰。是 → 回傳工作階段；否 → null */
+Sparky.probe=async function(relay){
+  const c={relay:relay||SPARKY_RELAY};
+  const j=await this.gcall("/session/start","POST",null,c);
+  const r=await fetch(this.base(c)+"/api/health",{headers:{authorization:"Bearer "+j.token},credentials:"omit"});
+  if(r.ok) return j;
+  let e=null; try{ e=await r.json(); }catch(x){}
+  if(e&&e.code==="not_linked") return null;
+  throw new Error((e&&e.error)||("HTTP "+r.status));
+};
+/* 清除裝置資料或換新裝置後：帳號已在轉接程式連接過，就自動恢復，不用重新輸入金鑰 */
+Sparky.restore=async function(){
+  const c=this.cfg(); if(c.relay&&(c.linked||c.apiKey)) return false;
+  try{
+    const j=await this.probe(c.relay); if(!j) return false;
+    this.set(Object.assign(c,{relay:c.relay||SPARKY_RELAY,site:c.site||SPARKY_SITE,linked:true}));
+    this.sess={token:j.token,exp:Date.now()+(Number(j.ttl)||3600)*1000}; this.reset();
+    return true;
+  }catch(e){ return false; }
+};
 Sparky.range=async function(a,b){ const d=await this.cached("/api/daily-summary/range?startDate="+a+"&endDate="+b); return (d&&d.days)||[]; };
 Sparky.day=function(ds){ return this.cached("/api/daily-summary?date="+ds); };
 /* 從當天的飲食項目加總三大營養素。
@@ -4856,6 +4878,7 @@ function homeBody(v){
 }
 function openSparkySheet(){
   const c=Object.assign({relay:"",site:""},Sparky.cfg()); let newKey=""; delete c.apiKey;
+  if(!c.relay) c.relay=SPARKY_RELAY; if(!c.site) c.site=SPARKY_SITE;
   openSheet(s=>{
     s.appendChild(el("h2",null,"飲食與健康數據"));
     s.appendChild(el("div",{class:"sub",style:"margin:4px 0 12px"},
@@ -4874,7 +4897,11 @@ function openSparkySheet(){
         else return;
       }
       if(!/^https:\/\//i.test(c.relay)){ toast("轉接程式網址需以 https:// 開頭"); return; }
-      if(!c.linked && !newKey){ toast("請輸入 API 金鑰"); return; }
+      if(!c.linked && !newKey){
+        let j=null; try{ j=await Sparky.probe(c.relay); }catch(e){ toast("連不上轉接程式："+(e.message||e)); return; }
+        if(!j){ toast("這個帳號還沒連接，請輸入 API 金鑰"); return; }
+        c.linked=true; Sparky.sess={token:j.token,exp:Date.now()+(Number(j.ttl)||3600)*1000};
+      }
       if(c.site && !/^https:\/\//i.test(c.site)){ toast("Sparky 網址需以 https:// 開頭"); return; }
       Sparky.set(c); Sparky.reset(); out.innerHTML=""; out.appendChild(el("div",{class:"sub"},"連接中…"));
       if(newKey){
@@ -5362,6 +5389,7 @@ async function afterSignIn(){
     await Cloud.push();
   }catch(e){ Cloud.badge("err"); toast("雲端讀取失敗，先使用本機資料"); }
   rerenderView();
+  if(await Sparky.restore()) rerenderView();
 }
 /* 雲端讀完後只重畫「現在這一頁」，不要把使用者拉回首頁；紀錄頁正在輸入就不動 */
 function rerenderView(){
