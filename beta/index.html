@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.18" };
+const APP = { beta:true, ver:"m4-beta.19" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3517,26 +3517,72 @@ function renderHyroxStats(v){
    ============================================================ */
 /* ============================================================
    Sparky 連接（試驗）
-   透過自己的轉接程式讀取 SparkyFitness 的資料，只讀不寫。
-   網址與金鑰只存在這台裝置，不會同步到雲端，也不會寫進匯出的備份。
+   透過自己的轉接程式讀寫 SparkyFitness。
+   Sparky API 金鑰不存在瀏覽器：第一次連接時交給轉接程式加密保存（跟 Google 帳號綁定），
+   之後 App 用 Google 登入換一張短效工作階段（只放在記憶體）。這台裝置只記轉接程式網址與「已連接」。
    ============================================================ */
 const Sparky={
   key(){ return KEY+".sparky."+((Auth.user&&Auth.user.sub)||"local"); },
   cfg(){ try{ return JSON.parse(localStorage.getItem(this.key())||"{}")||{}; }catch(e){ return {}; } },
   set(c){ try{ localStorage.setItem(this.key(),JSON.stringify(c)); }catch(e){} },
   clear(){ try{ localStorage.removeItem(this.key()); }catch(e){} },
-  async get(path,c){
-    c=c||this.cfg();
-    const r=await fetch(c.relay.replace(/\/+$/,"")+path,{headers:{"x-api-key":c.apiKey||""},credentials:"omit"});
-    if(r.status===401) throw new Error("金鑰不正確或已停用");
-    if(!r.ok){ let m=""; try{ m=(await r.json()).error||""; }catch(e){}
+  async get(path){
+    const r=await this.req(path,{});
+    if(!r.ok){ let j=null; try{ j=await r.json(); }catch(e){}
+      const m=(j&&j.error)||"";
       throw new Error(/沒有開放/.test(m)?"轉接程式還是舊版，請先更新轉接程式":(m||"HTTP "+r.status)); }
     return r.json();
   }
 };
+/* ---- 工作階段：只放記憶體 ---- */
+Sparky.sess=null;
+Sparky.base=function(c){ return String((c||this.cfg()).relay||"").replace(/\/+$/,""); };
+/* 向轉接程式的 /session/* 發送（帶 Google 登入），回傳 {token,ttl} */
+Sparky.gcall=async function(path,method,body,c){
+  const g=await requestToken();
+  let r;
+  try{ r=await fetch(this.base(c)+path,{method,headers:{authorization:"Bearer "+g,"content-type":"application/json"},body:body?JSON.stringify(body):undefined,credentials:"omit"}); }
+  catch(e){ throw new Error("連不到轉接程式，請確認網路"); }
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const e=new Error((j&&j.error)||("HTTP "+r.status)); e.code=j&&j.code; e.status=r.status;
+    if(r.status===403&&!j) e.message="轉接程式還是舊版，請先更新轉接程式"; throw e; }
+  return j;
+};
+Sparky.auth=function(force){
+  if(!force&&this.sess&&this.sess.exp>Date.now()+60000) return Promise.resolve(this.sess.token);
+  if(this._authP) return this._authP;                // 同時多個請求只換一次工作階段
+  this._authP=this._auth().finally(()=>{ this._authP=null; });
+  return this._authP;
+};
+Sparky._auth=async function(){
+  const c=this.cfg();
+  let j;
+  if(c.apiKey){                       // 舊版存在這台裝置的金鑰：交給轉接程式保存後立刻刪除
+    const k=c.apiKey; delete c.apiKey; this.set(c);
+    try{ j=await this.gcall("/session/link","POST",{sparky_key:k},c); c.linked=true; this.set(c); }
+    catch(e){ c.linked=false; this.set(c); throw e; }
+  } else {
+    try{ j=await this.gcall("/session/start","POST",null,c); }
+    catch(e){ if(e.code==="not_linked"){ c.linked=false; this.set(c); e.message="這個帳號還沒連接 Sparky，請到「我的 › 飲食與健康數據」連接"; } throw e; }
+  }
+  this.sess={token:j.token,exp:Date.now()+(Number(j.ttl)||3600)*1000};
+  return j.token;
+};
+Sparky.req=async function(path,o){
+  for(let i=0;i<2;i++){
+    const t=await this.auth(i>0);
+    let r;
+    try{ r=await fetch(this.base()+path,{method:o.method||"GET",headers:Object.assign({authorization:"Bearer "+t},o.body!==undefined?{"content-type":"application/json"}:{}),body:o.body,credentials:"omit"}); }
+    catch(e){ throw new Error("連不到轉接程式，請確認網路"); }
+    if(r.status===401&&i===0){ let j=null; try{ j=await r.clone().json(); }catch(e){}
+      if(j&&j.code==="session"){ this.sess=null; continue; }
+      if(j&&j.code==="not_linked"){ const c=this.cfg(); c.linked=false; this.set(c); } }
+    return r;
+  }
+};
 /* ---- 讀取與快取（只放在記憶體，5 分鐘內不重複抓） ---- */
 Sparky.mem={};
-Sparky.on=function(){ const c=this.cfg(); return !!(c.relay&&c.apiKey); };
+Sparky.on=function(){ const c=this.cfg(); return !!(c.relay&&(c.linked||c.apiKey)); };
 Sparky.cached=async function(path){
   const k=this.key()+"|"+path, m=this.mem[k];
   if(m && Date.now()-m.t<5*60e3) return m.v;
@@ -3624,14 +3670,11 @@ const MEALS=[["breakfast","早餐"],["lunch","午餐"],["snacks","點心"],["din
 const MEAL_ZH={}; MEALS.forEach(([k,n])=>MEAL_ZH[k]=n);
 function mealNow(){ const h=new Date().getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
 Sparky.post=async function(path,body,method){
-  const c=this.cfg();
-  let r;
-  try{ r=await fetch(c.relay.replace(/\/+$/,"")+path,{method:method||"POST",headers:{"x-api-key":c.apiKey||"","content-type":"application/json"},body:body==null?undefined:JSON.stringify(body),credentials:"omit"}); }
-  catch(e){ throw new Error("連不到轉接程式，請確認網路"); }
+  const r=await this.req(path,{method:method||"POST",body:body==null?undefined:JSON.stringify(body)});
   let j=null; try{ j=await r.json(); }catch(e){}
   if(r.ok) return j;
   const m=(j&&(j.error||j.message))||"";
-  if(r.status===401) throw new Error(m||"金鑰不正確或已停用");
+  if(r.status===401) throw new Error(m||"Sparky 金鑰不正確或已停用，請重新連接");
   if(r.status===405&&/只允許讀取/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
   if(r.status===404&&/沒有開放/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
   if(r.status===405&&/只允許|不能修改/.test(m)) throw new Error("轉接程式還是舊版，請先更新轉接程式");
@@ -3803,6 +3846,13 @@ async function matchFood(name){
 }
 async function startPhoto(file){
   const b=$("#ms-body"); if(!b) return;
+  const pk=KEY+".photoOk."+((Auth.user&&Auth.user.sub)||"local");
+  let agreed=false; try{ agreed=localStorage.getItem(pk)==="1"; }catch(e){}
+  if(!agreed){
+    const y=await ask("照片會送去 AI 辨識",{sub:"照片會縮小後經過你的轉接程式（Cloudflare）交給 Google Gemini 辨識；如果 Gemini 不接受這次的連線地區，會改交給你的 SparkyFitness 及它設定的 AI 服務。照片不會被轉接程式保存，也不會存進 App；Google 與 AI 服務商依各自條款處理。",ok:"了解，繼續",cancel:"取消"});
+    if(!y) return;
+    try{ localStorage.setItem(pk,"1"); }catch(e){}
+  }
   MS.photo={state:"busy"}; msNote("");
   b.innerHTML="";
   const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
@@ -4805,13 +4855,13 @@ function homeBody(v){
   }).catch(()=>{ if(seq===homeBodySeq) box.innerHTML=""; });
 }
 function openSparkySheet(){
-  const c=Object.assign({relay:"",apiKey:"",site:""},Sparky.cfg());
+  const c=Object.assign({relay:"",site:""},Sparky.cfg()); let newKey=""; delete c.apiKey;
   openSheet(s=>{
     s.appendChild(el("h2",null,"飲食與健康數據"));
     s.appendChild(el("div",{class:"sub",style:"margin:4px 0 12px"},
-      "連接你自己的 SparkyFitness。這裡只會讀取資料，不會修改。網址與金鑰只存在這台裝置。"));
+      "連接你自己的 SparkyFitness。金鑰只在連接時送出一次，由你的轉接程式加密保存並綁定你的 Google 帳號；這台裝置不會留下金鑰。"));
     s.appendChild(fieldInput("轉接程式網址","url",c.relay,v=>c.relay=v.trim(),"https://xxx.workers.dev"));
-    s.appendChild(fieldInput("Sparky API 金鑰","password",c.apiKey,v=>c.apiKey=v.trim(),"在 Sparky 的 Settings 產生",{autocomplete:"off"}));
+    s.appendChild(fieldInput(c.linked?"Sparky API 金鑰（已保存，要換才需要填）":"Sparky API 金鑰","password","",v=>newKey=v.trim(),c.linked?"留空表示沿用":"在 Sparky 的 Settings 產生",{autocomplete:"off"}));
     s.appendChild(fieldInput("Sparky 網址（選填，用來快速開啟）","url",c.site,v=>c.site=v.trim(),"https://"));
     const out=el("div",{style:"margin-top:4px"});
     const row=el("div",{class:"chips",style:"margin-top:4px"});
@@ -4824,22 +4874,27 @@ function openSparkySheet(){
         else return;
       }
       if(!/^https:\/\//i.test(c.relay)){ toast("轉接程式網址需以 https:// 開頭"); return; }
-      if(!c.apiKey){ toast("請輸入 API 金鑰"); return; }
+      if(!c.linked && !newKey){ toast("請輸入 API 金鑰"); return; }
       if(c.site && !/^https:\/\//i.test(c.site)){ toast("Sparky 網址需以 https:// 開頭"); return; }
-      Sparky.set(c); Sparky.reset(); out.innerHTML=""; out.appendChild(el("div",{class:"sub"},"讀取中…"));
+      Sparky.set(c); Sparky.reset(); out.innerHTML=""; out.appendChild(el("div",{class:"sub"},"連接中…"));
+      if(newKey){
+        try{ const j=await Sparky.gcall("/session/link","POST",{sparky_key:newKey},c); c.linked=true; Sparky.set(c); Sparky.sess={token:j.token,exp:Date.now()+(Number(j.ttl)||3600)*1000}; }
+        catch(e){ out.innerHTML=""; out.appendChild(el("div",{class:"sub",style:"color:var(--crit)"},"連接失敗："+(e.message||e))); return; }
+        finally{ newKey=""; const pw=$$("input[type=password]",s)[0]; if(pw) pw.value=""; }
+      }
       const lines=[]; const end=today(), start=dstr(new Date(Date.now()-6*864e5));
       const step=async(label,fn)=>{ try{ lines.push([label,await fn(),true]); }catch(e){ lines.push([label,"讀取失敗（"+(e.message||e)+"）",false]); } };
-      await step("連線",async()=>{ await Sparky.get("/api/health",c); return "正常"; });
-      await step("今日熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+end+"&endDate="+end,c);
+      await step("連線",async()=>{ await Sparky.get("/api/health"); return "正常"; });
+      await step("今日熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+end+"&endDate="+end);
         const x=(d.days||[])[0]; if(!x) return "沒有資料"; return "吃進 "+Math.round(x.eaten||0)+" / 目標 "+Math.round(x.goal||0)+" 大卡，運動消耗 "+Math.round(x.burned||0); });
-      await step("今日紀錄",async()=>{ const d=await Sparky.get("/api/daily-summary?date="+end,c);
+      await step("今日紀錄",async()=>{ const d=await Sparky.get("/api/daily-summary?date="+end);
         return "飲食 "+(d.foodEntries||[]).length+" 筆、運動 "+(d.exerciseSessions||[]).length+" 筆；蛋白質目標 "+Math.round((d.goals||{}).protein||0)+" g"; });
-      await step("近 7 天熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+start+"&endDate="+end,c);
+      await step("近 7 天熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+start+"&endDate="+end);
         const ds=(d.days||[]); const n=ds.filter(x=>x.eaten>0).length; return ds.length+" 天有資料，其中 "+n+" 天有記飲食"; });
-      await step("步數與體重",async()=>{ const d=await Sparky.get("/api/measurements/check-in-measurements-range/"+start+"/"+end,c);
+      await step("步數與體重",async()=>{ const d=await Sparky.get("/api/measurements/check-in-measurements-range/"+start+"/"+end);
         const a=Array.isArray(d)?d:[]; const st=a.filter(x=>x.steps>0), w=a.filter(x=>x.weight!=null);
         return "步數 "+st.length+" 天"+(st.length?"（平均 "+Math.round(st.reduce((p,x)=>p+x.steps,0)/st.length)+"）":"")+"、體重 "+w.length+" 筆"; });
-      await step("睡眠",async()=>{ const d=await Sparky.get("/api/sleep?startDate="+start+"&endDate="+end,c);
+      await step("睡眠",async()=>{ const d=await Sparky.get("/api/sleep?startDate="+start+"&endDate="+end);
         const n=Array.isArray(d)?d.length:0; return n?("近 7 天 "+n+" 筆"):"近 7 天沒有資料"; });
       out.innerHTML="";
       lines.forEach(([k,v,ok])=>{ const r=el("div",{style:"display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-md)"});
@@ -4850,10 +4905,26 @@ function openSparkySheet(){
     row.appendChild(t);
     if(c.site){ row.appendChild(el("a",{class:"btn sm",href:c.site,target:"_blank",rel:"noopener"},"開啟 Sparky ↗")); }
     if(Sparky.cfg().relay){ const x=el("button",{class:"btn sm dim"},"中斷連接");
-      x.addEventListener("click",()=>{ Sparky.clear(); Sparky.reset(); closeSheet(); toast("已中斷連接，這台裝置上的金鑰已刪除"); go(view); }); row.appendChild(x); }
+      x.addEventListener("click",async()=>{
+        if(!(await ask("中斷連接？",{sub:"轉接程式保存的金鑰會被刪除，之後要重新輸入金鑰才能連接。",ok:"中斷連接",danger:true}))) return;
+        try{ await Sparky.gcall("/session/link","DELETE",null); }catch(e){ toast("轉接程式那邊沒刪成功："+(e.message||e)+"；這台裝置的設定已清除"); }
+        Sparky.clear(); Sparky.reset(); Sparky.sess=null; closeSheet(); toast("已中斷連接"); go(view); }); row.appendChild(x); }
     s.appendChild(row); s.appendChild(out);
     const cl=el("button",{class:"btn wide",style:"margin-top:16px"},"關閉");
     cl.addEventListener("click",()=>{ closeSheet(); if(view==="me"||view==="food"||view==="home") go(view); }); s.appendChild(cl);
+  });
+}
+function openPrivacySheet(){
+  openSheet(s=>{
+    s.appendChild(el("h2",null,"隱私與資料"));
+    const sec=(t,lines)=>{ s.appendChild(el("div",{class:"lab"},t)); lines.forEach(x=>s.appendChild(el("div",{class:"bul"},x))); };
+    sec("帳號",["用 Google 登入，只取得名稱、Email、頭像與這個 App 專用的雲端硬碟資料夾權限，用來辨識你與同步紀錄。","App 看不到你雲端硬碟裡的其他檔案。"]);
+    sec("運動紀錄、模板、設定",["存在你自己 Google 雲端硬碟的 App 專用隱藏區，這台裝置另有離線快取。","保存到你刪除為止：「我的 › 刪除雲端的運動紀錄」會刪除雲端與各裝置；「清除此裝置資料並登出」只刪這台裝置。"]);
+    sec("飲食、體重、身體數據",["存在你們自己的 SparkyFitness（PikaPods 主機），App 透過你的轉接程式（Cloudflare）讀寫。","App 記的訓練會以估算熱量寫進 Sparky 的運動紀錄。","要刪除請在 SparkyFitness 裡刪除紀錄或帳號；App 不會另外保存。"]);
+    sec("Sparky API 金鑰",["只在連接時送出一次，由你的轉接程式加密後保存在 Cloudflare，綁定你的 Google 帳號；瀏覽器裡不留金鑰。","「中斷連接」會刪除轉接程式保存的金鑰；也可以在 Sparky 的 Settings 直接停用金鑰。"]);
+    sec("拍照辨識",["照片縮小後經過轉接程式送給 Google Gemini；Gemini 不接受連線地區時改送你的 SparkyFitness 及其設定的 AI 服務。","轉接程式與 App 都不保存照片；每個帳號每天最多辨識 20 次。"]);
+    sec("不會做的事",["不放廣告、不賣資料、不把資料傳給上述以外的服務。"]);
+    const cl=el("button",{class:"btn wide",style:"margin-top:16px"},"關閉"); cl.addEventListener("click",closeSheet); s.appendChild(cl);
   });
 }
 function renderMe(){
@@ -4939,12 +5010,21 @@ function renderMe(){
   const sr=el("div",{class:"chips",style:"margin-top:12px"});
   const b1=el("button",{class:"btn pri sm"},"立即同步"); b1.addEventListener("click",()=>Auth.user?Cloud.syncNow():toast("請先登入"));
   const b2=el("button",{class:"btn sm"},"切換帳號"); b2.addEventListener("click",switchAccount);
-  const b3=el("button",{class:"btn sm dim"},"登出"); b3.addEventListener("click",signOut);
-  sr.append(b1,b2,b3); sc.appendChild(sr); v.appendChild(sc);
+  const b3=el("button",{class:"btn sm dim"},"登出"); b3.addEventListener("click",signOutAndClear);
+  sr.append(b1,b2,b3); sc.appendChild(sr);
+  sc.appendChild(el("div",{class:"sub"},"登出時會先確認同步完成，再清除這台裝置上這個帳號的紀錄與連接設定。"));
+  v.appendChild(sc);
 
-  secHead(v,"清除所有資料");
-  v.appendChild(el("div",{class:"sub",style:"margin:0 0 10px"},"刪除這個 App 的運動紀錄、模板與設定（飲食與體重在 SparkyFitness，不受影響）。建議先匯出完整備份。"));
-  const clr=el("button",{class:"btn crit sm"},"清除所有資料"); clr.addEventListener("click",clearAll); v.appendChild(clr);
+  secHead(v,"隱私與資料");
+  { const b=el("button",{class:"rowcard"}); const t=el("div",{class:"t"}); t.appendChild(el("b",null,"資料怎麼使用、存在哪裡")); t.appendChild(el("span",{class:"dt"},"›")); b.appendChild(t);
+    b.appendChild(el("div",{class:"m"},"帳號、運動、身體、飲食與照片的用途、保存位置與刪除方式")); b.addEventListener("click",openPrivacySheet); v.appendChild(b); }
+
+  secHead(v,"刪除資料");
+  { const b=el("button",{class:"rowcard"}); const t=el("div",{class:"t"}); t.appendChild(el("b",null,"清除此裝置資料並登出")); t.appendChild(el("span",{class:"dt"},"›")); b.appendChild(t);
+    b.appendChild(el("div",{class:"m"},"只刪這台裝置上的快取與連接設定；雲端的紀錄還在，重新登入就會回來")); b.addEventListener("click",async()=>{
+      if(await ask("清除此裝置資料並登出？",{sub:"會先確認同步完成。雲端的紀錄不會被刪除。",ok:"清除並登出"})) signOutAndClear(); }); v.appendChild(b); }
+  { const b=el("button",{class:"rowcard"}); const t=el("div",{class:"t"}); t.appendChild(el("b",{style:"color:var(--crit)"},"刪除雲端的運動紀錄")); t.appendChild(el("span",{class:"dt"},"›")); b.appendChild(t);
+    b.appendChild(el("div",{class:"m"},"刪除 Google 雲端硬碟裡這個 App 的運動紀錄、模板與設定，所有裝置都會同步刪除；飲食、體重在 SparkyFitness，要到 Sparky 刪除")); b.addEventListener("click",clearAll); v.appendChild(b); }
   v.appendChild(el("div",{class:"foot"},"版本 "+APP.ver+(APP.beta?" · 測試版":"")));
 }
 function ageOf(dob){ const b=new Date(dob+"T00:00:00"), n=new Date(); let a=n.getFullYear()-b.getFullYear(); if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate())) a--; return a; }
@@ -5067,7 +5147,9 @@ function download(name,text,mime){
   document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
-function csvCell(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+/* 匯出 CSV：文字開頭若是 = + - @ 或定位字元，試算表會當成公式執行，前面加一個 ' 讓它變成純文字 */
+function csvCell(v){ if(typeof v!=="number"){ v=String(v==null?"":v); if(/^[=+\-@\t\r]/.test(v)) v="'"+v; } else v=String(v);
+  return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function exportCsv(){
   const head=["日期","運動","時長(分)","RPE","內容摘要","備註"];
   const rows=DB.entries.slice().sort((a,b)=>a.date.localeCompare(b.date))
@@ -5101,8 +5183,8 @@ function importJson(ev){
   rd.readAsText(f); ev.target.value="";
 }
 async function clearAll(){
-  if(!(await ask("清除全部資料？",{sub:"建議先匯出備份。",ok:"繼續",danger:true}))) return;
-  if(!(await ask("最後確認",{sub:"雲端資料也會一併清空，無法復原。",ok:"全部清除",danger:true}))) return;
+  if(!(await ask("刪除雲端的運動紀錄？",{sub:"Google 雲端硬碟裡這個 App 的運動紀錄、模板與設定都會刪除，所有裝置同步生效。建議先匯出完整備份。",ok:"繼續",danger:true}))) return;
+  if(!(await ask("最後確認",{sub:"刪除後無法復原。SparkyFitness 的飲食與體重不受影響。",ok:"刪除",danger:true}))) return;
   const tomb={}; DB.entries.forEach(e=>tomb[e.id]=Date.now());
   DB=normalize({deleted:Object.assign({},DB.deleted,tomb)});
   save(); applyTheme(); toast("已清除"); go("home");
@@ -5286,17 +5368,42 @@ function rerenderView(){
   if(view==="log") return;
   const y=window.scrollY||0; go(view); window.scrollTo(0,y);
 }
-function signOut(){
+/* 清除這台裝置上這個帳號的資料：紀錄快取、Sparky 設定、工作階段、記憶體快取 */
+function clearDeviceData(sub){
+  try{
+    const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k) ks.push(k); }
+    ks.forEach(k=>{ if(k===KEY+"."+sub || k.startsWith(KEY+".sparky.") || k===KEY+".lastUser" || k.startsWith(KEY+".photoOk") || k===KEY+".local" || k===KEY) localStorage.removeItem(k); });
+  }catch(e){}
+  try{ sessionStorage.clear(); }catch(e){}
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; SparkyEx.exIds={}; MS=null;
+}
+/* 登出：先確認雲端同步完成，再清除這台裝置的資料 */
+async function signOutAndClear(){
+  const sub=Auth.user&&Auth.user.sub;
+  if(Auth.user){
+    clearTimeout(Cloud.timer);
+    let ok=true; try{ await Cloud.push(); ok=!!Cloud.lastSync && Cloud.lastSync>=(DB.updatedAt||0)-1; }catch(e){ ok=false; }
+    if(!ok && !(await ask("還有資料沒同步到雲端",{sub:"現在登出並清除這台裝置的資料，最近的紀錄會遺失。建議先檢查網路後按「立即同步」。",ok:"仍要登出並清除",cancel:"先不要",danger:true}))) return;
+  }
+  if(sub) clearDeviceData(sub);
+  signOut(true);
+  toast("已登出，這台裝置上的資料已清除");
+}
+function signOut(cleared){
   const t=Auth.token;
   Auth.token=null; Auth.expiresAt=0; Auth.user=null; Cloud.fileId=null; Cloud.lastSync=0;
   clearTimeout(Cloud.timer); stopRest();
   try{ if(t&&google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(t,()=>{}); }catch(e){}
   try{ localStorage.removeItem(KEY+".lastUser"); }catch(e){}
   DB=normalize({}); cacheKey=KEY; L=null;
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null;
   $("#app").hidden=true; $("#gate").hidden=false; Cloud.badge("idle");
 }
 async function switchAccount(){
-  Cloud.flush(); Auth.token=null; Auth.expiresAt=0;
+  const old=Auth.user&&Auth.user.sub;
+  try{ clearTimeout(Cloud.timer); await Cloud.push(); }catch(e){}
+  if(old && Cloud.lastSync>=(DB.updatedAt||0)-1) clearDeviceData(old);
+  Auth.token=null; Auth.expiresAt=0;
   try{ await requestToken("select_account"); await afterSignIn(); toast("已切換帳號"); }
   catch(e){ toast(e.message||"切換失敗"); }
 }
