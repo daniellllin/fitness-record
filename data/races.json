@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T04:04:03.532Z",
+ "updated": "2026-11-23T04:58:39.880Z",
  "note": "資料整理自公開賽事行事曆網站，以主辦單位公告為準。",
  "meta": {
   "sources": {
@@ -7,23 +7,27 @@
     "name": "全統運動報名網",
     "url": "https://www.ctrun.com.tw/",
     "ok": true,
-    "count": 17,
+    "count": 15,
     "sample": [
      {
-      "name": "PIKMIN : RUN FESTIVAL in Taiwan 2027 高雄場",
-      "date": "2027-03-14",
-      "city": "高雄市",
+      "name": "2027 ZEPRO RUN全國半程馬拉松 新北場",
+      "date": "2027-03-07",
+      "city": "新北市",
       "dist": [
-       "3.5K"
+       "21K",
+       "10K",
+       "4.5K"
       ],
-      "status": "open"
+      "status": ""
      },
      {
-      "name": "PIKMIN : RUN FESTIVAL in Taiwan 2027 台中場",
-      "date": "2027-03-21",
-      "city": "臺中市",
+      "name": "第三屆2027嘉基愛+1 八福公益路跑 BLESS RUN",
+      "date": "2027-03-06",
+      "city": "嘉義縣",
       "dist": [
-       "3.5K"
+       "21K",
+       "11K",
+       "5K"
       ],
       "status": "open"
      }
@@ -33,19 +37,8 @@
     "name": "中華民國路跑協會",
     "url": "https://www.sportsnet.org.tw/schedule.php",
     "ok": true,
-    "count": 13,
+    "count": 12,
     "sample": [
-     {
-      "name": "2026 NS RUN南山人壽半程馬拉松",
-      "date": "2026-11-22",
-      "city": "臺北市",
-      "dist": [
-       "21K",
-       "10K",
-       "3K"
-      ],
-      "status": ""
-     },
      {
       "name": "2026臺北馬拉松-耶誕歡樂早餐跑 TAIPEI MARATHON BREAKFAST RUN",
       "date": "2026-12-19",
@@ -55,6 +48,16 @@
        "3K"
       ],
       "status": ""
+     },
+     {
+      "name": "2026臺北馬拉松 TAIPEI MARATHON",
+      "date": "2026-12-20",
+      "city": "臺北市",
+      "dist": [
+       "42.195K",
+       "21.0975K"
+      ],
+      "status": ""
      }
     ]
    },
@@ -62,19 +65,8 @@
     "name": "運動筆記",
     "url": "https://running.biji.co/?q=competition",
     "ok": true,
-    "count": 120,
+    "count": 137,
     "sample": [
-     {
-      "name": "2027 國家地理路跑-RUN FOR EARTH",
-      "date": "2027-03-14",
-      "city": "臺北市",
-      "dist": [
-       "21K",
-       "10K",
-       "5K"
-      ],
-      "status": ""
-     },
      {
       "name": "2027 富邦人壽高雄馬拉松 DAY 2",
       "date": "2027-01-10",
@@ -84,266 +76,26 @@
        "21.0975K"
       ],
       "status": "tbd"
+     },
+     {
+      "name": "2026 Garmin Run 馬拉松系列賽 - 臺北站",
+      "date": "2026-11-29",
+      "city": "臺北市",
+      "dist": [
+       "21K",
+       "10K",
+       "5K"
+      ],
+      "status": "closed"
      }
     ]
    }
   },
-  "total": 139,
-  "newCount": 1,
-  "merged": 11
+  "total": 151,
+  "newCount": 22,
+  "merged": 13
  },
  "races": [
-  {
-   "id": "r5h2olr",
-   "name": "最強市民飆5K－新北市5000公尺挑戰賽 十一月場",
-   "date": "2026-11-18",
-   "city": "新北市",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "5K"
-   ],
-   "type": "其他",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13179",
-     "name": "最強市民飆5K－新北市5000公尺挑戰賽 十一月場"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rqojxu6",
-   "name": "2026 宜蘭冬山河超級馬拉松",
-   "date": "2026-11-20",
-   "city": "宜蘭縣",
-   "region": "北部",
-   "place": "",
-   "dist": [
-    "160K",
-    "100K",
-    "80K",
-    "50K",
-    "44K",
-    "22K",
-    "11K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13003",
-     "name": "2026 宜蘭冬山河超級馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r115sxyc",
-   "name": "2026六堆客庄巡禮走相逐",
-   "date": "2026-11-21",
-   "city": "屏東縣",
-   "region": "南部",
-   "place": "",
-   "dist": [
-    "21K",
-    "10K",
-    "6K"
-   ],
-   "type": "其他",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13144",
-     "name": "2026六堆客庄巡禮走相逐"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r1f37j4u",
-   "name": "2026年東石全國馬拉松",
-   "date": "2026-11-21",
-   "city": "嘉義縣",
-   "region": "南部",
-   "place": "",
-   "dist": [
-    "42.195K",
-    "21K",
-    "10K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12813",
-     "name": "2026年東石全國馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r3xgg1c",
-   "name": "2026 NS RUN南山人壽半程馬拉松",
-   "date": "2026-11-22",
-   "city": "臺北市",
-   "region": "北部",
-   "place": "總統府前廣場",
-   "dist": [
-    "21K",
-    "10K",
-    "3K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "sportsnet",
-     "url": "http://www.nanshanrun.com/",
-     "name": "2026 NS RUN南山人壽半程馬拉松"
-    },
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13019",
-     "name": "2026 NS RUN南山人壽半程馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rp6mf93",
-   "name": "2026 桃園落羽松 秘境馬拉松賽",
-   "date": "2026-11-22",
-   "city": "桃園市",
-   "region": "北部",
-   "place": "桃園市龍岡森林公園(龍慈路與龍岡路三段交接處)",
-   "dist": [
-    "42.195K",
-    "21K",
-    "11K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "ctrun",
-     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=318",
-     "name": "2026 桃園落羽松 秘境馬拉松賽"
-    },
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12862",
-     "name": "2026 桃園落羽松秘境馬拉松賽"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rs1h677",
-   "name": "2026 跑出金虎爺全國路跑賽",
-   "date": "2026-11-22",
-   "city": "嘉義縣",
-   "region": "南部",
-   "place": "",
-   "dist": [
-    "12.5K",
-    "5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12883",
-     "name": "2026 跑出金虎爺全國路跑賽"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r1d2bh39",
-   "name": "2026 輪轉台灣百K單車挑戰賽 彰化站",
-   "date": "2026-11-22",
-   "city": "彰化縣",
-   "region": "中部",
-   "place": "彰高二號廣場公園",
-   "dist": [
-    "100K",
-    "62K"
-   ],
-   "type": "自行車",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "ctrun",
-     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=353",
-     "name": "2026 輪轉台灣百K單車挑戰賽 彰化站"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "r1tf8zf6",
-   "name": "2026萬丹紅豆公益馬拉松",
-   "date": "2026-11-22",
-   "city": "屏東縣",
-   "region": "南部",
-   "place": "",
-   "dist": [
-    "42.195K",
-    "22K",
-    "10K",
-    "6K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "biji",
-     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=12880",
-     "name": "2026萬丹紅豆公益馬拉松"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
-  {
-   "id": "rrvqafh",
-   "name": "2026親子天下 達克比x樂樂小宇宙親子路跑",
-   "date": "2026-11-22",
-   "city": "新北市",
-   "region": "北部",
-   "place": "新北大都會公園(水漾啵啵廣場)",
-   "dist": [
-    "3.5K"
-   ],
-   "type": "路跑",
-   "status": "closed",
-   "deadline": "",
-   "sources": [
-    {
-     "key": "ctrun",
-     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=336",
-     "name": "2026親子天下 達克比x樂樂小宇宙親子路跑"
-    }
-   ],
-   "firstSeen": "2026-11-14"
-  },
   {
    "id": "rthz4ur",
    "name": "玩野樂園",
@@ -1077,8 +829,8 @@
     "8K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-18",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1330,8 +1082,8 @@
     "10K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-22",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1475,8 +1227,8 @@
     "4K"
    ],
    "type": "路跑",
-   "status": "",
-   "deadline": "2026-11-21",
+   "status": "closed",
+   "deadline": "",
    "sources": [
     {
      "key": "biji",
@@ -1636,6 +1388,28 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "r13jr2id",
+   "name": "2027 廈門馬拉松",
+   "date": "2027-01-10",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K"
+   ],
+   "type": "路跑",
+   "status": "closed",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13235",
+     "name": "2027 廈門馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r1i573aj",
    "name": "2027南投縣仁愛鄉原住民三鐵挑戰賽",
    "date": "2027-01-10",
@@ -1739,6 +1513,30 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "r12fyj9c",
+   "name": "2027 休士頓馬拉松",
+   "date": "2027-01-16",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "21K",
+    "5K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13237",
+     "name": "2027 休士頓馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r233gpk",
    "name": "2027金門馬拉松 KINMEN MARATHON",
    "date": "2027-01-16",
@@ -1746,19 +1544,26 @@
    "region": "離島",
    "place": "金城田徑場/金馬聯合服務中心前廣場民族路",
    "dist": [
+    "42.195K",
     "42K",
+    "21.0975K",
     "21K",
     "10K",
     "4K"
    ],
    "type": "路跑",
-   "status": "",
+   "status": "closed",
    "deadline": "",
    "sources": [
     {
      "key": "sportsnet",
      "url": "https://www.sportsnet.org.tw/20270117_web/",
      "name": "2027金門馬拉松 KINMEN MARATHON"
+    },
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13252",
+     "name": "2027 金門馬拉松"
     }
    ],
    "firstSeen": "2026-11-14"
@@ -1791,6 +1596,103 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r17rxpk6",
+   "name": "2027 孟買馬拉松",
+   "date": "2027-01-17",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "21K",
+    "10K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13238",
+     "name": "2027 孟買馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "ryqyfnk",
+   "name": "2027 杜拜馬拉松",
+   "date": "2027-01-17",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "10K",
+    "4K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13236",
+     "name": "2027 杜拜馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "rp2isqm",
+   "name": "2027 渣打香港馬拉松",
+   "date": "2027-01-17",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "21K",
+    "10K",
+    "5K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13239",
+     "name": "2027 渣打香港馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "rdv2fxe",
+   "name": "2027 第24屆石垣島馬拉松",
+   "date": "2027-01-17",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "21K",
+    "10K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13234",
+     "name": "2027 第24屆石垣島馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "r1rl285",
@@ -1893,6 +1795,29 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "r1v5thw7",
+   "name": "2027 第79屆香川丸龜國際半程馬拉松賽",
+   "date": "2027-02-06",
+   "city": "香川縣",
+   "region": "海外",
+   "place": "",
+   "dist": [
+    "21K",
+    "3K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13241",
+     "name": "2027 第79屆香川丸龜國際半程馬拉松賽"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r12a0v3o",
    "name": "2027 第64屆愛媛馬拉松",
    "date": "2027-02-07",
@@ -1913,6 +1838,50 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r1swmpiu",
+   "name": "2027 第75屆別府大分每日馬拉松",
+   "date": "2027-02-07",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13240",
+     "name": "2027 第75屆別府大分每日馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "r4kih4y",
+   "name": "2027 巴塞隆納半程馬拉松",
+   "date": "2027-02-14",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "21K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13243",
+     "name": "2027 巴塞隆納半程馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "rhyqw7r",
@@ -1940,6 +1909,31 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "r1hsceez",
+   "name": "2027年台南全國鐵人三項錦標賽",
+   "date": "2027-02-20",
+   "city": "臺南市",
+   "region": "南部",
+   "place": "",
+   "dist": [
+    "51.9K",
+    "26.15K",
+    "7.5K",
+    "5.8K"
+   ],
+   "type": "鐵人三項",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13231",
+     "name": "2027年台南全國鐵人三項錦標賽"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "rsk098u",
    "name": "2027 晨曦麥香馬拉松",
    "date": "2027-02-21",
@@ -1954,7 +1948,7 @@
    ],
    "type": "路跑",
    "status": "",
-   "deadline": "2026-11-16",
+   "deadline": "2026-11-30",
    "sources": [
     {
      "key": "biji",
@@ -1963,6 +1957,51 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r12in2b9",
+   "name": "2027 沖繩馬拉松",
+   "date": "2027-02-21",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42.195K",
+    "10K"
+   ],
+   "type": "路跑",
+   "status": "",
+   "deadline": "2026-12-13",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13242",
+     "name": "2027 沖繩馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "r3nhv6h",
+   "name": "2027 蘇黎世-塞維利亞馬拉松",
+   "date": "2027-02-21",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13244",
+     "name": "2027 蘇黎世-塞維利亞馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "r1tnvy2t",
@@ -2133,6 +2172,29 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "r1hl3j6c",
+   "name": "ASICS RUN 2027 亞瑟士路跑賽",
+   "date": "2027-02-27",
+   "city": "宜蘭縣",
+   "region": "北部",
+   "place": "",
+   "dist": [
+    "21.0975K",
+    "10K"
+   ],
+   "type": "路跑",
+   "status": "closed",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13253",
+     "name": "ASICS RUN 2027 亞瑟士路跑賽"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r1vp5yj",
    "name": "2027台北長跑扶輪社長明賞超馬盃50公里挑戰賽",
    "date": "2027-02-28",
@@ -2251,6 +2313,79 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "rwzte4h",
+   "name": "2027 ZEPRO RUN全國半程馬拉松 新北場",
+   "date": "2027-03-07",
+   "city": "新北市",
+   "region": "北部",
+   "place": "新北市板橋區浮洲橋下廣場",
+   "dist": [
+    "21K",
+    "10K",
+    "4.5K"
+   ],
+   "type": "路跑",
+   "status": "",
+   "deadline": "2026-12-23",
+   "sources": [
+    {
+     "key": "ctrun",
+     "url": "https://www.ctrun.com.tw/Activity?EventMain_ID=374",
+     "name": "2027 ZEPRO RUN全國半程馬拉松 新北場"
+    },
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13230",
+     "name": "2027 ZEPRO RUN全國半程馬拉松 新北場"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "r1rwkpas",
+   "name": "2027 東京馬拉松",
+   "date": "2027-03-07",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13245",
+     "name": "2027 東京馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "r1fho07o",
+   "name": "2027 洛杉磯馬拉松",
+   "date": "2027-03-07",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13248",
+     "name": "2027 洛杉磯馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "rfbma9b",
    "name": "2027南山人壽臺北國道馬拉松 NAN SHAN TAIPEI FREEWAY MARATHON",
    "date": "2027-03-07",
@@ -2259,16 +2394,22 @@
    "place": "淡水河六號敦煌水門",
    "dist": [
     "42.195K",
-    "21.0975K"
+    "21.0975K",
+    "21K"
    ],
    "type": "路跑",
    "status": "",
-   "deadline": "",
+   "deadline": "2027-01-07",
    "sources": [
     {
      "key": "sportsnet",
      "url": "http://www.taipeifreewaymarathon.com/",
      "name": "2027南山人壽臺北國道馬拉松 NAN SHAN TAIPEI FREEWAY MARATHON"
+    },
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13254",
+     "name": "2027南山人壽臺北國道馬拉松"
     }
    ],
    "firstSeen": "2026-11-14"
@@ -2493,6 +2634,28 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "ro4duac",
+   "name": "2027 名古屋女子馬拉松",
+   "date": "2027-03-14",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13246",
+     "name": "2027 名古屋女子馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r1rnrbi5",
    "name": "2027 國家地理路跑-RUN FOR EARTH",
    "date": "2027-03-14",
@@ -2515,6 +2678,50 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r10o1qm",
+   "name": "2027 巴塞隆納馬拉松",
+   "date": "2027-03-14",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13249",
+     "name": "2027 巴塞隆納馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
+   "id": "r1qsvnow",
+   "name": "2027 羅馬馬拉松",
+   "date": "2027-03-14",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13250",
+     "name": "2027 羅馬馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "rtljxxq",
@@ -2657,6 +2864,29 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r1u6fo4v",
+   "name": "2027 首爾馬拉松",
+   "date": "2027-03-21",
+   "city": "",
+   "region": "",
+   "place": "",
+   "dist": [
+    "42K",
+    "10K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13251",
+     "name": "2027 首爾馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "r971vjb",
@@ -2893,6 +3123,28 @@
    "firstSeen": "2026-11-14"
   },
   {
+   "id": "rr89du4",
+   "name": "2027 福井櫻花馬拉松",
+   "date": "2027-03-28",
+   "city": "福井縣",
+   "region": "海外",
+   "place": "",
+   "dist": [
+    "42K"
+   ],
+   "type": "路跑",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13247",
+     "name": "2027 福井櫻花馬拉松"
+    }
+   ],
+   "firstSeen": "2026-11-23"
+  },
+  {
    "id": "r2zxrld",
    "name": "2027海風馬拉松",
    "date": "2027-03-28",
@@ -3114,18 +3366,24 @@
    "region": "北部",
    "place": "總統府/大佳河濱公園",
    "dist": [
+    "21.0975K",
     "21K",
     "10K",
     "3K"
    ],
    "type": "路跑",
    "status": "",
-   "deadline": "",
+   "deadline": "2027-02-25",
    "sources": [
     {
      "key": "sportsnet",
      "url": "http://www.womenruntpe.com/",
      "name": "2027 TS WOMEN RUN"
+    },
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13255",
+     "name": "2027 TS WOMEN RUN 台新女子馬拉松"
     }
    ],
    "firstSeen": "2026-11-14"
@@ -3395,6 +3653,29 @@
     }
    ],
    "firstSeen": "2026-11-14"
+  },
+  {
+   "id": "r7df90y",
+   "name": "2027年新北亞洲盃鐵人三項分齡賽",
+   "date": "2027-09-26",
+   "city": "新北市",
+   "region": "北部",
+   "place": "",
+   "dist": [
+    "27.15K",
+    "9.77K"
+   ],
+   "type": "鐵人三項",
+   "status": "tbd",
+   "deadline": "",
+   "sources": [
+    {
+     "key": "biji",
+     "url": "https://running.biji.co/index.php?q=competition&act=info&cid=13232",
+     "name": "2027年新北亞洲盃鐵人三項分齡賽"
+    }
+   ],
+   "firstSeen": "2026-11-23"
   },
   {
    "id": "r1duyxzv",
