@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.20" };
+const APP = { beta:true, ver:"m4-beta.21" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1155,6 +1155,7 @@ function lockScroll(on){
 }
 let sheetOpen=false;
 function openSheet(build){
+  if(typeof stopScanner==="function") stopScanner();
   const s=$("#sheet"), sc=$("#scrim");
   if(!sheetOpen){ sheetOpen=true; lockScroll(true); }
   s.scrollTop=0;
@@ -1195,6 +1196,7 @@ function ask(msg,o){
   });
 }
 function closeSheet(){
+  if(typeof stopScanner==="function") stopScanner();
   const s=$("#sheet"), sc=$("#scrim");
   if(sheetOpen){ sheetOpen=false; lockScroll(false); }
   s.classList.remove("on"); sc.classList.remove("on");
@@ -3742,12 +3744,21 @@ function mountMealPane(host){
 }
 function msNote(t,kind){ const m=$("#ms-msg"); if(!m) return; m.hidden=!t; m.textContent=t||""; m.className="msmsg"+(kind?" "+kind:""); }
 function drawMealList(){
-  const b=$("#ms-body"); if(!b||!MS) return; b.innerHTML=""; MS.pick=null; MS.photo=null;
-  const ph=el("button",{class:"btn pri wide",style:"margin:14px 0 10px"},"📷 拍照辨識");
+  const b=$("#ms-body"); if(!b||!MS) return; stopScanner(); endPend(); b.innerHTML=""; MS.pick=null; MS.photo=null;
+  const pend=el("div",{style:"margin-top:12px"}); b.appendChild(pend);
+  drawPendingCard(pend,drawPendingList);
+  const brow=el("div",{style:"display:flex;gap:8px;margin:2px 0 4px"});
+  const ph=el("button",{class:"btn pri",style:"flex:1"},"📷 拍照辨識");
   const fi=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
   ph.addEventListener("click",()=>fi.click());
   fi.addEventListener("change",()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(f) startPhoto(f); });
-  b.append(ph,fi);
+  const sc=el("button",{class:"btn",style:"flex:1"},"▦ 掃條碼"); sc.addEventListener("click",openScan);
+  brow.append(ph,sc,fi); b.appendChild(brow);
+  const al=el("button",{class:"link",type:"button",style:"margin:0 0 10px"},"從相簿選餐點照片");
+  const ai=el("input",{type:"file",accept:"image/*",hidden:""});
+  al.addEventListener("click",()=>ai.click());
+  ai.addEventListener("change",()=>{ const f=ai.files&&ai.files[0]; ai.value=""; if(f) startPhoto(f); });
+  b.append(al,ai);
   const sf=el("div",{class:"field",style:"margin-bottom:8px"});
   const si=el("input",{type:"search",placeholder:"搜尋食物，例如 白飯、茶葉蛋",value:MS.q,"aria-label":"搜尋食物",autocomplete:"off",enterkeyhint:"search"});
   let t=null;
@@ -3799,20 +3810,28 @@ async function loadRecentFoods(){
     if(MS){ MS.recent=out.slice(0,8); if(!MS.q&&!MS.pick&&!MS.photo) drawMealResults(); }
   }catch(e){ if(MS){ MS.recent=[]; if(!MS.q&&!MS.pick&&!MS.photo) drawMealResults(); } }
 }
-function pickFood(f,qty){
-  const b=$("#ms-body"); if(!b) return; MS.pick=f;
+function pickFood(f,qty,opt){
+  const b=$("#ms-body"); if(!b) return; MS.pick=f; opt=opt||{};
   const v=f.default_variant, u=v.serving_unit, isG=/^(g|ml)$/i.test(u||"");
   let amt=qty?String(qty):(isG?"100":String(num(v.serving_size)||1));
   b.innerHTML="";
   const back=el("button",{class:"backl"},"‹ 換一個"); back.addEventListener("click",drawMealList); b.appendChild(back);
+  pendTag(b);
   b.appendChild(el("div",{style:"font-size:var(--fs-lg);font-weight:600;margin:4px 0 2px"},f.name));
+  if(opt.note) b.appendChild(el("div",{class:"sub",style:"margin:0 0 4px;color:var(--acc)"},opt.note));
   b.appendChild(el("div",{class:"sub",style:"margin:0 0 12px"},[f.brand,"每 "+fmt(num(v.serving_size))+" "+unitZh(u)+" "+kc(v.calories)+" 大卡"].filter(Boolean).join(" · ")));
   const fr=el("div",{class:"field"});
   fr.appendChild(el("label",{for:"ms-amt"},"吃了多少（"+unitZh(u)+"）"));
   const ai=el("input",{id:"ms-amt",type:"text",inputmode:"decimal",value:amt,autocomplete:"off"});
   fr.appendChild(ai); b.appendChild(fr);
-  const quick=isG?[50,100,150,200,300]:[0.5,1,1.5,2].map(x=>x*(num(v.serving_size)||1));
+  let quick=isG?[50,100,150,200,300]:[0.5,1,1.5,2].map(x=>x*(num(v.serving_size)||1));
   const qc=el("div",{class:"chips",style:"margin-bottom:12px"});
+  if(isG&&num(opt.serving)>0){
+    const sv1=num(opt.serving), pk=num(opt.servings)>0?Math.round(sv1*num(opt.servings)*10)/10:0;
+    const add=(lab,q)=>{ const c=el("button",{class:"chip",type:"button"},lab); c.addEventListener("click",()=>{ ai.value=String(q); upd(); }); qc.appendChild(c); };
+    add("一份 "+fmt(sv1)+" "+unitZh(u),sv1); if(pk>0) add("一整包 "+fmt(pk)+" "+unitZh(u),pk);
+    quick=quick.filter(q=>q!==sv1&&q!==pk).slice(0,3);
+  }
   quick.forEach(q=>{ const c=el("button",{class:"chip",type:"button"},fmt(q)+" "+unitZh(u)); c.addEventListener("click",()=>{ ai.value=String(q); upd(); }); qc.appendChild(c); });
   b.appendChild(qc);
   const pv=el("div",{class:"card",style:"padding:12px 14px"}); b.appendChild(pv);
@@ -3830,9 +3849,9 @@ function pickFood(f,qty){
       const mt=types.find(x=>String(x.name).toLowerCase()===MS.meal);
       await Sparky.post("/api/food-entries",{user_id:me.id,food_id:f.id,variant_id:v.id,meal_type:MS.meal,meal_type_id:mt?mt.id:null,
         quantity:q,unit:u,entry_date:MS.date,entry_time:null,notes:null});
-      const n=foodPer(v,q);
+      const n=foodPer(v,q); const at=MS.date, am=MS.meal; await pendDone();
       refreshFoodViews(); MS.recent=null; MS.q=""; drawMealList(); loadRecentFoods();
-      msNote("已記錄："+f.name+" "+fmt(q)+" "+unitZh(u)+"（"+kc(n.kcal)+" 大卡）到"+(MS.date===today()?"今天":md(MS.date))+MEAL_ZH[MS.meal]+"，可以繼續加","ok");
+      msNote("已記錄："+f.name+" "+fmt(q)+" "+unitZh(u)+"（"+kc(n.kcal)+" 大卡）到"+(at===today()?"今天":md(at))+MEAL_ZH[am]+"，可以繼續加","ok");
     }catch(e){ sv.disabled=false; sv.textContent="記錄到"+MEAL_ZH[MS.meal]; msNote("沒有記錄成功："+(e.message||e),"err"); }
   });
 }
@@ -3868,30 +3887,36 @@ async function matchFood(name){
 }
 async function startPhoto(file){
   const b=$("#ms-body"); if(!b) return;
-  const pk=KEY+".photoOk."+((Auth.user&&Auth.user.sub)||"local");
-  let agreed=false; try{ agreed=localStorage.getItem(pk)==="1"; }catch(e){}
-  if(!agreed){
-    const y=await ask("照片會送去 AI 辨識",{sub:"照片會縮小後經過你的轉接程式（Cloudflare）交給 Google Gemini 辨識；如果 Gemini 不接受這次的連線地區，會改交給你的 SparkyFitness 及它設定的 AI 服務。照片不會被轉接程式保存，也不會存進 App；Google 與 AI 服務商依各自條款處理。",ok:"了解，繼續",cancel:"取消"});
-    if(!y) return;
-    try{ localStorage.setItem(pk,"1"); }catch(e){}
-  }
-  MS.photo={state:"busy"}; msNote("");
+  if(!(await ensurePhotoConsent())) return;
+  let data;
+  try{ data=await shrinkImage(file,1024); }catch(e){ toast(e.message||"讀不到這張照片"); return; }
+  runPhoto(data);
+}
+async function runPhoto(data){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  if(!(await ensurePhotoConsent())) return;
+  stopScanner(); MS.photo={state:"busy"}; msNote("");
   b.innerHTML="";
   const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
-  const st=el("div",{class:"sub",style:"margin:6px 0 10px"},"處理照片中…"); b.appendChild(st);
-  let data;
-  try{ data=await shrinkImage(file,1024); }catch(e){ st.textContent=e.message||"讀不到這張照片"; return; }
-  const im=el("img",{class:"msimg",src:data,alt:"要辨識的照片"}); b.insertBefore(im,st);
-  st.textContent="辨識中，大約需要 5–15 秒…";
+  pendTag(b);
+  const im=el("img",{class:"msimg",src:data,alt:"要辨識的照片"}); b.appendChild(im);
+  const st=el("div",{class:"sub",style:"margin:0 0 10px"},"辨識中，大約需要 5–15 秒…"); b.appendChild(st);
+  const later=el("button",{class:"btn sm",style:"margin-bottom:10px"},"先存起來，晚點再辨識");
+  if(!MS.pend){ later.addEventListener("click",()=>{ MS.photo=null; savePending("meal",data); }); b.appendChild(later); }
   const token=MS.photo;
   let est;
   try{ est=await Sparky.post("/ai/estimate",{image:data.split(",")[1],mime:"image/jpeg"}); }
-  catch(e){ if(MS.photo!==token) return; st.textContent=""; st.appendChild(el("span",{style:"color:var(--crit)"},"辨識失敗："+(e.message||e)));
+  catch(e){ if(MS.photo!==token) return; later.remove(); st.textContent=""; st.appendChild(el("span",{style:"color:var(--crit)"},"辨識失敗："+(e.message||e)));
     if(e.code==="no_gemini_key") st.appendChild(el("div",{style:"margin-top:4px"},"需要先在 Cloudflare 的轉接程式設定 Gemini 金鑰。"));
+    const row=el("div",{class:"chips",style:"margin-top:8px"});
+    const rt=el("button",{class:"chip",type:"button"},"再試一次"); rt.addEventListener("click",()=>runPhoto(data)); row.appendChild(rt);
+    if(!MS.pend){ const sv=el("button",{class:"chip",type:"button"},"存起來，晚點再辨識"); sv.addEventListener("click",()=>savePending("meal",data)); row.appendChild(sv); }
+    st.appendChild(row);
     return; }
+  later.remove();
   if(MS.photo!==token) return;
   const items=(est&&est.items)||[];
-  if(!items.length){ st.textContent="照片裡看不出食物，換個角度再拍一次，或用搜尋。"; return; }
+  if(!items.length){ st.textContent=MS.pend?"照片裡看不出食物，可以刪掉這張，改用搜尋。":"照片裡看不出食物，換個角度再拍一次，或用搜尋。"; return; }
   st.textContent="對照食物庫中…";
   // 先用中文名稱對食藥署資料，對不到再試備用名稱（Sparky 備援時會附上）
   const matched=await Promise.all(items.map(async x=>{ for(const n of [x.name,...(x.alt||[])]){ if(!n) continue; const f=await matchFood(n); if(f) return f; } return null; }));
@@ -3903,6 +3928,7 @@ function drawPhotoReview(im){
   const b=$("#ms-body"); if(!b||!MS.photo) return;
   const P=MS.photo; b.innerHTML="";
   const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  pendTag(b);
   if(im) b.appendChild(im);
   b.appendChild(el("div",{class:"sub",style:"margin:4px 0 8px"},"確認每一項和份量，不對的可以取消勾選或改克數。數值是估計，僅供參考。"));
   if(P.via==="sparky") b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--acc2-ink)"},"這次 Gemini 不接受連線地區，改由 Sparky 辨識，名稱已轉成中文；沒對到食藥署資料的項目請確認一下。"));
@@ -3953,12 +3979,313 @@ function drawPhotoReview(im){
         ? {source:"existing",food_id:r.food.id,variant_id:r.food.default_variant.id,quantity:num(r.g),unit:"g"}
         : {source:"new",quantity:num(r.g),unit:"g",food:{name:r.ai.name,serving_size:100,serving_unit:"g",calories:r.ai.kcal,protein:r.ai.protein,carbs:r.ai.carbs,fat:r.ai.fat}});
       await Sparky.post("/api/food-entry-meals/from-photo-estimate",{mode:"grouped",entry_date:MS.date,meal_type:MS.meal,meal_type_id:mt?mt.id:null,name:(P.dish||"拍照餐點").trim().slice(0,40),items});
-      const k=rows.reduce((a,r)=>a+foodPer(per(r),r.g).kcal,0);
+      const k=rows.reduce((a,r)=>a+foodPer(per(r),r.g).kcal,0); await pendDone();
       refreshFoodViews(); MS.recent=null; MS.q=""; drawMealList(); loadRecentFoods();
       msNote("已記錄："+(P.dish||"拍照餐點")+"，共 "+rows.length+" 項（"+kc(k)+" 大卡）","ok");
     }catch(e){ sv.disabled=false; sv.textContent="記錄到"+MEAL_ZH[MS.meal]; msNote("沒有記錄成功："+(e.message||e),"err"); }
   });
 }
+/* ============================================================
+   條碼掃描＋營養標示＋待辨識清單（m4-beta.21）
+   掃條碼：相機即時掃描（html5-qrcode，放在 vendor/，按下才載入）→ 查 Sparky（自己的食物 → Open Food Facts）
+     → 自己的食物：直接輸入份量；Open Food Facts：確認名稱與營養素後存成自己的食物（綁定條碼，下次直接找到）
+     → 查不到：拍營養標示給 AI 讀數字，或手動輸入
+   待辨識：當下不方便或辨識失敗時，照片連同日期、餐別先存在這台裝置（IndexedDB），7 天沒處理自動刪除
+   ============================================================ */
+const PEND_DAYS=7;
+const Pend={
+  _db:null,
+  open(){
+    if(this._db) return this._db;
+    this._db=new Promise((res,rej)=>{
+      let r; try{ r=indexedDB.open("fitnessRecord.pending",1); }catch(e){ rej(e); return; }
+      r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains("items")) db.createObjectStore("items",{keyPath:"id"}); };
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error||new Error("這台裝置不能暫存照片"));
+    });
+    this._db.catch(()=>{ this._db=null; });
+    return this._db;
+  },
+  async tx(mode,fn){ const db=await this.open(); return new Promise((res,rej)=>{ const t=db.transaction("items",mode), s=t.objectStore("items"); let out; const r=fn(s); if(r) r.onsuccess=()=>{ out=r.result; }; t.oncomplete=()=>res(out); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); }); },
+  sub(){ return (Auth.user&&Auth.user.sub)||"local"; },
+  async all(){ try{ const a=await this.tx("readonly",s=>s.getAll()); const me=this.sub(); return (a||[]).filter(x=>x.sub===me).sort((a,b)=>a.at-b.at); }catch(e){ return []; } },
+  async put(x){ const it=Object.assign({id:"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),sub:this.sub(),at:Date.now()},x); await this.tx("readwrite",s=>s.put(it)); return it; },
+  async del(id){ try{ await this.tx("readwrite",s=>s.delete(id)); }catch(e){} },
+  async purge(){ try{ const lim=Date.now()-PEND_DAYS*864e5; const a=await this.tx("readonly",s=>s.getAll()); for(const x of (a||[])) if(!(x.at>lim)) await this.del(x.id); }catch(e){} },
+  async clearSub(sub){ try{ const a=await this.tx("readonly",s=>s.getAll()); for(const x of (a||[])) if(x.sub===sub) await this.del(x.id); }catch(e){} },
+  left(x){ return Math.max(0,Math.ceil((x.at+PEND_DAYS*864e5-Date.now())/864e5)); }
+};
+const PEND_KIND={meal:"餐點照片",scan:"條碼照片",label:"營養標示"};
+/* 存進待辨識：記下現在的日期與餐別 */
+async function savePending(kind,image,extra){
+  try{
+    await Pend.put(Object.assign({kind,image,date:MS.date,meal:MS.meal},extra||{}));
+    endPend(); MS.photo=null; stopScanner(); drawMealList();
+    msNote("已存到「待辨識」，記在"+(MS.date===today()?"今天":md(MS.date))+MEAL_ZH[MS.meal]+"；"+PEND_DAYS+" 天內補辨識就好","ok");
+    if(view==="food") renderFood();
+  }catch(e){ toast("這台裝置不能暫存照片："+(e.message||e)); }
+}
+/* 處理待辨識項目時，暫時改用當時的日期與餐別 */
+function beginPend(it){ if(!MS) return; if(!MS.saved) MS.saved={date:MS.date,meal:MS.meal}; MS.date=it.date; MS.meal=it.meal; MS.pend=it; }
+function endPend(){ if(!MS) return; if(MS.saved){ MS.date=MS.saved.date; MS.meal=MS.saved.meal; } MS.saved=null; MS.pend=null; }
+async function pendDone(){ if(MS&&MS.pend){ const id=MS.pend.id; await Pend.del(id); if(view==="food") renderFood(); } }
+function pendTag(b){ if(MS&&MS.pend) b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--acc)"},"補辨識：會記到 "+(MS.pend.date===today()?"今天":md(MS.pend.date))+MEAL_ZH[MS.pend.meal])); }
+async function drawPendingCard(host,onOpen){
+  const a=await Pend.all(); if(!a.length) return;
+  const c=el("button",{class:"rowcard",style:"margin:0 0 10px"});
+  const t=el("div",{class:"t"}); t.appendChild(el("b",null,"待辨識 "+a.length+" 張")); t.appendChild(el("span",{class:"dt"},"›")); c.appendChild(t);
+  c.appendChild(el("div",{class:"m"},"先存起來的照片，最早一張 "+Pend.left(a[0])+" 天後自動刪除"));
+  c.addEventListener("click",onOpen); host.appendChild(c);
+}
+async function drawPendingList(){
+  const b=$("#ms-body"); if(!b||!MS) return; stopScanner(); MS.photo={state:"pending"};
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 返回"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  b.appendChild(el("div",{class:"sub",style:"margin:4px 0 10px"},"照片只存在這台裝置，會記到拍照時選的日期與餐別。"+PEND_DAYS+" 天沒處理會自動刪除。"));
+  const a=await Pend.all();
+  if(!a.length){ b.appendChild(el("div",{class:"sub"},"沒有待辨識的照片")); return; }
+  a.forEach(it=>{
+    const r=el("div",{class:"prow",style:"display:flex;gap:10px;align-items:center"});
+    r.appendChild(el("img",{src:it.image,alt:"",style:"width:56px;height:56px;object-fit:cover;border-radius:8px;flex:none"}));
+    const m=el("div",{style:"flex:1;min-width:0"});
+    m.appendChild(el("b",{style:"font-size:var(--fs-md)"},(PEND_KIND[it.kind]||"照片")+(it.barcode?" · "+it.barcode:"")));
+    m.appendChild(el("div",{class:"sub",style:"margin:2px 0 0"},(it.date===today()?"今天":md(it.date))+MEAL_ZH[it.meal]+" · "+Pend.left(it)+" 天後刪除"));
+    r.appendChild(m);
+    const go=el("button",{class:"btn sm pri"},"辨識"); go.addEventListener("click",()=>runPending(it));
+    const del=el("button",{class:"btn sm dim","aria-label":"刪除"},"刪除"); del.addEventListener("click",async()=>{ await Pend.del(it.id); drawPendingList(); if(view==="food") renderFood(); });
+    const bs=el("div",{style:"display:flex;flex-direction:column;gap:6px"}); bs.append(go,del); r.appendChild(bs);
+    b.appendChild(r);
+  });
+}
+async function runPending(it){
+  if(!MS) return; beginPend(it);
+  if(it.kind==="meal") return runPhoto(it.image);
+  if(it.kind==="label") return runLabel(it.image,it.barcode||"");
+  return scanFromImage(it.image);
+}
+/* 從飲食頁點「待辨識」：打開記一筆 → 飲食 → 清單 */
+function openPendingFromPage(){ openAddSheet({tab:"food"}); setTimeout(drawPendingList,0); }
+
+/* ---- 照片同意（拍照辨識與營養標示共用） ---- */
+async function ensurePhotoConsent(){
+  const pk=KEY+".photoOk."+((Auth.user&&Auth.user.sub)||"local");
+  let agreed=false; try{ agreed=localStorage.getItem(pk)==="1"; }catch(e){}
+  if(agreed) return true;
+  const y=await ask("照片會送去 AI 辨識",{sub:"照片會縮小後經過你的轉接程式（Cloudflare）交給 Google Gemini 辨識；如果 Gemini 不接受這次的連線地區，會改交給你的 SparkyFitness 及它設定的 AI 服務。照片不會被轉接程式保存，也不會存進你的紀錄。每個帳號每天最多辨識 20 次。",ok:"同意並繼續",cancel:"先不要"});
+  if(!y) return false;
+  try{ localStorage.setItem(pk,"1"); }catch(e){}
+  return true;
+}
+
+/* ---- 掃描元件（同網站的 vendor 檔，按下才載入） ---- */
+let _hqP=null, SCAN=null;
+function loadScanner(){
+  if(window.__Html5QrcodeLibrary__) return Promise.resolve(window.__Html5QrcodeLibrary__);
+  if(_hqP) return _hqP;
+  _hqP=new Promise((res,rej)=>{
+    const s=document.createElement("script"); s.src="vendor/html5-qrcode.min.js"; s.async=true;
+    s.onload=()=>window.__Html5QrcodeLibrary__?res(window.__Html5QrcodeLibrary__):rej(new Error("掃描元件載入失敗"));
+    s.onerror=()=>{ _hqP=null; rej(new Error("掃描元件載入失敗，請確認網路")); };
+    document.head.appendChild(s);
+  });
+  return _hqP;
+}
+function barcodeFormats(L){ const F=L.Html5QrcodeSupportedFormats; return [F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E]; }
+function stopScanner(){
+  const s=SCAN; SCAN=null; if(!s) return;
+  try{ const st=s.getState&&s.getState(); if(st===2||st===3) s.stop().then(()=>{ try{ s.clear(); }catch(e){} }).catch(()=>{}); else { try{ s.clear(); }catch(e){} } }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopScanner(); });
+function cleanCode(v){ const d=String(v||"").replace(/\D/g,""); return /^\d{8,14}$/.test(d)?d:""; }
+
+/* ---- 掃條碼畫面 ---- */
+async function openScan(){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  stopScanner(); MS.photo={state:"scan"}; msNote("");
+  const token=MS.photo;
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ stopScanner(); MS.photo=null; drawMealList(); }); b.appendChild(back);
+  pendTag(b);
+  const cam=el("div",{id:"ms-cam",style:"width:100%;min-height:200px;border-radius:var(--r2);overflow:hidden;background:#000;margin:6px 0 8px"}); b.appendChild(cam);
+  const st=el("div",{class:"sub",style:"margin:0 0 10px"},"開啟相機中…"); b.appendChild(st);
+  // 手動輸入
+  const mf=el("div",{style:"display:flex;gap:8px;align-items:flex-end"});
+  const fw=el("div",{class:"field",style:"flex:1;margin:0"}); fw.appendChild(el("label",{for:"ms-code"},"或輸入條碼數字"));
+  const ci=el("input",{id:"ms-code",type:"text",inputmode:"numeric",autocomplete:"off",placeholder:"例如 4710088410118",maxlength:"14"}); fw.appendChild(ci);
+  const go=el("button",{class:"btn"},"查詢");
+  const doManual=()=>{ const c=cleanCode(ci.value); if(!c){ toast("條碼是 8 到 14 位數字"); return; } stopScanner(); lookupBarcode(c); };
+  go.addEventListener("click",doManual); ci.addEventListener("keydown",e=>{ if(e.key==="Enter") doManual(); });
+  mf.append(fw,go); b.appendChild(mf);
+  // 用照片（相機或相簿）
+  const row=el("div",{class:"chips",style:"margin-top:12px"});
+  const pb=el("button",{class:"chip",type:"button"},"用照片找條碼");
+  const fi=el("input",{type:"file",accept:"image/*",hidden:""});
+  pb.addEventListener("click",()=>fi.click());
+  fi.addEventListener("change",async()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(!f) return; stopScanner();
+    let data; try{ data=await shrinkImage(f,1600); }catch(e){ toast(e.message||"讀不到這張照片"); return; } scanFromImage(data); });
+  const lb=el("button",{class:"chip",type:"button"},"直接拍營養標示");
+  const li=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
+  lb.addEventListener("click",()=>li.click());
+  li.addEventListener("change",async()=>{ const f=li.files&&li.files[0]; li.value=""; if(!f) return; stopScanner();
+    let data; try{ data=await shrinkImage(f,1280); }catch(e){ toast(e.message||"讀不到這張照片"); return; } runLabel(data,""); });
+  row.append(pb,lb,fi,li); b.appendChild(row);
+  // 即時相機
+  let L;
+  try{ L=await loadScanner(); }catch(e){ if(MS.photo!==token) return; st.textContent=(e.message||e)+"。可以改輸入條碼數字或用照片。"; cam.remove(); return; }
+  if(MS.photo!==token) return;
+  try{
+    const sc=new L.Html5Qrcode("ms-cam",{formatsToSupport:barcodeFormats(L),verbose:false});
+    SCAN=sc;
+    await sc.start({facingMode:"environment"},{fps:10,qrbox:(w,h)=>({width:Math.max(160,Math.round(Math.min(w*0.85,360))),height:Math.max(80,Math.round(Math.min(h*0.45,160)))})},
+      txt=>{ const c=cleanCode(txt); if(!c||SCAN!==sc) return; if(navigator.vibrate) try{ navigator.vibrate(60); }catch(e){} stopScanner(); lookupBarcode(c); }, ()=>{});
+    if(SCAN!==sc){ try{ await sc.stop(); }catch(e){} return; }
+    st.textContent="把條碼放進框裡，對到會自動查詢";
+  }catch(e){
+    if(MS.photo!==token) return; stopScanner(); cam.remove();
+    const m=String(e&&e.message||e||"");
+    st.textContent=/Permission|NotAllowed|denied/i.test(m)?"沒有相機權限。可以在瀏覽器設定允許相機，或改輸入條碼數字、用照片。"
+      :"相機無法使用（"+m.slice(0,60)+"）。可以改輸入條碼數字或用照片。";
+  }
+}
+/* 從照片解碼條碼（不用 AI）；找不到條碼就問要不要當成營養標示 */
+async function scanFromImage(data){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  stopScanner(); MS.photo={state:"scanimg"}; const token=MS.photo;
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  pendTag(b);
+  b.appendChild(el("img",{class:"msimg",src:data,alt:"條碼照片"}));
+  const st=el("div",{class:"sub",style:"margin:0 0 10px"},"在照片裡找條碼…"); b.appendChild(st);
+  let code="";
+  try{
+    const L=await loadScanner();
+    const holder=el("div",{id:"ms-scanfile",hidden:""}); document.body.appendChild(holder);
+    try{ const sc=new L.Html5Qrcode("ms-scanfile",{formatsToSupport:barcodeFormats(L),verbose:false});
+      const blob=await (await fetch(data)).blob(); const file=new File([blob],"scan.jpg",{type:"image/jpeg"});
+      code=cleanCode(await sc.scanFile(file,false)); try{ sc.clear(); }catch(e){} }
+    catch(e){ code=""; }
+    holder.remove();
+  }catch(e){ if(MS.photo!==token) return; st.textContent=(e.message||e)+"。"; }
+  if(MS.photo!==token) return;
+  if(code){ if(MS.pend){ const it=MS.pend; it.barcode=code; } return lookupBarcode(code); }
+  st.textContent="照片裡找不到條碼。如果拍到的是營養標示，可以直接請 AI 讀數字。";
+  const row=el("div",{class:"chips"});
+  const lb=el("button",{class:"chip",type:"button"},"當成營養標示辨識"); lb.addEventListener("click",()=>runLabel(data,""));
+  const rs=el("button",{class:"chip",type:"button"},"重新掃描"); rs.addEventListener("click",openScan);
+  row.append(lb,rs);
+  if(!MS.pend){ const sv=el("button",{class:"chip",type:"button"},"存起來，晚點再辨識"); sv.addEventListener("click",()=>savePending("scan",data)); row.appendChild(sv); }
+  b.appendChild(row);
+}
+/* 查條碼：自己的食物 → 直接記；Open Food Facts → 確認後存成自己的食物；查不到 → 營養標示 */
+async function lookupBarcode(code){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  MS.photo={state:"lookup"}; const token=MS.photo;
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 重新掃描"); back.addEventListener("click",openScan); b.appendChild(back);
+  pendTag(b);
+  const st=el("div",{class:"sub",style:"margin:6px 0 10px"},"查詢條碼 "+code+"…"); b.appendChild(st);
+  let r;
+  try{ r=await Sparky.get("/api/v2/foods/barcode/"+code); }
+  catch(e){ if(MS.photo!==token) return; st.textContent="查詢失敗："+(e.message||e); return; }
+  if(MS.photo!==token) return;
+  const f=r&&r.food, v=f&&f.default_variant;
+  if(f&&f.id&&v&&v.id){ MS.photo=null; return pickFood(f,null,{note:"條碼 "+code+" · 你存過的食物"}); }
+  if(f&&v&&r.source==="openfoodfacts"){
+    return openFoodForm({code,provider:"openfoodfacts",name:f.name||"",brand:f.brand||"",basis:num(v.serving_size)||100,unit:/^ml$/i.test(v.serving_unit||"")?"ml":"g",
+      calories:v.calories,protein:v.protein,fat:v.fat,carbs:v.carbs,sugars:v.sugars,sodium:v.sodium,from:"Open Food Facts"});
+  }
+  st.textContent="你的食物庫和 Open Food Facts 都沒有這個條碼（"+code+"）。拍營養標示讓 AI 讀數字，或自己輸入；存好之後下次掃就會直接找到。";
+  const row=el("div",{class:"chips"});
+  const lb=el("button",{class:"chip",type:"button"},"拍營養標示");
+  const li=el("input",{type:"file",accept:"image/*",hidden:""});
+  lb.addEventListener("click",()=>li.click());
+  li.addEventListener("change",async()=>{ const x=li.files&&li.files[0]; li.value=""; if(!x) return;
+    let data; try{ data=await shrinkImage(x,1280); }catch(e){ toast(e.message||"讀不到這張照片"); return; } runLabel(data,code); });
+  const mb=el("button",{class:"chip",type:"button"},"手動輸入"); mb.addEventListener("click",()=>openFoodForm({code,name:"",brand:"",basis:100,unit:"g"}));
+  row.append(lb,mb,li); b.appendChild(row);
+}
+/* 營養標示：AI 讀數字（可先存起來晚點再讀） */
+async function runLabel(data,code){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  if(!(await ensurePhotoConsent())) return;
+  stopScanner(); MS.photo={state:"label"}; const token=MS.photo;
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  pendTag(b);
+  b.appendChild(el("img",{class:"msimg",src:data,alt:"營養標示照片"}));
+  const st=el("div",{class:"sub",style:"margin:0 0 10px"},"讀取營養標示中，大約需要 5–15 秒…"); b.appendChild(st);
+  const later=el("button",{class:"btn sm",style:"margin-bottom:10px"},"先存起來，晚點再辨識");
+  if(!MS.pend){ later.addEventListener("click",()=>{ MS.photo=null; savePending("label",data,{barcode:code}); }); b.appendChild(later); }
+  let L;
+  try{ L=await Sparky.post("/ai/estimate",{image:data.split(",")[1],mime:"image/jpeg",mode:"label"}); }
+  catch(e){ if(MS.photo!==token) return; later.remove(); st.textContent=""; st.appendChild(el("span",{style:"color:var(--crit)"},"辨識失敗："+(e.message||e)));
+    const row=el("div",{class:"chips",style:"margin-top:8px"});
+    const rt=el("button",{class:"chip",type:"button"},"再試一次"); rt.addEventListener("click",()=>runLabel(data,code));
+    const mb=el("button",{class:"chip",type:"button"},"手動輸入"); mb.addEventListener("click",()=>openFoodForm({code,name:"",brand:"",basis:100,unit:"g"}));
+    row.append(rt,mb);
+    if(!MS.pend){ const sv=el("button",{class:"chip",type:"button"},"存起來，晚點再辨識"); sv.addEventListener("click",()=>savePending("label",data,{barcode:code})); row.appendChild(sv); }
+    st.appendChild(row); return; }
+  if(MS.photo!==token) return;
+  if(!L||L.found===false||!(num(L.calories)>0||num(L.protein)>0||num(L.carbs)>0)){
+    later.remove(); st.textContent="照片裡讀不到營養標示，請拍清楚一點，或手動輸入。";
+    const row=el("div",{class:"chips"});
+    const mb=el("button",{class:"chip",type:"button"},"手動輸入"); mb.addEventListener("click",()=>openFoodForm({code,name:"",brand:"",basis:100,unit:"g"}));
+    row.appendChild(mb); st.appendChild(row); return;
+  }
+  const per100=L.basis!=="serving";
+  openFoodForm({code,name:L.name||"",brand:L.brand||"",basis:per100?100:(num(L.serving_size)||100),unit:L.serving_unit==="ml"?"ml":"g",
+    calories:L.calories,protein:L.protein,fat:L.fat,carbs:L.carbs,sugars:L.sugars,sodium:L.sodium,
+    serving:num(L.serving_size)||0,servings:num(L.servings_per_package)||0,from:L.via==="sparky"?"Sparky 讀取的營養標示":"AI 讀取的營養標示",low:L.confidence==="low",image:data});
+}
+/* 確認營養素並存成自己的食物（綁定條碼） */
+function openFoodForm(p){
+  const b=$("#ms-body"); if(!b||!MS) return;
+  MS.photo={state:"form"};
+  b.innerHTML="";
+  const back=el("button",{class:"backl"},"‹ 取消"); back.addEventListener("click",()=>{ MS.photo=null; drawMealList(); }); b.appendChild(back);
+  pendTag(b);
+  if(p.image) b.appendChild(el("img",{class:"msimg",src:p.image,alt:"營養標示照片",style:"max-height:140px"}));
+  b.appendChild(el("div",{class:"sub",style:"margin:4px 0 8px"},[p.from?"資料來源："+p.from:"自己輸入營養標示",p.code?"條碼 "+p.code:""].filter(Boolean).join(" · ")));
+  if(p.low) b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--warn-ink,var(--crit))"},"有些數字看不太清楚，請對照包裝確認。"));
+  const F={name:p.name||"",brand:p.brand||"",basis:String(p.basis||100),unit:p.unit||"g"};
+  ["calories","protein","fat","carbs","sugars","sodium"].forEach(k=>F[k]=p[k]==null||p[k]===""?"":String(Math.round(num(p[k])*10)/10));
+  if(F.name && !/[㐀-鿿]/.test(F.name)) b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px"},"名稱可以改成中文，之後搜尋比較好找。"));
+  b.appendChild(fieldInput("名稱","text",F.name,v=>F.name=v,"例如 義美小泡芙",{maxlength:"80"}));
+  b.appendChild(fieldInput("品牌（選填）","text",F.brand,v=>F.brand=v,"",{maxlength:"60"}));
+  const br=el("div",{style:"display:flex;gap:8px;align-items:flex-end"});
+  const bw=fieldInput("營養標示的基準","text",F.basis,v=>F.basis=v,"100",{inputmode:"decimal"}); bw.style.flex="1";
+  const uc=el("div",{class:"field",style:"flex:none"}); uc.appendChild(el("label",null,"單位"));
+  uc.appendChild(chipRow(["公克","毫升"],F.unit==="ml"?"毫升":"公克",v=>{ F.unit=v==="毫升"?"ml":"g"; }));
+  br.append(bw,uc); b.appendChild(br);
+  b.appendChild(el("div",{class:"sub",style:"margin:-4px 0 10px"},"下面的數字是這個基準量的含量；台灣標示有「每100公克」那一欄，基準就填 100"));
+  const grid=el("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:0 10px"});
+  [["calories","熱量（大卡）"],["protein","蛋白質（公克）"],["fat","脂肪（公克）"],["carbs","碳水化合物（公克）"],["sugars","糖（公克，選填）"],["sodium","鈉（毫克，選填）"]]
+    .forEach(([k,l])=>grid.appendChild(fieldInput(l,"text",F[k],v=>F[k]=v,"",{inputmode:"decimal"})));
+  b.appendChild(grid);
+  if(p.serving>0) b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px"},"包裝上：每一份 "+fmt(p.serving)+" "+(F.unit==="ml"?"毫升":"公克")+(p.servings>0?"，本包裝 "+fmt(p.servings)+" 份":"")));
+  const sv=el("button",{class:"btn pri wide",style:"margin-top:10px"},"存成我的食物，下一步填份量");
+  b.appendChild(sv);
+  sv.addEventListener("click",async()=>{
+    const name=F.name.trim(), basis=num(F.basis), kcal=F.calories===""?NaN:num(F.calories);
+    if(!name){ toast("請填名稱"); return; }
+    if(!(basis>0)){ toast("請填營養標示的基準，例如 100"); return; }
+    if(!(kcal>=0)||F.calories===""){ toast("請填熱量"); return; }
+    sv.disabled=true; sv.textContent="儲存中…";
+    const body={name,brand:F.brand.trim(),serving_size:basis,serving_unit:F.unit,calories:kcal};
+    ["protein","fat","carbs","sugars","sodium"].forEach(k=>{ if(F[k]!=="") body[k]=num(F[k]); });
+    if(p.code) body.barcode=p.code;
+    if(p.provider==="openfoodfacts"&&p.code){ body.provider_type="openfoodfacts"; body.provider_external_id=p.code; }
+    try{
+      const r=await Sparky.post("/api/foods",body);
+      const vid=r&&r.default_variant&&r.default_variant.id;
+      if(!r||!r.id||!vid) throw new Error("Sparky 沒有回傳新食物");
+      const food={id:r.id,name,brand:body.brand,default_variant:{id:vid,serving_size:basis,serving_unit:F.unit,calories:kcal,protein:num(body.protein),carbs:num(body.carbs),fat:num(body.fat)}};
+      MS.photo=null; Sparky.reset();
+      const pre=p.serving>0?p.serving:null;
+      pickFood(food,pre,{note:"已存成你的食物"+(p.code?"，下次掃條碼 "+p.code+" 會直接找到":""),serving:p.serving,servings:p.servings});
+    }catch(e){ sv.disabled=false; sv.textContent="存成我的食物，下一步填份量"; toast("沒有存成功："+(e.message||e)); }
+  });
+}
+
 /* ============================================================
    身體數據：體重、體脂、腰圍、身高 → BMI
    來源：Sparky 的每日量測（check-in）。Apple 健康手動輸入的會經 Sparky iOS App 同步進來；
@@ -4693,7 +5020,7 @@ function renderFood(){
     ["登入 SparkyFitness，到 Settings → API Key Management 產生一把金鑰","回到這裡按「開始連接」，貼上轉接程式網址和金鑰","之後每天的熱量與營養會自動出現在首頁、這一頁和週報"].forEach(t=>ol.appendChild(el("li",null,t)));
     c.appendChild(ol);
     const b=el("button",{class:"btn pri wide"},"開始連接"); b.addEventListener("click",openSparkySheet); c.appendChild(b);
-    c.appendChild(el("div",{class:"sub",style:"font-size:var(--fs-xs)"},"金鑰只存在這台裝置，換手機或電腦要再輸入一次。"));
+    c.appendChild(el("div",{class:"sub",style:"font-size:var(--fs-xs)"},"金鑰只在連接時送出一次，由轉接程式加密保存；換手機或電腦用同一個 Google 帳號登入就會自動連上。"));
     v.appendChild(c); return;
   }
   const fcols=el("div",{class:"cols fcols"}), fA=el("div"), fB=el("div"); fcols.append(fA,fB); v.appendChild(fcols);
@@ -4704,7 +5031,9 @@ function renderFood(){
   ph.addEventListener("click",()=>fi.click());
   fi.addEventListener("change",()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(!f) return; openAddSheet({tab:"food"}); startPhoto(f); });
   const se=el("button",{class:"btn"},"搜尋食物"); se.addEventListener("click",()=>{ openAddSheet({tab:"food"}); setTimeout(()=>{ const i=$("#ms-body input[type=search]"); if(i) i.focus(); },60); });
-  cta.append(ph,se,fi); fA.appendChild(cta);
+  const bc=el("button",{class:"btn"},"掃條碼"); bc.addEventListener("click",()=>{ openAddSheet({tab:"food"}); setTimeout(openScan,0); });
+  cta.append(ph,bc,se,fi); fA.appendChild(cta);
+  const pendHost=el("div"); fA.appendChild(pendHost); drawPendingCard(pendHost,openPendingFromPage);
   const meals=el("div"); fA.appendChild(meals);
   const week=el("div"); fB.appendChild(week);
   const seq=++foodSeq, t0=today(), start=dstr(new Date(Date.now()-6*864e5));
@@ -4949,7 +5278,8 @@ function openPrivacySheet(){
     sec("運動紀錄、模板、設定",["存在你自己 Google 雲端硬碟的 App 專用隱藏區，這台裝置另有離線快取。","保存到你刪除為止：「我的 › 刪除雲端的運動紀錄」會刪除雲端與各裝置；「清除此裝置資料並登出」只刪這台裝置。"]);
     sec("飲食、體重、身體數據",["存在你們自己的 SparkyFitness（PikaPods 主機），App 透過你的轉接程式（Cloudflare）讀寫。","App 記的訓練會以估算熱量寫進 Sparky 的運動紀錄。","要刪除請在 SparkyFitness 裡刪除紀錄或帳號；App 不會另外保存。"]);
     sec("Sparky API 金鑰",["只在連接時送出一次，由你的轉接程式加密後保存在 Cloudflare，綁定你的 Google 帳號；瀏覽器裡不留金鑰。","「中斷連接」會刪除轉接程式保存的金鑰；也可以在 Sparky 的 Settings 直接停用金鑰。"]);
-    sec("拍照辨識",["照片縮小後經過轉接程式送給 Google Gemini；Gemini 不接受連線地區時改送你的 SparkyFitness 及其設定的 AI 服務。","轉接程式與 App 都不保存照片；每個帳號每天最多辨識 20 次。"]);
+    sec("拍照辨識",["照片縮小後經過轉接程式送給 Google Gemini；Gemini 不接受連線地區時改送你的 SparkyFitness 及其設定的 AI 服務。","轉接程式不保存照片；每個帳號每天最多辨識 20 次。","選「先存起來，晚點再辨識」的照片只存在這台裝置，辨識完或 7 天後自動刪除；登出清除資料時也會一起刪除。"]);
+    sec("掃條碼",["條碼在手機上直接解讀，不經過 AI；再用條碼向你的 SparkyFitness 查詢（Sparky 會查你存過的食物與 Open Food Facts）。","拍營養標示和拍照辨識一樣，經過轉接程式交給 AI 讀數字。存下的食物只有你自己看得到。"]);
     sec("不會做的事",["不放廣告、不賣資料、不把資料傳給上述以外的服務。"]);
     const cl=el("button",{class:"btn wide",style:"margin-top:16px"},"關閉"); cl.addEventListener("click",closeSheet); s.appendChild(cl);
   });
@@ -5389,6 +5719,7 @@ async function afterSignIn(){
     await Cloud.push();
   }catch(e){ Cloud.badge("err"); toast("雲端讀取失敗，先使用本機資料"); }
   rerenderView();
+  Pend.purge();
   if(await Sparky.restore()) rerenderView();
 }
 /* 雲端讀完後只重畫「現在這一頁」，不要把使用者拉回首頁；紀錄頁正在輸入就不動 */
@@ -5403,6 +5734,7 @@ function clearDeviceData(sub){
     ks.forEach(k=>{ if(k===KEY+"."+sub || k.startsWith(KEY+".sparky.") || k===KEY+".lastUser" || k.startsWith(KEY+".photoOk") || k===KEY+".local" || k===KEY) localStorage.removeItem(k); });
   }catch(e){}
   try{ sessionStorage.clear(); }catch(e){}
+  try{ Pend.clearSub(sub); }catch(e){}
   Sparky.mem={}; Sparky.sess=null; Sparky._me=null; SparkyEx.exIds={}; MS=null;
 }
 /* 登出：先確認雲端同步完成，再清除這台裝置的資料 */
