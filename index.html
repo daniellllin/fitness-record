@@ -385,7 +385,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:false, ver:"m3.0" };
+const APP = { beta:false, ver:"m3.1" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3141,7 +3141,7 @@ function renderMe(){
   const b2=el("button",{class:"btn sm"},"切換帳號");
   b2.addEventListener("click",switchAccount);
   const b3=el("button",{class:"btn sm dim"},"登出");
-  b3.addEventListener("click",signOut);
+  b3.addEventListener("click",signOutAndClear);
   sr.appendChild(b1); sr.appendChild(b2); sr.appendChild(b3);
   sc.appendChild(sr);
   v.appendChild(sc);
@@ -3264,7 +3264,9 @@ function download(name,text,mime){
   document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
-function csvCell(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+/* 匯出 CSV：文字開頭若是 = + - @ 或定位字元，試算表會當成公式執行，前面加一個 ' 讓它變成純文字 */
+function csvCell(v){ if(typeof v!=="number"){ v=String(v==null?"":v); if(/^[=+\-@\t\r]/.test(v)) v="'"+v; } else v=String(v);
+  return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function exportCsv(){
   const head=["日期","運動","時長(分)","RPE","內容摘要","備註"];
   const rows=DB.entries.slice().sort((a,b)=>a.date.localeCompare(b.date))
@@ -3474,6 +3476,24 @@ async function afterSignIn(){
   }catch(e){ Cloud.badge("err"); toast("雲端讀取失敗，先使用本機資料"); }
   go("home");
 }
+/* 清除這台裝置上這個帳號的資料 */
+function clearDeviceData(sub){
+  try{ const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k) ks.push(k); }
+    ks.forEach(k=>{ if(k===KEY+"."+sub || k===KEY+".lastUser" || k===KEY) localStorage.removeItem(k); }); }catch(e){}
+  try{ sessionStorage.clear(); }catch(e){}
+}
+/* 登出：先確認雲端同步完成，再清除這台裝置的資料 */
+async function signOutAndClear(){
+  const sub=Auth.user&&Auth.user.sub;
+  if(Auth.user){
+    clearTimeout(Cloud.timer);
+    let ok=true; try{ await Cloud.push(); ok=!!Cloud.lastSync && Cloud.lastSync>=(DB.updatedAt||0)-1; }catch(e){ ok=false; }
+    if(!ok && !confirm("還有資料沒同步到雲端，現在登出並清除這台裝置的資料，最近的紀錄會遺失。仍要登出嗎？")) return;
+  }
+  if(sub) clearDeviceData(sub);
+  signOut();
+  toast("已登出，這台裝置上的資料已清除");
+}
 function signOut(){
   const t=Auth.token;
   Auth.token=null; Auth.expiresAt=0; Auth.user=null; Cloud.fileId=null; Cloud.lastSync=0;
@@ -3484,7 +3504,10 @@ function signOut(){
   $("#app").hidden=true; $("#gate").hidden=false; Cloud.badge("idle");
 }
 async function switchAccount(){
-  Cloud.flush(); Auth.token=null; Auth.expiresAt=0;
+  const old=Auth.user&&Auth.user.sub;
+  try{ clearTimeout(Cloud.timer); await Cloud.push(); }catch(e){}
+  if(old && Cloud.lastSync>=(DB.updatedAt||0)-1) clearDeviceData(old);
+  Auth.token=null; Auth.expiresAt=0;
   try{ await requestToken("select_account"); await afterSignIn(); toast("已切換帳號"); }
   catch(e){ toast(e.message||"切換失敗"); }
 }
