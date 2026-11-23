@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.21" };
+const APP = { beta:true, ver:"m4-beta.22" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -4253,13 +4253,34 @@ function openFoodForm(p){
   b.appendChild(fieldInput("品牌（選填）","text",F.brand,v=>F.brand=v,"",{maxlength:"60"}));
   const br=el("div",{style:"display:flex;gap:8px;align-items:flex-end"});
   const bw=fieldInput("營養標示的基準","text",F.basis,v=>F.basis=v,"100",{inputmode:"decimal"}); bw.style.flex="1";
+  const bIn=bw.querySelector("input");
   const uc=el("div",{class:"field",style:"flex:none"}); uc.appendChild(el("label",null,"單位"));
-  uc.appendChild(chipRow(["公克","毫升"],F.unit==="ml"?"毫升":"公克",v=>{ F.unit=v==="毫升"?"ml":"g"; }));
+  uc.appendChild(chipRow(["公克","毫升"],F.unit==="ml"?"毫升":"公克",v=>{ F.unit=v==="毫升"?"ml":"g"; setNote(); drawBasisChips(); }));
   br.append(bw,uc); b.appendChild(br);
-  b.appendChild(el("div",{class:"sub",style:"margin:-4px 0 10px"},"下面的數字是這個基準量的含量；台灣標示有「每100公克」那一欄，基準就填 100"));
+  // 換基準時，營養素跟著等比例換算（例如每 100 公克 → 每一份 40 公克）
+  const NK=["calories","protein","fat","carbs","sugars","sodium"], inputs={};
+  const uz=()=>F.unit==="ml"?"毫升":"公克";
+  let lastBasis=num(F.basis), undo=null;
+  const bc=el("div",{class:"chips",style:"margin:-4px 0 6px"});
+  const note=el("div",{class:"sub",style:"margin:0 0 10px"});
+  const setNote=()=>{ note.innerHTML=""; note.appendChild(document.createTextNode("下面的數字是每 "+(fmt(num(F.basis))||"—")+" "+uz()+" 的含量；改基準時會自動換算"));
+    if(undo){ const u=el("button",{class:"link",type:"button",style:"margin-left:6px"},"不要換算"); u.addEventListener("click",()=>{ NK.forEach(k=>{ F[k]=undo[k]; inputs[k].value=undo[k]; }); undo=null; setNote(); }); note.appendChild(u); } };
+  const rescale=nb=>{
+    nb=num(nb); if(!(nb>0)||!(lastBasis>0)||nb===lastBasis){ if(nb>0) lastBasis=nb; return; }
+    const k=nb/lastBasis, had=NK.some(x=>F[x]!=="");
+    if(had){ undo={}; NK.forEach(x=>{ undo[x]=F[x]; if(F[x]!==""){ F[x]=String(Math.round(num(F[x])*k*10)/10); inputs[x].value=F[x]; } }); }
+    lastBasis=nb; setNote();
+  };
+  bIn.addEventListener("change",()=>rescale(bIn.value));
+  const drawBasisChips=()=>{ bc.innerHTML=""; const opts=[[100,"每 100 "+uz()]]; if(num(p.serving)>0&&num(p.serving)!==100) opts.push([num(p.serving),"每一份 "+fmt(num(p.serving))+" "+uz()]);
+    if(opts.length<2) return;
+    opts.forEach(([v,l])=>{ const c=el("button",{class:"chip",type:"button","aria-pressed":String(num(F.basis)===v)},l);
+      c.addEventListener("click",()=>{ F.basis=String(v); bIn.value=F.basis; rescale(v); drawBasisChips(); }); bc.appendChild(c); }); };
+  bIn.addEventListener("input",()=>{ undo=null; drawBasisChips(); });
+  b.append(bc,note); drawBasisChips(); setNote();
   const grid=el("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:0 10px"});
   [["calories","熱量（大卡）"],["protein","蛋白質（公克）"],["fat","脂肪（公克）"],["carbs","碳水化合物（公克）"],["sugars","糖（公克，選填）"],["sodium","鈉（毫克，選填）"]]
-    .forEach(([k,l])=>grid.appendChild(fieldInput(l,"text",F[k],v=>F[k]=v,"",{inputmode:"decimal"})));
+    .forEach(([k,l])=>{ const fw=fieldInput(l,"text",F[k],v=>{ F[k]=v; if(undo){ undo=null; setNote(); } },"",{inputmode:"decimal"}); inputs[k]=fw.querySelector("input"); grid.appendChild(fw); });
   b.appendChild(grid);
   if(p.serving>0) b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px"},"包裝上：每一份 "+fmt(p.serving)+" "+(F.unit==="ml"?"毫升":"公克")+(p.servings>0?"，本包裝 "+fmt(p.servings)+" 份":"")));
   const sv=el("button",{class:"btn pri wide",style:"margin-top:10px"},"存成我的食物，下一步填份量");
