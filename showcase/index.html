@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>每日運動紀錄 · 作品介紹</title>
+<meta name="description" content="把訓練和飲食放在同一個地方看的個人健身紀錄工具：從問題定義、階段決策、資安檢查到上線的完整歷程，附可操作的示範版。">
+<meta property="og:title" content="每日運動紀錄 · 作品介紹">
+<meta property="og:description" content="把訓練和飲食放在同一個地方看的個人健身紀錄工具。">
+<meta property="og:image" content="img/desktop.webp">
+<style>
+:root{
+  --bg:#f3f2f2; --card:#eae9e9; --card2:#e0dcdc; --line:rgba(32,30,29,.14);
+  --ink:#201e1d; --ink2:#4f4c4b; --mut:#646060;
+  --acc:#006786; --acc-soft:rgba(0,136,176,.12); --acc2:#b8005c; --ok:#18794e;
+  --r:14px; --side:max(16px,env(safe-area-inset-left));
+  --font:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
+  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#62c5ee; --acc-soft:rgba(98,197,238,.14); --acc2:#ff90b1; --ok:#5fd49a; } }
+:root[data-theme="dark"]{ --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
+  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#62c5ee; --acc-soft:rgba(98,197,238,.14); --acc2:#ff90b1; --ok:#5fd49a; }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--font);letter-spacing:.01em}
+a{color:var(--acc)}
+img{max-width:100%;display:block}
+.wrap{max-width:1080px;margin:0 auto;padding:0 var(--side)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h1{font-size:clamp(32px,6vw,52px);line-height:1.15;margin:0 0 14px;letter-spacing:-.01em}
+h2{font-size:clamp(24px,3.6vw,32px);line-height:1.3;margin:0 0 8px}
+h3{font-size:19px;line-height:1.4;margin:0 0 6px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--acc);text-transform:uppercase;margin:0 0 10px}
+.lead{font-size:clamp(17px,2.2vw,20px);color:var(--ink2);margin:0 0 22px;max-width:40em}
+.sub{color:var(--mut);font-size:15px;margin:0 0 28px;max-width:44em}
+p{margin:0 0 12px}
+/* hero */
+.hero{padding:56px 0 48px;display:grid;grid-template-columns:1fr;gap:36px;align-items:center}
+@media (min-width:900px){ .hero{grid-template-columns:1.15fr .85fr;padding-top:72px} }
+.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:0 0 26px;padding:0}
+@media (min-width:600px){ .meta{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.meta div{border-left:2px solid var(--acc);padding-left:10px}
+.meta dt{font-size:12px;color:var(--mut)} .meta dd{margin:0;font-weight:600;font-size:15px;white-space:nowrap}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;min-height:46px;padding:0 20px;border-radius:999px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--card)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+:root[data-theme="dark"] .btn.pri{color:#201e1d}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btn.pri{color:#201e1d} }
+/* phone */
+.phone{justify-self:center;width:min(100%,360px)}
+.frame{position:relative;width:100%;aspect-ratio:390/780;border-radius:44px;padding:12px;background:#151414;box-shadow:0 30px 60px -20px rgba(0,0,0,.35),inset 0 0 0 2px #333}
+.frame iframe,.frame img{width:100%;height:100%;border:0;border-radius:33px;background:var(--bg);display:block}
+.frame img{object-fit:cover;object-position:top}
+.cap{font-size:13px;color:var(--mut);text-align:center;margin-top:12px}
+/* cards */
+.grid{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:700px){ .grid.c2{grid-template-columns:1fr 1fr} .grid.c3{grid-template-columns:repeat(3,1fr)} }
+.card{background:var(--card);border-radius:var(--r);padding:20px 20px 16px}
+.card .n{font-size:13px;font-weight:700;color:var(--acc);margin-bottom:4px}
+.card p{color:var(--ink2);font-size:15px;margin:0}
+.goal{display:flex;gap:14px;align-items:flex-start}
+.goal b{display:block}
+.dot{flex:none;width:28px;height:28px;border-radius:50%;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:2px}
+/* timeline */
+.tl{position:relative;margin:0;padding:0;list-style:none}
+.tl>li{position:relative;padding:0 0 30px 34px}
+.tl>li::before{content:"";position:absolute;left:8px;top:10px;bottom:-4px;width:2px;background:var(--line)}
+.tl>li:last-child::before{display:none}
+.tl>li::after{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--acc)}
+.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:1px 10px;margin-right:6px;vertical-align:2px}
+.pd{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0 0;font-size:15px}
+.pd dt{color:var(--mut);white-space:nowrap} .pd dd{margin:0;color:var(--ink2)}
+.sublist{margin:12px 0 0;display:grid;gap:10px;grid-template-columns:1fr}
+@media (min-width:760px){ .sublist{grid-template-columns:1fr 1fr} }
+.sublist div{background:var(--card);border-radius:12px;padding:12px 14px;font-size:14.5px;color:var(--ink2)}
+.sublist b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:12px 12px 12px 0;border-bottom:1px solid var(--line)}
+.tbl th{font-size:13px;color:var(--mut);font-weight:600}
+.tbl td:first-child{font-weight:600;white-space:nowrap}
+.tbl .alt{color:var(--mut)}
+@media (max-width:700px){
+  .tbl thead{display:none}
+  .tbl tr{display:block;padding:12px 0;border-bottom:1px solid var(--line)}
+  .tbl td{display:block;border:0;padding:2px 0}
+  .tbl td:nth-child(2)::before{content:"採用："; color:var(--mut); font-weight:400}
+  .tbl td:nth-child(3)::before{content:"考慮過："; color:var(--mut)}
+  .tbl td:nth-child(4)::before{content:"原因："; color:var(--mut)}
+}
+/* arch */
+.arch{background:var(--card);border-radius:var(--r);padding:16px;overflow:hidden}
+.arch svg{width:100%;height:auto;display:block}
+.arch text{fill:var(--ink);font-family:var(--font)}
+.arch .m{fill:var(--mut)}
+.arch .box{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+.arch .hl{stroke:var(--acc);stroke-width:2}
+.arch .ln{stroke:var(--mut);stroke-width:1.6;fill:none;marker-end:url(#arr)}
+.arch .arch-m{display:none}
+@media (max-width:640px){ .arch .arch-d{display:none} .arch .arch-m{display:block} }
+/* gallery */
+.gal{display:grid;grid-auto-flow:column;grid-auto-columns:min(62%,230px);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 16px;margin:0 calc(var(--side) * -1);padding-left:var(--side);padding-right:var(--side)}
+.gal figure{margin:0;scroll-snap-align:start}
+.gal img{width:100%;height:auto;border-radius:18px;border:1px solid var(--line);aspect-ratio:390/844;object-fit:cover;object-position:top;background:var(--card)}
+.gal figcaption{font-size:13.5px;color:var(--ink2);margin-top:8px;line-height:1.5}
+.wide{margin-top:22px}
+.wide img{width:100%;height:auto;border-radius:14px;border:1px solid var(--line)}
+.note{font-size:13px;color:var(--mut)}
+ul.plain{margin:0;padding-left:1.2em;color:var(--ink2)} ul.plain li{margin:4px 0}
+footer{padding:36px 0 56px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <p class="kicker">Side project · 產品設計與開發</p>
+      <h1>每日運動紀錄</h1>
+      <p class="lead">把<b>訓練</b>和<b>飲食</b>放在同一個地方看。給我和另一半每天使用的健身紀錄工具，我擔任產品經理，和 AI 協作，從問題定義、設計、開發、資安檢查一路做到上線。</p>
+      <dl class="meta">
+        <div><dt>角色</dt><dd>產品經理</dd></div>
+        <div><dt>期間</dt><dd>2026 年 8 月中至今</dd></div>
+        <div><dt>使用者</dt><dd>2 人日常使用</dd></div>
+        <div><dt>平台</dt><dd>Web · 手機／桌機</dd></div>
+      </dl>
+      <div class="btns">
+        <a class="btn pri" href="../demo/" target="_blank" rel="noopener">開啟示範版</a>
+        <a class="btn" href="https://github.com/daniellllin/fitness-record#readme" target="_blank" rel="noopener">閱讀完整 README</a>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="frame"><iframe src="../demo/" title="每日運動紀錄示範版" loading="lazy"></iframe></div>
+      <p class="cap">可直接操作 · 資料是虛構的，不會連到任何真實帳號</p>
+    </div>
+  </header>
+
+  <section id="problem">
+    <p class="kicker">Problem</p>
+    <h2>要解決的問題</h2>
+    <p class="sub">想回答「這週練了多少、吃了多少、體重有沒有往目標走」，卻要在好幾個 App 之間切換、自己心算。</p>
+    <div class="grid c2">
+      <div class="card"><div class="n">01</div><h3>資料散在好幾個地方</h3><p>重訓記在筆記、跑步在 Strava、體重在 Apple 健康、飲食在另一個 App，彼此的關係看不出來。</p></div>
+      <div class="card"><div class="n">02</div><h3>整合要付好幾份訂閱</h3><p>市售 App 各管一塊，要整合通常得訂閱多個服務，資料也存在別人的伺服器上。</p></div>
+      <div class="card"><div class="n">03</div><h3>台灣的食物不好記</h3><p>國外的營養資料庫查不到便當、小吃和在地包裝食品，記錄不準就失去參考價值。</p></div>
+      <div class="card"><div class="n">04</div><h3>太麻煩就不會持續</h3><p>重訓一組一組輸入、每餐查營養素，只要多幾個步驟，記錄就容易中斷。</p></div>
+    </div>
+  </section>
+
+  <section id="goals">
+    <p class="kicker">Goals</p>
+    <h2>核心目標</h2>
+    <p class="sub">每個功能進來之前，都先對照這五個目標。</p>
+    <div class="grid c2">
+      <div class="goal"><span class="dot">1</span><div><b>訓練與飲食同等重要，放在一起看</b><span class="note">首頁同時看到今天吃了多少、目標多少、有沒有運動；週報把訓練負荷、熱量差、體重放在同一頁。</span></div></div>
+      <div class="goal"><span class="dot">2</span><div><b>資料自己擁有</b><span class="note">運動紀錄存在使用者自己的 Google 雲端硬碟；飲食與身體數據存在自架的 SparkyFitness。</span></div></div>
+      <div class="goal"><span class="dot">3</span><div><b>幾乎零成本</b><span class="note">靜態網頁加上免費額度的服務，固定支出只有飲食系統的主機。</span></div></div>
+      <div class="goal"><span class="dot">4</span><div><b>記錄要快</b><span class="note">重訓自動帶入上次重量；飲食可拍照、上傳照片、掃條碼、搜尋食藥署資料。</span></div></div>
+      <div class="goal"><span class="dot">5</span><div><b>安全與隱私是上線門檻</b><span class="note">金鑰不放在瀏覽器、登出清除裝置資料、跨帳號存取實測過才上線。</span></div></div>
+    </div>
+  </section>
+
+  <section id="process">
+    <p class="kicker">Process</p>
+    <h2>開發歷程</h2>
+    <p class="sub">每個階段都先在測試版自己用過，確認沒問題才升級正式版。飲食整合這一段前後經過 25 個測試版。</p>
+    <ol class="tl">
+      <li>
+        <h3><span class="tag">M1</span>能每天用的運動紀錄</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>先要有一個每天願意打開的工具，而且不想架伺服器、不想付費。</dd>
+          <dt>決策</dt><dd>單一 HTML 放在 GitHub Pages；紀錄存在使用者自己的 Google 雲端硬碟 App 專用區，開發者讀不到任何人的資料，也不需要 Google 審查。</dd>
+          <dt>結果</dt><dd>重訓逐組輸入並自動帶入上次的重量與次數；離線可用，多台裝置自動合併。</dd>
+        </dl>
+      </li>
+      <li>
+        <h3><span class="tag">設計</span>從能用到好用</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>功能可以用，但版面是工程師排的，手機和電腦都不順手。</dd>
+          <dt>決策</dt><dd>先在 Claude Design 做出設計稿再套用；用裝置內建字體讓開啟更快；動作庫改用公有領域的 free-exercise-db（約 870 個動作，附示範圖）。</dd>
+          <dt>結果</dt><dd>手機、平板、桌機三種版面；桌機改成左側導覽加兩欄。</dd>
+        </dl>
+      </li>
+      <li>
+        <h3><span class="tag">M2</span>符合實際的訓練型態</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>實際訓練還有 HYROX、高強度間歇、混合健身，也需要知道「這週練得太多還是太少」。</dd>
+          <dt>決策</dt><dd>各訓練型態有專屬欄位；週報用 session-RPE（時長 × 自覺強度）計算訓練負荷，和前幾週比較。</dd>
+          <dt>結果</dt><dd>每週一份週報，標出負荷變化與高強度日。</dd>
+        </dl>
+      </li>
+      <li>
+        <h3><span class="tag">M3</span>公開賽事行事曆，第一次上線正式版</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>近期比賽的資訊散在好幾個報名網站。</dd>
+          <dt>決策</dt><dd>GitHub Actions 每週自動整理公開賽事成靜態檔，不需要後端；遵守 robots.txt，禁止抓取的網站不納入；線上路跑評估後先不做。</dd>
+          <dt>結果</dt><dd>首頁優先顯示自己報名的比賽，其次是近期公開賽事。</dd>
+        </dl>
+      </li>
+      <li>
+        <h3><span class="tag">M4</span>飲食整合：把吃的也放進來</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>飲食分析要做好很花時間；固定的熱量目標也無法反映「今天有沒有運動」。</dd>
+          <dt>決策</dt><dd>不自己重做，採用自架的開源 SparkyFitness；先用免費的 Cloudflare Worker 做轉接層，低成本驗證可行後再加深整合。</dd>
+        </dl>
+        <div class="sublist">
+          <div><b>台灣的食物資料</b>匯入衛福部食藥署營養資料，搜尋時優先顯示；評估過 FatSecret、Nutritionix，收錄與授權都不適合。</div>
+          <div><b>拍照辨識</b>AI 辨識每一項食物與克數，再對到食藥署資料，使用者確認後才寫入；AI 服務有地區限制時自動改用備援。</div>
+          <div><b>每日 TDEE 與階段目標</b>每日 TDEE ＝ 基礎代謝 × 1.2 ＋ 當天運動消耗；減脂、維持、增肌換算成每天的熱量差，運動日目標自動提高。</div>
+          <div><b>版面重新設計</b>用 Dieter Rams 的十項設計原則檢視，定出各頁角色：首頁看今天與本週、統計看長期、飲食負責記錄。</div>
+          <div><b>記錄更快</b>掃條碼、拍營養標示讓 AI 讀數字、每份與每 100 公克自動換算、每一餐都能回頭修改。</div>
+          <div><b>不怕當下沒空</b>照片可以先存起來 7 天內補辨識；上傳已拍的照片會依拍攝時間自動記到那一餐。</div>
+        </div>
+      </li>
+      <li>
+        <h3><span class="tag">上線前</span>資安檢查</h3>
+        <dl class="pd">
+          <dt>問題</dt><dd>外部程式碼審查（Codex）列出 P1–P3 的風險：金鑰放在瀏覽器、登出沒清資料、AI 用量沒有上限等。</dd>
+          <dt>決策</dt><dd>金鑰改由轉接程式加密保存並綁定 Google 帳號，App 只拿 12 小時、只存在記憶體的工作階段；登出前確認同步再清除；AI 每人有用量上限；本機伺服器與 CSV 匯出一併補強。</dd>
+          <dt>結果</dt><dd>用兩個帳號實測跨帳號存取，發現上游系統在 API 金鑰模式下有一個缺少擁有者檢查的漏洞，在轉接層補上防護；撤銷金鑰後數秒內失效也實測確認。</dd>
+        </dl>
+      </li>
+    </ol>
+  </section>
+
+  <section id="tradeoffs">
+    <p class="kicker">Decisions</p>
+    <h2>關鍵取捨</h2>
+    <p class="sub">多數決策都在「自己做」和「整合現成服務」之間選擇，原則是先用最低成本驗證，確定值得再加深。</p>
+    <table class="tbl">
+      <thead><tr><th>議題</th><th>採用</th><th>考慮過</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>運動紀錄存哪裡</td><td>使用者自己的 Google 雲端硬碟</td><td class="alt">自建資料庫</td><td>零成本、資料歸使用者，開發者碰不到別人的資料</td></tr>
+        <tr><td>飲食功能</td><td>自架 SparkyFitness ＋ 轉接層</td><td class="alt">自己從頭開發</td><td>營養分析已有成熟開源方案；轉接層可以先低成本驗證</td></tr>
+        <tr><td>主機</td><td>先用 PikaPods 託管</td><td class="alt">家裡現有的 NAS</td><td>先用託管快速上線，之後換新的 NAS 再搬回家</td></tr>
+        <tr><td>跑步資料</td><td>Strava → Apple 健康 → Sparky</td><td class="alt">訂閱 Strava 直接串接</td><td>不需要額外訂閱，同時也拿到 Apple 健康的體重與消耗</td></tr>
+        <tr><td>食物資料</td><td>衛福部食藥署資料＋Open Food Facts</td><td class="alt">FatSecret、Nutritionix</td><td>台灣食物收錄完整，授權適合個人使用</td></tr>
+        <tr><td>金鑰保管</td><td>轉接層加密保存</td><td class="alt">放在瀏覽器</td><td>資安審查的 P1 項目；換裝置不用重新輸入</td></tr>
+        <tr><td>線上路跑</td><td>先不做</td><td class="alt">每週自動收錄</td><td>評估後決定先不做，需要時可以手動新增賽事</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="architecture">
+    <p class="kicker">Architecture</p>
+    <h2>架構</h2>
+    <p class="sub">沒有自己的資料庫。App 是一個靜態網頁，運動紀錄放在使用者的雲端硬碟，飲食透過轉接層存到自架系統。</p>
+    <div class="arch">
+      <svg class="arch-d" viewBox="0 0 960 430" role="img" aria-label="系統架構圖">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--mut)"/></marker></defs>
+        <rect class="box hl" x="300" y="14" width="360" height="70" rx="12"/>
+        <text x="480" y="44" text-anchor="middle" font-size="17" font-weight="700">App（瀏覽器，單一 HTML）</text>
+        <text x="480" y="68" text-anchor="middle" font-size="13" class="m">GitHub Pages · 手機與桌機 · 可離線</text>
+        <rect class="box" x="20" y="160" width="250" height="84" rx="12"/>
+        <text x="145" y="194" text-anchor="middle" font-size="15" font-weight="700">Google 雲端硬碟</text>
+        <text x="145" y="218" text-anchor="middle" font-size="13" class="m">運動紀錄（使用者自己的）</text>
+        <rect class="box hl" x="355" y="160" width="250" height="100" rx="12"/>
+        <text x="480" y="190" text-anchor="middle" font-size="15" font-weight="700">轉接層（Cloudflare Worker）</text>
+        <text x="480" y="213" text-anchor="middle" font-size="13" class="m">驗證登入 · 加密保存金鑰</text>
+        <text x="480" y="235" text-anchor="middle" font-size="13" class="m">白名單 · 用量上限</text>
+        <rect class="box" x="690" y="160" width="250" height="84" rx="12"/>
+        <text x="815" y="194" text-anchor="middle" font-size="15" font-weight="700">公開賽事 JSON</text>
+        <text x="815" y="218" text-anchor="middle" font-size="13" class="m">GitHub Actions 每週更新</text>
+        <rect class="box" x="230" y="320" width="300" height="94" rx="12"/>
+        <text x="380" y="350" text-anchor="middle" font-size="15" font-weight="700">SparkyFitness（自架）</text>
+        <text x="380" y="373" text-anchor="middle" font-size="13" class="m">飲食 · 身體數據 · 食藥署食物庫</text>
+        <text x="380" y="395" text-anchor="middle" font-size="13" class="m">← Apple 健康（Sparky iOS 同步）</text>
+        <rect class="box" x="590" y="320" width="220" height="94" rx="12"/>
+        <text x="700" y="356" text-anchor="middle" font-size="15" font-weight="700">AI 辨識（Gemini）</text>
+        <text x="700" y="380" text-anchor="middle" font-size="13" class="m">餐點照片 · 營養標示</text>
+        <path class="ln" d="M380 84 C 300 120, 200 120, 160 156"/>
+        <text x="236" y="122" font-size="12" class="m">Google 登入</text>
+        <path class="ln" d="M480 84 L480 156"/>
+        <text x="490" y="124" font-size="12" class="m">12 小時工作階段</text>
+        <path class="ln" d="M580 84 C 660 120, 760 120, 800 156"/>
+        <path class="ln" d="M440 260 L400 316"/>
+        <path class="ln" d="M520 260 L640 316"/>
+      </svg>
+      <svg class="arch-m" viewBox="0 0 340 560" role="img" aria-label="系統架構圖（手機版）">
+        <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--mut)"/></marker></defs>
+        <g font-size="13">
+        <rect class="box hl" x="20" y="10" width="300" height="62" rx="12"/><text x="170" y="37" text-anchor="middle" font-size="15" font-weight="700">App（瀏覽器，單一 HTML）</text><text x="170" y="58" text-anchor="middle" class="m">GitHub Pages · 可離線</text>
+        <rect class="box" x="20" y="110" width="140" height="70" rx="12"/><text x="90" y="138" text-anchor="middle" font-weight="700">Google 雲端硬碟</text><text x="90" y="160" text-anchor="middle" class="m">運動紀錄</text>
+        <rect class="box" x="180" y="110" width="140" height="70" rx="12"/><text x="250" y="138" text-anchor="middle" font-weight="700">公開賽事 JSON</text><text x="250" y="160" text-anchor="middle" class="m">每週自動更新</text>
+        <rect class="box hl" x="20" y="220" width="300" height="80" rx="12"/><text x="170" y="250" text-anchor="middle" font-size="15" font-weight="700">轉接層（Cloudflare Worker）</text><text x="170" y="274" text-anchor="middle" class="m">驗證登入 · 加密金鑰 · 白名單 · 上限</text>
+        <rect class="box" x="20" y="340" width="300" height="86" rx="12"/><text x="170" y="370" text-anchor="middle" font-size="15" font-weight="700">SparkyFitness（自架）</text><text x="170" y="393" text-anchor="middle" class="m">飲食 · 身體數據 · 食藥署食物庫</text><text x="170" y="413" text-anchor="middle" class="m">← Apple 健康同步</text>
+        <rect class="box" x="20" y="466" width="300" height="70" rx="12"/><text x="170" y="494" text-anchor="middle" font-size="15" font-weight="700">AI 辨識（Gemini）</text><text x="170" y="516" text-anchor="middle" class="m">餐點照片 · 營養標示</text>
+        </g>
+        <path class="ln" style="marker-end:url(#arr2)" d="M90 72 L90 106"/><path class="ln" style="marker-end:url(#arr2)" d="M250 72 L250 106"/>
+        <path class="ln" style="marker-end:url(#arr2)" d="M170 72 C 170 150, 170 160, 170 216"/>
+        <path class="ln" style="marker-end:url(#arr2)" d="M170 300 L170 336"/>
+        <path class="ln" style="marker-end:url(#arr2)" d="M300 300 C 336 360, 336 430, 304 462"/>
+      </svg>
+    </div>
+  </section>
+
+  <section id="screens">
+    <p class="kicker">Screens</p>
+    <h2>畫面</h2>
+    <p class="sub">以下畫面都使用示範版的虛構資料。可以左右滑動。</p>
+    <div class="gal">
+      <figure><img src="img/home.webp" alt="首頁：今天的熱量與目標、本週訓練" loading="lazy" width="390" height="844"><figcaption><b>首頁</b>：今天吃了多少、目標多少、是不是運動日，一眼看完</figcaption></figure>
+      <figure><img src="img/report.webp" alt="週報：訓練負荷與熱量達成" loading="lazy" width="390" height="844"><figcaption><b>週報</b>：訓練負荷和熱量差放在同一頁</figcaption></figure>
+      <figure><img src="img/food.webp" alt="飲食頁" loading="lazy" width="390" height="844"><figcaption><b>飲食</b>：拍照、上傳照片、掃條碼、搜尋四種記法</figcaption></figure>
+      <figure><img src="img/photo.webp" alt="拍照辨識確認畫面" loading="lazy" width="390" height="844"><figcaption><b>拍照辨識</b>：逐項對到食藥署資料，確認後才寫入</figcaption></figure>
+      <figure><img src="img/label.webp" alt="營養標示表單" loading="lazy" width="390" height="844"><figcaption><b>營養標示</b>：每份與每 100 公克自動換算</figcaption></figure>
+      <figure><img src="img/log.webp" alt="重量訓練紀錄" loading="lazy" width="390" height="844"><figcaption><b>重訓紀錄</b>：自動帶入上次的重量與次數</figcaption></figure>
+      <figure><img src="img/body.webp" alt="身體數據" loading="lazy" width="390" height="844"><figcaption><b>身體</b>：體重、體脂、腰圍與 BMI 趨勢</figcaption></figure>
+      <figure><img src="img/trend.webp" alt="長期趨勢" loading="lazy" width="390" height="844"><figcaption><b>趨勢</b>：每週訓練時間與熱量差</figcaption></figure>
+      <figure><img src="img/food-dark.webp" alt="深色模式" loading="lazy" width="390" height="844"><figcaption><b>深色模式</b>：跟隨系統設定</figcaption></figure>
+    </div>
+    <figure class="wide"><img src="img/desktop.webp" alt="桌機版首頁" loading="lazy" width="1280" height="800"><figcaption class="cap">桌機版：左側導覽加兩欄</figcaption></figure>
+  </section>
+
+  <section id="learnings">
+    <p class="kicker">Learnings</p>
+    <h2>做法與下一步</h2>
+    <div class="grid c3">
+      <div class="card"><h3>先驗證，再加深</h3><p>飲食功能先用免費的轉接層和現成系統驗證，確定每天真的會用，才投入拍照辨識、條碼與 TDEE。</p></div>
+      <div class="card"><h3>測試版先自己用</h3><p>每個版本都先在獨立的測試版實際使用，資料與正式版分開，確認沒問題才升級。</p></div>
+      <div class="card"><h3>資安是上線門檻</h3><p>上線前做外部審查並實測跨帳號存取，找到上游系統的漏洞後在轉接層補上防護。</p></div>
+    </div>
+    <p style="margin-top:22px"><b>下一步</b></p>
+    <ul class="plain">
+      <li>有穿戴裝置後：運動消耗改用實測值，加入睡眠、HRV 與心率。</li>
+      <li>把飲食系統從託管主機搬到自己的 NAS。</li>
+    </ul>
+  </section>
+
+</div>
+<footer><div class="wrap">每日運動紀錄 · <a href="../demo/" target="_blank" rel="noopener">示範版</a> · <a href="https://github.com/daniellllin/fitness-record#readme" target="_blank" rel="noopener">README</a><br><span class="note">示範版的所有資料都是虛構的，不會連到任何真實帳號或服務。</span></div></footer>
+</body>
+</html>
