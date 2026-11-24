@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.24" };
+const APP = { beta:true, ver:"m4-beta.25" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3700,7 +3700,7 @@ function homeFood(v){
    ============================================================ */
 const MEALS=[["breakfast","早餐"],["lunch","午餐"],["snacks","點心"],["dinner","晚餐"]];
 const MEAL_ZH={}; MEALS.forEach(([k,n])=>MEAL_ZH[k]=n);
-function mealNow(){ const h=new Date().getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
+function mealNow(){ return mealAt(new Date()); }
 Sparky.post=async function(path,body,method){
   const r=await this.req(path,{method:method||"POST",body:body==null?undefined:JSON.stringify(body)});
   let j=null; try{ j=await r.json(); }catch(e){}
@@ -4001,7 +4001,8 @@ function drawPhotoReview(im){
    待辨識：當下不方便或辨識失敗時，照片連同日期、餐別先存在這台裝置（IndexedDB），7 天沒處理自動刪除
    ============================================================ */
 /* ---- 照片拍攝時間：補上傳以前拍的照片時，記到拍照當時的日期與餐別 ---- */
-function mealAt(d){ const h=d.getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
+/* 餐別（Daniel 11-24）：5–10 點早餐、11–15 點午餐、17–21 點晚餐（含整個小時，例如 15:59 仍是午餐），其他時間算點心 */
+function mealAt(d){ const h=d.getHours(); return h>=5&&h<=10?"breakfast":h>=11&&h<=15?"lunch":h>=17&&h<=21?"dinner":"snacks"; }
 /* 讀 JPEG 的 EXIF 拍攝時間（DateTimeOriginal，沒有就用 DateTime）；讀不到回 null */
 async function photoTakenAt(file){
   try{
