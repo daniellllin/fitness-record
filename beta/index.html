@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.22" };
+const APP = { beta:true, ver:"m4-beta.23" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3592,7 +3592,15 @@ Sparky.cached=async function(path){
 };
 Sparky.reset=function(){ this.mem={}; };
 /* 預設的轉接程式與 Sparky 網址（都是公開網址，不含金鑰） */
-const SPARKY_RELAY="https://sparky-relay.daniel-lin0515.workers.dev", SPARKY_SITE="https://danieloffitness.pikapod.net";
+/* 正式版與測試版各用自己的轉接程式（測試版先驗證轉接程式的改版，不影響正式版） */
+const SPARKY_RELAY_PROD="https://sparky-relay.daniel-lin0515.workers.dev", SPARKY_RELAY_BETA="https://sparky-relay-beta.daniel-lin0515.workers.dev";
+const SPARKY_RELAY=APP.beta?SPARKY_RELAY_BETA:SPARKY_RELAY_PROD, SPARKY_SITE="https://danieloffitness.pikapod.net";
+/* 測試版以前連的是正式版轉接程式：改連測試版專用的，需要重新連接一次（金鑰分開保存） */
+Sparky.migrateRelay=function(){
+  if(!APP.beta) return false;
+  const c=this.cfg(); if(!c.relay||String(c.relay).replace(/\/+$/,"")!==SPARKY_RELAY_PROD) return false;
+  c.relay=SPARKY_RELAY; c.linked=false; delete c.apiKey; this.set(c); this.sess=null; this.reset(); return true;
+};
 /* 問轉接程式：這個 Google 帳號是否已經保存過金鑰。是 → 回傳工作階段；否 → null */
 Sparky.probe=async function(relay){
   const c={relay:relay||SPARKY_RELAY};
@@ -3998,7 +4006,7 @@ const Pend={
   open(){
     if(this._db) return this._db;
     this._db=new Promise((res,rej)=>{
-      let r; try{ r=indexedDB.open("fitnessRecord.pending",1); }catch(e){ rej(e); return; }
+      let r; try{ r=indexedDB.open(APP.beta?"fitnessRecord.pending":KEY+".pending",1); /* 正式版與測試版分開 */ }catch(e){ rej(e); return; }
       r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains("items")) db.createObjectStore("items",{keyPath:"id"}); };
       r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error||new Error("這台裝置不能暫存照片"));
     });
@@ -5739,6 +5747,7 @@ async function afterSignIn(){
     applyTheme();
     await Cloud.push();
   }catch(e){ Cloud.badge("err"); toast("雲端讀取失敗，先使用本機資料"); }
+  Sparky.migrateRelay();
   rerenderView();
   Pend.purge();
   if(await Sparky.restore()) rerenderView();
