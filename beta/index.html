@@ -443,7 +443,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .wkstep button[disabled]{opacity:.35}
 .wkstep .r{flex:1;text-align:center}.wkstep .r b{display:block;font-size:var(--fs-lg)}.wkstep .r span{font-size:var(--fs-xs);color:var(--mut)}
 details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(--acc);cursor:pointer;min-height:32px;display:flex;align-items:center}
-.cta{display:flex;gap:8px;margin-top:10px}.cta .btn{flex:1;padding:12px}
+.cta{display:flex;gap:8px;margin-top:10px}.cta .btn{flex:1;padding:12px 6px;white-space:nowrap}
 .meal{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.meal:last-child{border-bottom:0}
 .meal b{font-size:var(--fs-base);font-weight:600;width:40px;flex:none}
 .meal .m{flex:1;min-width:0;font-size:var(--fs-sm);color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.meal .m.none{color:var(--mut)}
@@ -615,7 +615,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.23" };
+const APP = { beta:true, ver:"m4-beta.24" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3755,18 +3755,17 @@ function drawMealList(){
   const b=$("#ms-body"); if(!b||!MS) return; stopScanner(); endPend(); b.innerHTML=""; MS.pick=null; MS.photo=null;
   const pend=el("div",{style:"margin-top:12px"}); b.appendChild(pend);
   drawPendingCard(pend,drawPendingList);
-  const brow=el("div",{style:"display:flex;gap:8px;margin:2px 0 4px"});
-  const ph=el("button",{class:"btn pri",style:"flex:1"},"📷 拍照辨識");
+  const brow=el("div",{class:"cta",style:"margin:2px 0 10px"});
+  const ph=el("button",{class:"btn pri"},"拍照辨識");
   const fi=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
   ph.addEventListener("click",()=>fi.click());
   fi.addEventListener("change",()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(f) startPhoto(f); });
-  const sc=el("button",{class:"btn",style:"flex:1"},"▦ 掃條碼"); sc.addEventListener("click",openScan);
-  brow.append(ph,sc,fi); b.appendChild(brow);
-  const al=el("button",{class:"link",type:"button",style:"margin:0 0 10px"},"從相簿選餐點照片");
+  const up=el("button",{class:"btn"},"上傳照片");
   const ai=el("input",{type:"file",accept:"image/*",hidden:""});
-  al.addEventListener("click",()=>ai.click());
-  ai.addEventListener("change",()=>{ const f=ai.files&&ai.files[0]; ai.value=""; if(f) startPhoto(f); });
-  b.append(al,ai);
+  up.addEventListener("click",()=>ai.click());
+  ai.addEventListener("change",()=>{ const f=ai.files&&ai.files[0]; ai.value=""; if(f) startPhoto(f,{upload:true}); });
+  const sc=el("button",{class:"btn"},"掃條碼"); sc.addEventListener("click",openScan);
+  brow.append(ph,up,sc,fi,ai); b.appendChild(brow);
   const sf=el("div",{class:"field",style:"margin-bottom:8px"});
   const si=el("input",{type:"search",placeholder:"搜尋食物，例如 白飯、茶葉蛋",value:MS.q,"aria-label":"搜尋食物",autocomplete:"off",enterkeyhint:"search"});
   let t=null;
@@ -3893,9 +3892,10 @@ async function matchFood(name){
     return best;
   }catch(e){ return null; }
 }
-async function startPhoto(file){
+async function startPhoto(file,opt){
   const b=$("#ms-body"); if(!b) return;
   if(!(await ensurePhotoConsent())) return;
+  await adoptPhotoTime(file,opt&&opt.upload);
   let data;
   try{ data=await shrinkImage(file,1024); }catch(e){ toast(e.message||"讀不到這張照片"); return; }
   runPhoto(data);
@@ -4000,6 +4000,61 @@ function drawPhotoReview(im){
      → 查不到：拍營養標示給 AI 讀數字，或手動輸入
    待辨識：當下不方便或辨識失敗時，照片連同日期、餐別先存在這台裝置（IndexedDB），7 天沒處理自動刪除
    ============================================================ */
+/* ---- 照片拍攝時間：補上傳以前拍的照片時，記到拍照當時的日期與餐別 ---- */
+function mealAt(d){ const h=d.getHours(); return h>=5&&h<11?"breakfast":h>=11&&h<16?"lunch":h>=16&&h<22?"dinner":"snacks"; }
+/* 讀 JPEG 的 EXIF 拍攝時間（DateTimeOriginal，沒有就用 DateTime）；讀不到回 null */
+async function photoTakenAt(file){
+  try{
+    const buf=await file.slice(0,262144).arrayBuffer(), v=new DataView(buf);
+    if(v.byteLength<4||v.getUint16(0)!==0xFFD8) return null;
+    let o=2;
+    while(o+4<=v.byteLength){
+      const mk=v.getUint16(o), len=v.getUint16(o+2);
+      if((mk&0xFF00)!==0xFF00) return null;
+      if(mk===0xFFE1&&o+10<=v.byteLength&&v.getUint32(o+4)===0x45786966){
+        const t=o+10, le=v.getUint16(t)===0x4949, u16=x=>v.getUint16(x,le), u32=x=>v.getUint32(x,le);
+        const ascii=(x,n)=>{ let r=""; for(let i=0;i<n&&x+i<v.byteLength;i++){ const c=v.getUint8(x+i); if(!c) break; r+=String.fromCharCode(c); } return r; };
+        const ifd=(start,want)=>{ const out={}; if(t+start+2>v.byteLength) return out; const n=u16(t+start);
+          for(let i=0;i<n;i++){ const e=t+start+2+i*12; if(e+12>v.byteLength) break; const tag=u16(e);
+            if(want.includes(tag)){ const cnt=u32(e+4); out[tag]=tag===0x8769?u32(e+8):ascii(cnt>4?t+u32(e+8):e+8,cnt); } }
+          return out; };
+        const i0=ifd(u32(t+4),[0x0132,0x8769]);
+        let str="";
+        if(i0[0x8769]) str=(ifd(i0[0x8769],[0x9003])[0x9003])||"";
+        if(!str) str=i0[0x0132]||"";
+        const m=/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/.exec(str);
+        if(!m) return null;
+        const d=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);
+        return isNaN(d)?null:d;
+      }
+      if(mk===0xFFDA) return null;
+      o+=2+len;
+    }
+  }catch(e){}
+  return null;
+}
+/* 改「記一筆」上方的日期與餐別，畫面一起更新 */
+function setMealCtx(d,m){
+  if(!MS) return;
+  MS.date=d; MS.meal=m; if(typeof ADD==="object"&&ADD) ADD.date=d;
+  const di=$("#sheet input[type=date]"); if(di) di.value=d;
+  $$("#add-pane .chips").slice(0,1).forEach(c=>$$("button",c).forEach(x=>x.setAttribute("aria-pressed",String(x.textContent===MEAL_ZH[m]))));
+  $$("[data-mealbtn]").forEach(x=>{ if(!x.disabled) x.textContent="記錄到"+MEAL_ZH[m]; });
+}
+/* 上傳的照片：讀拍攝時間；跟目前選的日期或餐別不同就問要記到哪一餐 */
+async function adoptPhotoTime(file,upload){
+  if(!MS||MS.pend) return;
+  let t=await photoTakenAt(file);
+  if(!t&&upload&&file.lastModified){ const lm=new Date(file.lastModified); if(Date.now()-lm>20*60e3) t=lm; }   // 沒有 EXIF：用檔案時間（太接近現在就不參考）
+  if(!t){ if(upload) toast("讀不到拍攝時間，會記到目前選的 "+(MS.date===today()?"今天":md(MS.date))+MEAL_ZH[MS.meal]+"，可以在上方改"); return; }
+  const d=dstr(t), m=mealAt(t);
+  if(d>today()||Date.now()-t>60*864e5) return;
+  if(d===MS.date&&m===MS.meal) return;
+  const when=(d===today()?"今天":md(d))+" "+pad2(t.getHours())+":"+pad2(t.getMinutes());
+  const y=await ask("這張照片是 "+when+" 拍的",{sub:"要記到拍照那時的 "+(d===today()?"今天":md(d))+MEAL_ZH[m]+" 嗎？",
+    ok:"記到 "+(d===today()?"今天":md(d))+MEAL_ZH[m],cancel:"維持 "+(MS.date===today()?"今天":md(MS.date))+MEAL_ZH[MS.meal]});
+  if(y) setMealCtx(d,m);
+}
 const PEND_DAYS=7;
 const Pend={
   _db:null,
@@ -4129,6 +4184,7 @@ async function openScan(){
   const fi=el("input",{type:"file",accept:"image/*",hidden:""});
   pb.addEventListener("click",()=>fi.click());
   fi.addEventListener("change",async()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(!f) return; stopScanner();
+    await adoptPhotoTime(f,true);
     let data; try{ data=await shrinkImage(f,1600); }catch(e){ toast(e.message||"讀不到這張照片"); return; } scanFromImage(data); });
   const lb=el("button",{class:"chip",type:"button"},"直接拍營養標示");
   const li=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
@@ -4207,6 +4263,7 @@ async function lookupBarcode(code){
   const li=el("input",{type:"file",accept:"image/*",hidden:""});
   lb.addEventListener("click",()=>li.click());
   li.addEventListener("change",async()=>{ const x=li.files&&li.files[0]; li.value=""; if(!x) return;
+    await adoptPhotoTime(x,true);
     let data; try{ data=await shrinkImage(x,1280); }catch(e){ toast(e.message||"讀不到這張照片"); return; } runLabel(data,code); });
   const mb=el("button",{class:"chip",type:"button"},"手動輸入"); mb.addEventListener("click",()=>openFoodForm({code,name:"",brand:"",basis:100,unit:"g"}));
   row.append(lb,mb,li); b.appendChild(row);
@@ -5056,12 +5113,15 @@ function renderFood(){
   const card=el("div",{class:"card tcard"}); fA.appendChild(card); card.appendChild(el("div",{class:"sub",style:"margin:0"},"讀取中…"));
   // 拍照／搜尋
   const cta=el("div",{class:"cta"});
-  const ph=el("button",{class:"btn pri"},"拍照記一餐"), fi=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
+  const ph=el("button",{class:"btn pri"},"拍照"), fi=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:""});
   ph.addEventListener("click",()=>fi.click());
   fi.addEventListener("change",()=>{ const f=fi.files&&fi.files[0]; fi.value=""; if(!f) return; openAddSheet({tab:"food"}); startPhoto(f); });
-  const se=el("button",{class:"btn"},"搜尋食物"); se.addEventListener("click",()=>{ openAddSheet({tab:"food"}); setTimeout(()=>{ const i=$("#ms-body input[type=search]"); if(i) i.focus(); },60); });
+  const up=el("button",{class:"btn"},"上傳照片"), ui=el("input",{type:"file",accept:"image/*",hidden:""});
+  up.addEventListener("click",()=>ui.click());
+  ui.addEventListener("change",()=>{ const f=ui.files&&ui.files[0]; ui.value=""; if(!f) return; openAddSheet({tab:"food"}); startPhoto(f,{upload:true}); });
+  const se=el("button",{class:"btn"},"搜尋"); se.addEventListener("click",()=>{ openAddSheet({tab:"food"}); setTimeout(()=>{ const i=$("#ms-body input[type=search]"); if(i) i.focus(); },60); });
   const bc=el("button",{class:"btn"},"掃條碼"); bc.addEventListener("click",()=>{ openAddSheet({tab:"food"}); setTimeout(openScan,0); });
-  cta.append(ph,bc,se,fi); fA.appendChild(cta);
+  cta.append(ph,up,bc,se,fi,ui); fA.appendChild(cta);
   const pendHost=el("div"); fA.appendChild(pendHost); drawPendingCard(pendHost,openPendingFromPage);
   const meals=el("div"); fA.appendChild(meals);
   const week=el("div"); fB.appendChild(week);
