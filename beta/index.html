@@ -618,7 +618,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.26" };
+const APP = { beta:true, ver:"m4-beta.27" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -4727,6 +4727,7 @@ function estKcal(e,kg){
    - 同一天已經在 App 手動記過同一種運動，就不帶入（避免重複）
    - 標記 DB.sx[id]={hk:1}，不會再把估算消耗寫回 Sparky
    - 「Active Calories」這類沒有時長的紀錄不帶入
+   - 同一次運動被兩個來源寫進 Apple 健康（同一天、同運動、同開始時間、時長差 2 分鐘內）只帶一筆
    ============================================================ */
 const HK_SPORT=[[/running|treadmill/i,"run"],[/hiking/i,"hike"],[/cycling|biking/i,"bike"],[/swim/i,"swim"],[/badminton/i,"badminton"],
   [/strength training|weight/i,"strength"],[/high intensity interval/i,"hiit"],[/cross training|mixed cardio|functional training/i,"crossfit"]];
@@ -4745,9 +4746,19 @@ const HealthImport={
     return {id:"hk-"+x.id, sport, date:d, duration:Math.max(1,Math.round(num(x.duration_minutes))), rpe:null, note:"", data, src:"health",
       ext:{id:x.id,kcal:Math.round(num(x.calories_burned)),time:String(x.entry_time||"").slice(0,5)}, createdAt:new Date().toISOString()};
   },
+  same(a,b){ return a.date===b.date&&a.sport===b.sport&&a.ext&&b.ext&&a.ext.time&&a.ext.time===b.ext.time&&Math.abs(num(a.duration)-num(b.duration))<=2; },
+  /* 之前已經帶進來的重複紀錄：留第一筆，其餘刪掉並留墓碑 */
+  dedupe(){
+    const hs=DB.entries.filter(e=>e.src==="health"), drop=new Set();
+    hs.forEach((e,i)=>{ if(drop.has(e.id)) return; hs.slice(i+1).forEach(x=>{ if(this.same(e,x)) drop.add(x.id); }); });
+    if(!drop.size) return 0;
+    DB.entries=DB.entries.filter(e=>!drop.has(e.id)); drop.forEach(id=>DB.deleted[id]=Date.now());
+    return drop.size;
+  },
   async sync(days){
     if(!Sparky.on()||Auth.offline||this._busy) return 0;
     this._busy=true; let added=0;
+    const removed=this.dedupe();
     try{
       for(let i=days-1;i>=0;i--){
         const d=dstr(new Date(Date.now()-i*864e5));
@@ -4758,10 +4769,12 @@ const HealthImport={
           const id="hk-"+x.id;
           if(DB.entries.some(e=>e.id===id)||DB.deleted[id]) continue;
           if(DB.entries.some(e=>e.date===d&&e.sport===sport&&e.src!=="health")) continue;
-          DB.entries.push(this.toEntry(x,d,sport)); DB.sx[id]={hk:1}; added++;
+          const ne=this.toEntry(x,d,sport);
+          if(DB.entries.some(e=>e.src==="health"&&this.same(e,ne))) continue;
+          DB.entries.push(ne); DB.sx[id]={hk:1}; added++;
         }
       }
-      if(added) save();
+      if(added||removed) save();
       this._last=Date.now();
     } finally { this._busy=false; }
     return added;
