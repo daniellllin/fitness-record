@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>每日運動紀錄 · 作品介紹</title>
+<link rel="icon" href="img/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="description" content="把訓練和飲食放在同一個地方看的個人健身紀錄工具：從問題定義、階段決策、資安檢查到上線的完整歷程，附可操作的示範版。">
 <meta property="og:title" content="每日運動紀錄 · 作品介紹">
 <meta property="og:description" content="把訓練和飲食放在同一個地方看的個人健身紀錄工具。">
@@ -12,15 +14,15 @@
 :root{
   --bg:#f3f2f2; --card:#eae9e9; --card2:#e0dcdc; --line:rgba(32,30,29,.14);
   --ink:#201e1d; --ink2:#4f4c4b; --mut:#646060;
-  --acc:#006786; --acc-soft:rgba(0,136,176,.12); --acc2:#b8005c; --ok:#18794e;
+  --acc:#08655E; --acc-soft:rgba(18,181,166,.14); --acc2:#A83322; --ok:#08655E;
   --r:14px; --side:max(16px,env(safe-area-inset-left));
   --font:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
-  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#62c5ee; --acc-soft:rgba(98,197,238,.14); --acc2:#ff90b1; --ok:#5fd49a; } }
+  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#3DD6C6; --acc-soft:rgba(61,214,198,.14); --acc2:#FF8A78; --ok:#3DD6C6; } }
 :root[data-theme="dark"]{ --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
-  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#62c5ee; --acc-soft:rgba(98,197,238,.14); --acc2:#ff90b1; --ok:#5fd49a; }
+  --ink:#f3f2f2; --ink2:#cfcaca; --mut:#a5a1a1; --acc:#3DD6C6; --acc-soft:rgba(61,214,198,.14); --acc2:#FF8A78; --ok:#3DD6C6; }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--font);letter-spacing:.01em}
@@ -31,6 +33,7 @@ section{padding:56px 0;border-top:1px solid var(--line)}
 h1{font-size:clamp(32px,6vw,52px);line-height:1.15;margin:0 0 14px;letter-spacing:-.01em}
 h2{font-size:clamp(24px,3.6vw,32px);line-height:1.3;margin:0 0 8px}
 h3{font-size:19px;line-height:1.4;margin:0 0 6px}
+.brand{display:flex;align-items:center;gap:16px;margin:0 0 14px}.brand h1{margin:0}.brand img{width:clamp(56px,8vw,72px);height:auto;border-radius:22%;box-shadow:0 6px 16px -6px rgba(0,0,0,.25)}
 .kicker{font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--acc);text-transform:uppercase;margin:0 0 10px}
 .lead{font-size:clamp(17px,2.2vw,20px);color:var(--ink2);margin:0 0 22px;max-width:40em}
 .sub{color:var(--mut);font-size:15px;margin:0 0 28px;max-width:44em}
@@ -39,7 +42,7 @@ p{margin:0 0 12px}
 .hero{padding:56px 0 48px;display:grid;grid-template-columns:1fr;gap:36px;align-items:center}
 @media (min-width:900px){ .hero{grid-template-columns:1.15fr .85fr;padding-top:72px} }
 .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:0 0 26px;padding:0}
-@media (min-width:600px){ .meta{grid-template-columns:repeat(4,minmax(0,1fr))} }
+@media (min-width:600px){ .meta{grid-template-columns:repeat(4,max-content);column-gap:28px} }
 .meta div{border-left:2px solid var(--acc);padding-left:10px}
 .meta dt{font-size:12px;color:var(--mut)} .meta dd{margin:0;font-weight:600;font-size:15px;white-space:nowrap}
 .btns{display:flex;flex-wrap:wrap;gap:10px}
@@ -117,7 +120,7 @@ footer{padding:36px 0 56px;border-top:1px solid var(--line);color:var(--mut);fon
   <header class="hero">
     <div>
       <p class="kicker">Side project · 產品設計與開發</p>
-      <h1>每日運動紀錄</h1>
+      <div class="brand"><img src="img/icon.svg" alt="每日運動紀錄 App 圖示" width="72" height="72"><h1>每日運動紀錄</h1></div>
       <p class="lead">把<b>訓練</b>和<b>飲食</b>放在同一個地方看。給我和另一半每天使用的健身紀錄工具，我擔任產品經理，和 AI 協作，從問題定義、設計、開發、資安檢查一路做到上線。</p>
       <dl class="meta">
         <div><dt>角色</dt><dd>產品經理</dd></div>
