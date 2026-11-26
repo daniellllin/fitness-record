@@ -1,0 +1,42 @@
+{
+ "name": "每日運動紀錄 測試版",
+ "short_name": "運動紀錄β",
+ "start_url": "./",
+ "scope": "./",
+ "display": "browser",
+ "lang": "zh-Hant",
+ "background_color": "#f3f2f2",
+ "theme_color": "#12B5A6",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icons/monochrome-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "monochrome"
+  },
+  {
+   "src": "icons/any.svg",
+   "sizes": "any",
+   "type": "image/svg+xml",
+   "purpose": "any"
+  }
+ ]
+}
