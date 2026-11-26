@@ -3,21 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#f3f2f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#201e1d" media="(prefers-color-scheme: dark)">
 <title>每日運動紀錄 · 示範版</title>
 <meta name="robots" content="noindex">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="icon" href="../icons/any.svg" type="image/svg+xml">
+<link rel="icon" href="../icons/favicon-32.png" sizes="32x32" type="image/png">
+<meta name="apple-mobile-web-app-title" content="運動紀錄">
 <style>
 :root{
   color-scheme: light dark;
-  /* Broadsheet 設計系統：紙白底、灰色塊卡片、直角、青色為主、洋紅為第二強調色 */
+  /* Broadsheet 設計系統：紙白底、灰色塊卡片、直角。
+     強調色跟 App 圖示「心跳雙人」同一組：青綠＝主色與「達成」、珊瑚＝「超過目標／未達成」、暖黃＝提醒。
+     圖示的亮色只當色塊；淺色模式的文字用同色相的深色版（對比 4.5:1 以上），圖形 3:1 以上 */
   --bg:#f3f2f2; --card:#eae9e9; --card2:#e0dcdc; --line:rgba(32,30,29,.14);
   --ink:#201e1d; --ink2:#605d5d; --mut:#646060;        /* 設計稿的 #9b9797 對比不足，次要灰字改用 #646060 */
-  --acc:#006786; --acc-ink:#f3f2f2; --acc-soft:rgba(0,136,176,.14);
-  --acc-fill:#0088b0;                                   /* 色塊與長條用；當文字色對比不夠，文字一律用 --acc */
-  --acc2:#d6006c; --acc2-ink:#b8005c;                   /* 洋紅：只用在少數需要突顯的數值 */
-  --good:#0ca30c; --warn:#d98b00; --crit:#b3261e;
-  --good-ink:#0a6e0a; --warn-ink:#7d5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
-  --bar:#0088b0; --bar-dim:#d7d3d3;
+  --brand:#12B5A6; --brand2:#FF6B57; --brand3:#FFC93C;  /* 圖示原色：只用在大面積色塊 */
+  --acc:#08655E; --acc-ink:#f3f2f2; --acc-soft:rgba(18,181,166,.16);
+  --acc-fill:#0F8579;                                   /* 色塊與長條用；文字一律用 --acc */
+  --acc2:#E2553F; --acc2-ink:#A83322;                   /* 珊瑚：只代表「超過目標／未達成」 */
+  --good:#0F8579; --warn:#FFC93C; --crit:#A83322;       /* 達成＝主色；錯誤與超過同一個珊瑚 */
+  --good-ink:#08655E; --warn-ink:#7D5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
+  --bar:#0F8579; --bar-dim:#d7d3d3;
   --surface:#f3f2f2;                                    /* 底部面板與對話框 */
   --r:2px; --r2:2px; --r3:2px; --r-float:12px;
   --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px; --fs-input:16px;
@@ -32,24 +41,24 @@
   :root:not([data-theme="light"]){
     --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
     --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
-    --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
-    --acc-fill:#0088b0;
-    --acc2:#ff90b1; --acc2-ink:#ff90b1;
-    --bar:#62c5ee; --bar-dim:#444141;
-    --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
-    --good-ink:#5fd35f; --warn-ink:#f0b429;
+    --acc:#3DD6C6; --acc-ink:#201e1d; --acc-soft:rgba(61,214,198,.16);
+    --acc-fill:#12B5A6;
+    --acc2:#FF8A78; --acc2-ink:#FF8A78;
+    --bar:#3DD6C6; --bar-dim:#444141;
+    --good:#3DD6C6; --warn:#FFD166; --crit:#FF8A78;
+    --good-ink:#3DD6C6; --warn-ink:#FFD166;
     --surface:#201e1d;
   }
 }
 :root[data-theme="dark"]{
   --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
   --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
-  --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
-  --acc-fill:#0088b0;
-  --acc2:#ff90b1; --acc2-ink:#ff90b1;
-  --bar:#62c5ee; --bar-dim:#444141;
-  --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
-  --good-ink:#5fd35f; --warn-ink:#f0b429;
+  --acc:#3DD6C6; --acc-ink:#201e1d; --acc-soft:rgba(61,214,198,.16);
+  --acc-fill:#12B5A6;
+  --acc2:#FF8A78; --acc2-ink:#FF8A78;
+  --bar:#3DD6C6; --bar-dim:#444141;
+  --good:#3DD6C6; --warn:#FFD166; --crit:#FF8A78;
+  --good-ink:#3DD6C6; --warn-ink:#FFD166;
   --surface:#201e1d;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -275,7 +284,10 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .setup ol{margin:0 0 10px;padding-left:18px;font-size:var(--fs-sm);color:var(--ink2);line-height:1.8}
 .setup code{background:var(--card2);border-radius:var(--r3);padding:1px 4px;font-size:var(--fs-xs);word-break:break-all}
 /* beta 標示 */
-.betabar.demobar{background:var(--acc);color:#fff}
+.offbar{display:block;width:100%;border:0;background:var(--acc-soft);color:var(--acc);font:inherit;font-size:var(--fs-sm);font-weight:600;text-align:center;padding:9px 14px;cursor:pointer}
+.offbar[hidden]{display:none}
+.syncb[data-s="offline"]{color:var(--acc)} .syncb[data-s="offline"] i{background:var(--mut)}
+.betabar.demobar{background:var(--acc);color:var(--acc-ink)}
 .betabar{background:var(--warn);color:#1a1200;font-size:var(--fs-xs);font-weight:600;text-align:center;padding:4px 10px;
   letter-spacing:.04em}
 /* M2：分段控制、時間輸入、HYROX、間歇、賽事、週報 */
@@ -397,7 +409,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .fab{background:var(--acc-fill);color:#f3f2f2}
 .tabbar{background:var(--card);border-top:1px solid var(--line)}
 .race .rd .d,.rp-ratio{font-family:var(--font-num)}
-.vol{color:var(--acc2-ink)}
+.vol{color:var(--acc)}
 
 
 /* ---- m4-beta.13 文字角色與新區塊 ---- */
@@ -617,7 +629,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:false, demo:true, ver:"m4.1 示範版" };
+const APP = { beta:false, demo:true, ver:"m4.3 示範版" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1239,7 +1251,18 @@ function streak(){
   while(set.has(dstr(d))){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
+/* Apple 健康帶入的紀錄：後面標示來源；重訓沒有逐組資料時只顯示時長與消耗 */
 function describe(e){
+  if(e&&e.src==="health"){
+    const k=e.ext&&e.ext.kcal?e.ext.kcal+" 大卡":"";
+    const base=(e.sport==="strength"&&!((e.data&&e.data.exercises)||[]).length)
+      ? [e.duration?e.duration+" 分":"",k,e.rpe?"RPE "+e.rpe:""].filter(Boolean).join(" · ")
+      : [describeBase(e),k].filter(Boolean).join(" · ");
+    return [base,"Apple 健康"].filter(Boolean).join(" · ");
+  }
+  return describeBase(e);
+}
+function describeBase(e){
   const d=e.data||{};
   const ext=describeExt(e);           // HYROX / 間歇 / 混合健身（M2）
   if(ext!=null) return ext;
@@ -1271,7 +1294,7 @@ function entryRow(e){
   t.appendChild(el("span",{class:"dt"},md(e.date)));
   c.appendChild(t);
   const sx=DB.sx&&DB.sx[e.id];
-  const mt=[describe(e),sx&&sx.kcal?"約 "+kc(sx.kcal)+" 大卡":sx&&sx.hk?"消耗見 Apple 健康":""].filter(Boolean).join(" · ");
+  const mt=[describe(e),sx&&sx.kcal?"約 "+kc(sx.kcal)+" 大卡":sx&&sx.hk&&e.src!=="health"?"消耗見 Apple 健康":""].filter(Boolean).join(" · ");
   if(mt) c.appendChild(el("div",{class:"m"},mt));
   c.addEventListener("click",()=>openEntrySheet(e));
   return c;
@@ -1283,6 +1306,13 @@ function openEntrySheet(e){
     s.appendChild(h);
     s.appendChild(el("p",{style:"font-size:var(--fs-md);color:var(--ink2);margin:6px 0 14px"},describe(e)));
     if(e.note) s.appendChild(el("p",{style:"font-size:var(--fs-sm);color:var(--mut);margin:0 0 14px"},"📝 "+e.note));
+    if(e.src==="health"){
+      s.appendChild(el("div",{class:"sub",style:"margin:0 0 6px"},"這筆來自 Apple 健康（經 SparkyFitness 同步），熱量已算進當天的消耗。補上自覺強度，週報的訓練負荷會更準（沒填以 5 計算）。"));
+      s.appendChild(el("div",{class:"lab",style:"margin-top:4px"},"自覺強度 1–10"));
+      s.appendChild(chipRow(["1","2","3","4","5","6","7","8","9","10"],e.rpe==null?"":String(e.rpe),v=>{
+        const x=DB.entries.find(y=>y.id===e.id); if(!x) return; x.rpe=num(v); e.rpe=x.rpe; save();
+        const pd=s.querySelector("p"); if(pd) pd.textContent=describe(x); toast("已更新自覺強度"); }));
+    }
     if(e.sport==="strength"){
       ((e.data&&e.data.exercises)||[]).forEach(x=>{
         s.appendChild(el("div",{style:"font-weight:600;margin-top:10px"},x.name));
@@ -1775,7 +1805,11 @@ function saveLog(){
     duration:num(L.duration), rpe:L.rpe===""?null:num(L.rpe), note:L.note||"",
     data, createdAt:new Date().toISOString() };
   DB.entries.push(e); DB.draft=null; L=null;
+  // 同一天同一種運動已經從 Apple 健康帶入：用手動這筆取代（避免週報重複計算）
+  const dup=DB.entries.filter(x=>x.src==="health"&&x.date===e.date&&x.sport===e.sport);
+  dup.forEach(x=>{ DB.entries=DB.entries.filter(y=>y!==x); DB.deleted[x.id]=Date.now(); });
   stopRest(); save();
+  if(dup.length) setTimeout(()=>toast("已用這筆取代 Apple 健康帶入的"+SPORTS[e.sport].n),1600);
   SparkyEx.syncOne(e).catch(()=>{});
   toast("已儲存 "+mdw(e.date)+" " + SPORTS[e.sport].n);
   go("home");
@@ -3684,7 +3718,7 @@ function homeFood(v){
     const tl=el("div",{class:"sub",style:"margin-top:2px"}); wrap.appendChild(tl);
     Sparky.energy().then(E=>{ const D=E.D; if(!tl.isConnected||!D) return;
       tl.textContent="今天 TDEE "+kc(D.tdee)+" 大卡（"+(D.train?"運動日":"休息日")+"）"+(D.eaten>0?" · 熱量差 "+signKc(D.diff)+(D.ok==null?"":D.ok?" · 達成":" · "+okMark(D,E.rate)):""); }).catch(()=>{});
-    SparkyEx.maybeSync();
+    HealthImport.maybe(); SparkyEx.maybeSync();
     wrap.addEventListener("click",()=>go("food")); box.appendChild(wrap);
   }).catch(e=>{
     if(seq!==homeFoodSeq||view!=="home") return;
@@ -3941,7 +3975,7 @@ function drawPhotoReview(im){
   pendTag(b);
   if(im) b.appendChild(im);
   b.appendChild(el("div",{class:"sub",style:"margin:4px 0 8px"},"確認每一項和份量，不對的可以取消勾選或改克數。數值是估計，僅供參考。"));
-  if(P.via==="sparky") b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--acc2-ink)"},"這次 Gemini 不接受連線地區，改由 Sparky 辨識，名稱已轉成中文；沒對到食藥署資料的項目請確認一下。"));
+  if(P.via==="sparky") b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--warn-ink)"},"這次 Gemini 不接受連線地區，改由 Sparky 辨識，名稱已轉成中文；沒對到食藥署資料的項目請確認一下。"));
   const nf=el("div",{class:"field"}); nf.appendChild(el("label",{for:"ms-dish"},"這一餐的名稱"));
   const ni=el("input",{id:"ms-dish",type:"text",value:P.dish,maxlength:"40"}); ni.addEventListener("input",()=>P.dish=ni.value); nf.appendChild(ni); b.appendChild(nf);
   const list=el("div"); b.appendChild(list);
@@ -4591,8 +4625,8 @@ function energyBlock(){
     box.appendChild(k);
     box.appendChild(el("div",{class:"sub",style:"margin-top:2px"},
       "休息日 "+kc(D.G.keep)+" ＋ 今天運動 "+kc(D.burned)+" · 階段："+rateName(E.rate)+(D.G.adj?"（"+signKc(D.G.adj)+"／天）":"")));
-    if(E.noProfile) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 個人資料還沒填出生日期或性別，BMR 是估的"));
-    if(!E.ready) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 的熱量目標還沒改成每日計算，請按下方設定"));
+    if(E.noProfile) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--warn-ink)"},"Sparky 個人資料還沒填出生日期或性別，BMR 是估的"));
+    if(!E.ready) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--warn-ink)"},"Sparky 的熱量目標還沒改成每日計算，請按下方設定"));
     // 最近 7 天
     const c=el("div",{class:"card",style:"padding:4px 14px;margin-top:10px"});
     days.slice().reverse().forEach(d=>{ const x=dayEnergy(d,E.rate); if(!x) return;
@@ -4652,7 +4686,7 @@ function openEnergySheet(){
         row("碳水化合物",M.carbs+" g（休息日）");
         row("脂肪",M.fat+" g（休息日）");
         pv.appendChild(c);
-        if(Gb.floored) pv.appendChild(el("div",{class:"sub",style:"color:var(--acc2-ink)"},"休息日目標會低於基礎代謝，已經調高到 "+kc(Gb.floor)+" 大卡；運動日的消耗仍會讓你有赤字。"));
+        if(Gb.floored) pv.appendChild(el("div",{class:"sub",style:"color:var(--warn-ink)"},"休息日目標會低於基礎代謝，已經調高到 "+kc(Gb.floor)+" 大卡；運動日的消耗仍會讓你有赤字。"));
       };
       draw();
       btn.addEventListener("click",async()=>{
@@ -4696,6 +4730,71 @@ function estKcal(e,kg){
   if(e.sport==="run"&&km>0) gross=kg*km;
   return Math.max(0,Math.round(gross-kg*h));
 }
+/* ============================================================
+   Apple 健康 → App 運動紀錄（m4-beta.26）
+   Sparky iOS App 把 Apple 健康的體能訓練同步進 Sparky（備註「Source: HealthKit」）。
+   這裡把最近 14 天的這類紀錄帶進 App，最近紀錄、週報、統計都會算進去：
+   - id 用「hk-＋Sparky 紀錄 id」，刪除會留下墓碑，不會再被帶回來
+   - 同一天已經在 App 手動記過同一種運動，就不帶入（避免重複）
+   - 標記 DB.sx[id]={hk:1}，不會再把估算消耗寫回 Sparky
+   - 「Active Calories」這類沒有時長的紀錄不帶入
+   - 同一次運動被兩個來源寫進 Apple 健康（同一天、同運動、同開始時間、時長差 2 分鐘內）只帶一筆
+   ============================================================ */
+const HK_SPORT=[[/running|treadmill/i,"run"],[/hiking/i,"hike"],[/cycling|biking/i,"bike"],[/swim/i,"swim"],[/badminton/i,"badminton"],
+  [/strength training|weight/i,"strength"],[/high intensity interval/i,"hiit"],[/cross training|mixed cardio|functional training/i,"crossfit"]];
+const HealthImport={
+  _busy:false, _last:0,
+  name(x){ return String(x.exercise_name||(x.exercise_snapshot&&x.exercise_snapshot.name)||x.name||""); },
+  isHealth(x){ const src=String((x.exercise_snapshot&&x.exercise_snapshot.source)||x.source||"");
+    return !String(x.notes||"").startsWith(SX_TAG) && (/HealthKit/i.test(String(x.notes||""))||/HealthKit/i.test(src)) && num(x.duration_minutes)>0; },
+  sportOf(x){ const n=this.name(x)+" "+String(x.notes||""); const m=HK_SPORT.find(([re])=>re.test(n)); return m?m[1]:null; },
+  toEntry(x,d,sport){
+    const data={}, dist=num(x.distance);
+    if(dist>0) data.dist = sport==="swim" ? Math.round(dist<20?dist*1000:dist) : Math.round(dist*100)/100;
+    if(num(x.avg_heart_rate)>0) data.hr=Math.round(num(x.avg_heart_rate));
+    if((sport==="hike"||sport==="bike")&&num(x.elevation_gain_meters)>0) data.gain=Math.round(num(x.elevation_gain_meters));
+    if(sport==="strength") data.exercises=[];
+    return {id:"hk-"+x.id, sport, date:d, duration:Math.max(1,Math.round(num(x.duration_minutes))), rpe:null, note:"", data, src:"health",
+      ext:{id:x.id,kcal:Math.round(num(x.calories_burned)),time:String(x.entry_time||"").slice(0,5)}, createdAt:new Date().toISOString()};
+  },
+  same(a,b){ return a.date===b.date&&a.sport===b.sport&&a.ext&&b.ext&&a.ext.time&&a.ext.time===b.ext.time&&Math.abs(num(a.duration)-num(b.duration))<=2; },
+  /* 之前已經帶進來的重複紀錄：留第一筆，其餘刪掉並留墓碑 */
+  dedupe(){
+    const hs=DB.entries.filter(e=>e.src==="health"), drop=new Set();
+    hs.forEach((e,i)=>{ if(drop.has(e.id)) return; hs.slice(i+1).forEach(x=>{ if(this.same(e,x)) drop.add(x.id); }); });
+    if(!drop.size) return 0;
+    DB.entries=DB.entries.filter(e=>!drop.has(e.id)); drop.forEach(id=>DB.deleted[id]=Date.now());
+    return drop.size;
+  },
+  async sync(days){
+    if(!Sparky.on()||Auth.offline||this._busy) return 0;
+    this._busy=true; let added=0;
+    const removed=this.dedupe();
+    try{
+      for(let i=days-1;i>=0;i--){
+        const d=dstr(new Date(Date.now()-i*864e5));
+        let list; try{ list=await SparkyEx.dayEntries(d); }catch(e){ if(i===days-1) throw e; continue; }
+        for(const x of list){
+          if(!x||!x.id||!this.isHealth(x)) continue;
+          const sport=this.sportOf(x); if(!sport) continue;
+          const id="hk-"+x.id;
+          if(DB.entries.some(e=>e.id===id)||DB.deleted[id]) continue;
+          if(DB.entries.some(e=>e.date===d&&e.sport===sport&&e.src!=="health")) continue;
+          const ne=this.toEntry(x,d,sport);
+          if(DB.entries.some(e=>e.src==="health"&&this.same(e,ne))) continue;
+          DB.entries.push(ne); DB.sx[id]={hk:1}; added++;
+        }
+      }
+      if(added||removed) save();
+      this._last=Date.now();
+    } finally { this._busy=false; }
+    return added;
+  },
+  maybe(){
+    if(!Sparky.on()||Auth.offline||Date.now()-this._last<10*60e3) return;
+    this.sync(14).then(n=>{ if(n){ toast("已從 Apple 健康帶入 "+n+" 筆運動"); rerenderView(); } }).catch(()=>{});
+  }
+};
 const SparkyEx={
   exIds:{},
   async weight(){ try{ const B=await Sparky.body(120); const w=B.last("weight"); return w?w.v:70; }catch(e){ return 70; } },
@@ -4751,7 +4850,7 @@ const SparkyEx={
       if(changed){ Sparky.reset(); if(view==="home"||view==="stats"||view==="food") rerenderView(); }
     } finally { this._busy=false; }
   },
-  maybeSync(){ if(Sparky.on()&&Date.now()-this._last>15*60e3) this.syncRecent(7).catch(()=>{}); }
+  maybeSync(){ if(Sparky.on()&&!Auth.offline&&Date.now()-this._last>15*60e3) this.syncRecent(7).catch(()=>{}); }
 };
 
 /* ============================================================
@@ -4843,7 +4942,7 @@ function homeToday(v,sub,seq){
     card.appendChild(macroGrid(T.m,T.g));
   }).catch(e=>{ if(seq!==homeSeq) return; card.innerHTML="";
     card.appendChild(el("div",{class:"sub",style:"margin:0;color:var(--crit)"},"飲食數據讀取失敗（"+(e.message||e)+"），點這裡查看")); });
-  SparkyEx.maybeSync();
+  HealthImport.maybe(); SparkyEx.maybeSync();
 }
 function homeWeek(v,seq){
   secHead(v,"本週","週報 ›",()=>{ reportOff=0; go("stats",{tab:"report"}); });
@@ -4941,7 +5040,8 @@ function renderStats(opt){
   if(statsTab==="body"){ renderBodyStats(v); return; }
   renderTrend(v);
 }
-const SPORT_COLORS=["#0088b0","#7cc2d8","#2f7d4f","#9a6a00","#b8005c","#8fc49f","#e48ab6","#d3b16a","#4a4646","#a19c9c"];
+/* 運動類別色：由圖示的青綠、珊瑚、暖黃與灰推導；淺色與深色背景上都有 3:1 以上 */
+const SPORT_COLORS=["#0F8579","#E2553F","#B07800","#7A7474","#2F7F86","#A86A55","#9C7A1E","#3C8DAD","#BF4E3A","#6B8F8A"];
 /* 顏色依「最常做的運動」排序：最常做的用主色，避免每次換顏色 */
 function sportColor(k){
   const cnt={}; DB.entries.forEach(e=>cnt[e.sport]=(cnt[e.sport]||0)+1);
@@ -5649,7 +5749,10 @@ const CONFIG = {
 const SCOPES="openid email profile https://www.googleapis.com/auth/drive.appdata";
 const FILE_NAME = APP.beta ? "fitness-record-beta.json" : "fitness-record.json";
 
-const Auth={ clientId:"", tokenClient:null, token:null, expiresAt:0, user:null, _res:null, _rej:null,
+const STAY_DAYS=3;   // 上次成功登入後幾天內，重開 App 直接進入（先用這台裝置的資料，需要時再連線）
+const Auth={ clientId:"", tokenClient:null, token:null, expiresAt:0, user:null, offline:false, _res:null, _rej:null,
+  remember(){ if(!Auth.user) return; try{ localStorage.setItem(KEY+".lastProfile",JSON.stringify({sub:Auth.user.sub,name:Auth.user.name||"",email:Auth.user.email||"",picture:Auth.user.picture||"",at:Date.now()})); }catch(e){} },
+  recall(){ try{ const p=JSON.parse(localStorage.getItem(KEY+".lastProfile")||"null"); return p&&p.sub&&Date.now()-num(p.at)<STAY_DAYS*864e5?p:null; }catch(e){ return null; } },
   // 測試版沒填時，沿用正式版在同一個網域存過的用戶端 ID
   storedId(){ try{ return localStorage.getItem(KEY+".clientId")||localStorage.getItem("fitnessRecord.v1.clientId")||""; }catch(e){ return ""; } },
   setId(v){ try{ localStorage.setItem(KEY+".clientId",v); }catch(e){} Auth.clientId=v; } };
@@ -5670,6 +5773,7 @@ function initTokenClient(){
       if(r&&r.access_token){
         Auth.token=r.access_token;
         Auth.expiresAt=Date.now()+(parseInt(r.expires_in,10)||3600)*1000;
+        Auth.remember();
         if(Auth._res){ const f=Auth._res; Auth._res=Auth._rej=null; f(Auth.token); }
       } else if(Auth._rej){ const f=Auth._rej; Auth._res=Auth._rej=null; f(new Error("未取得授權")); }
     },
@@ -5677,9 +5781,11 @@ function initTokenClient(){
       f(new Error(e&&e.type==="popup_closed"?"你關閉了登入視窗":"登入失敗，請再試一次")); } }
   });
 }
-function requestToken(prompt){
+function requestToken(prompt,interactive){
   return new Promise((res,rej)=>{
     if(Auth.token&&Date.now()<Auth.expiresAt-60000) return res(Auth.token);
+    /* 先開 App 的狀態：沒有點擊就不跳 Google 視窗，改請使用者點上方提示重新連線 */
+    if(Auth.offline&&!interactive&&prompt!=="none"){ const e=new Error("需要重新連線，請點畫面上方的提示"); e.code="offline"; return rej(e); }
     if(!Auth.tokenClient) return rej(new Error("尚未初始化 Google 登入"));
     Auth._res=res; Auth._rej=rej;
     try{ Auth.tokenClient.requestAccessToken({prompt:prompt||""}); }
@@ -5698,7 +5804,7 @@ async function driveFetch(url,opts,retry){
 const Cloud={
   fileId:null, lastSync:0, timer:null, busy:false, pending:false, unloading:false,
   badge(s){ const d=$("#sync-dot"); if(!d) return; d.dataset.s=s;
-    const t=$("#sync-txt"); if(t) t.textContent=({idle:"尚未同步",saving:"同步中…",ok:"已同步",err:"同步失敗，點一下重試"})[s]||""; },
+    const t=$("#sync-txt"); if(t) t.textContent=({idle:"尚未同步",saving:"同步中…",ok:"已同步",err:"同步失敗，點一下重試",offline:"點一下連線"})[s]||""; },
   async findFile(){
     const q=encodeURIComponent("name = '"+FILE_NAME+"' and trashed = false");
     const r=await driveFetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+
@@ -5738,9 +5844,9 @@ const Cloud={
       if(Cloud.pending){ Cloud.pending=false; Cloud.push(); }
     }
   },
-  schedulePush(){ if(!Auth.user) return; clearTimeout(Cloud.timer); Cloud.badge("saving");
+  schedulePush(){ if(!Auth.user) return; if(Auth.offline){ Cloud.badge("offline"); return; } clearTimeout(Cloud.timer); Cloud.badge("saving");
     Cloud.timer=setTimeout(()=>Cloud.push(),1500); },
-  flush(){ if(Auth.user){ clearTimeout(Cloud.timer); Cloud.push(); } },
+  flush(){ if(Auth.user&&!Auth.offline){ clearTimeout(Cloud.timer); Cloud.push(); } },
   async syncNow(){
     Cloud.badge("saving");
     try{
@@ -5802,6 +5908,11 @@ async function afterSignIn(){
   $("#betaver").textContent=APP.ver;
   $("#top-date").textContent=mdw(today());
   paintAvatar(); go("home");
+  Auth.offline=false; showOffline(false); Auth.remember();
+  await syncAfterLogin();
+}
+/* 登入或重新連線之後：雲端合併、寫回，再恢復 Sparky 連接 */
+async function syncAfterLogin(){
   Cloud.badge("saving");
   try{
     const remote=await Cloud.pull();
@@ -5815,6 +5926,29 @@ async function afterSignIn(){
   Pend.purge();
   if(await Sparky.restore()) rerenderView();
 }
+/* 先開 App：3 天內登入過，就直接用這台裝置的資料進入，不擋在登入畫面 */
+function startOffline(p){
+  Auth.user={sub:p.sub,name:p.name,email:p.email,picture:p.picture}; Auth.offline=true;
+  cacheKey=KEY+"."+p.sub;
+  load(); applyTheme();
+  $("#gate").hidden=true; $("#app").hidden=false;
+  $("#betabar").hidden=!APP.beta; $("#betaver").textContent=APP.ver;
+  $("#top-date").textContent=mdw(today());
+  paintAvatar(); showOffline(true); Cloud.badge("offline"); go("home");
+}
+function showOffline(on){
+  let b=$("#offbar");
+  if(!on){ if(b) b.hidden=true; return; }
+  if(!b){ b=el("button",{id:"offbar",class:"offbar",type:"button"}); b.addEventListener("click",reconnect); const a=$("#app"); a.insertBefore(b,a.firstChild); }
+  b.textContent="目前顯示這台裝置上的資料 · 點這裡重新連線，同步雲端與飲食資料"; b.hidden=false;
+}
+/* 使用者點一下才跳 Google 視窗（瀏覽器只允許點擊後開視窗） */
+async function reconnect(){
+  if(!Auth.tokenClient){ toast("Google 登入元件還在載入，請稍等一下再點"); return; }
+  try{ await requestToken("",true); }catch(e){ toast(e.message||"連線失敗"); return; }
+  Auth.offline=false; showOffline(false); toast("已重新連線");
+  await syncAfterLogin();
+}
 /* 雲端讀完後只重畫「現在這一頁」，不要把使用者拉回首頁；紀錄頁正在輸入就不動 */
 function rerenderView(){
   if(view==="log") return;
@@ -5824,7 +5958,7 @@ function rerenderView(){
 function clearDeviceData(sub){
   try{
     const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k) ks.push(k); }
-    ks.forEach(k=>{ if(k===KEY+"."+sub || k.startsWith(KEY+".sparky.") || k===KEY+".lastUser" || k.startsWith(KEY+".photoOk") || k===KEY+".local" || k===KEY) localStorage.removeItem(k); });
+    ks.forEach(k=>{ if(k===KEY+"."+sub || k.startsWith(KEY+".sparky.") || k===KEY+".lastUser" || k===KEY+".lastProfile" || k.startsWith(KEY+".photoOk") || k===KEY+".local" || k===KEY) localStorage.removeItem(k); });
   }catch(e){}
   try{ sessionStorage.clear(); }catch(e){}
   try{ Pend.clearSub(sub); }catch(e){}
@@ -5844,7 +5978,7 @@ async function signOutAndClear(){
 }
 function signOut(cleared){
   const t=Auth.token;
-  Auth.token=null; Auth.expiresAt=0; Auth.user=null; Cloud.fileId=null; Cloud.lastSync=0;
+  Auth.token=null; Auth.expiresAt=0; Auth.user=null; Auth.offline=false; showOffline(false); Cloud.fileId=null; Cloud.lastSync=0;
   clearTimeout(Cloud.timer); stopRest();
   try{ if(t&&google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(t,()=>{}); }catch(e){}
   try{ localStorage.removeItem(KEY+".lastUser"); }catch(e){}
@@ -5857,7 +5991,7 @@ async function switchAccount(){
   try{ clearTimeout(Cloud.timer); await Cloud.push(); }catch(e){}
   if(old && Cloud.lastSync>=(DB.updatedAt||0)-1) clearDeviceData(old);
   Auth.token=null; Auth.expiresAt=0;
-  try{ await requestToken("select_account"); await afterSignIn(); toast("已切換帳號"); }
+  try{ await requestToken("select_account",true); await afterSignIn(); toast("已切換帳號"); }
   catch(e){ toast(e.message||"切換失敗"); }
 }
 function renderGateSetup(){
@@ -5892,11 +6026,11 @@ function renderGateSetup(){
 $("#btn-signin").addEventListener("click",async()=>{
   try{
     if(!Auth.tokenClient){ await gisReady(); initTokenClient(); }
-    await requestToken("");
+    await requestToken("",true);
     await afterSignIn();
   }catch(e){ toast(e.message||"登入失敗"); }
 });
-$("#sync-dot").addEventListener("click",()=>{ if($("#sync-dot").dataset.s==="err") Cloud.syncNow(); });
+$("#sync-dot").addEventListener("click",()=>{ const st=$("#sync-dot").dataset.s; if(Auth.offline||st==="offline") reconnect(); else if(st==="err") Cloud.syncNow(); });
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState==="hidden"){ if(L) stashDraftSoft(); Cloud.flush(); }
   else checkUpdate();
@@ -6155,12 +6289,17 @@ const Demo={
   Auth.clientId=CONFIG.CLIENT_ID||Auth.storedId();
   $("#top-date").textContent=mdw(today());
   renderGateSetup();
+  let quick=null;
   if(Auth.clientId&&location.protocol!=="file:"){
+    quick=Auth.recall();
+    try{ if(quick&&!localStorage.getItem(KEY+"."+quick.sub)) quick=null; }catch(e){ quick=null; }
+    if(quick) startOffline(quick);
     gisReady().then(()=>{
       initTokenClient();
       let last=""; try{ last=localStorage.getItem(KEY+".lastUser")||""; }catch(e){}
-      if(last) requestToken("none").then(afterSignIn).catch(()=>{});
-    }).catch(e=>toast(e.message));
+      if(quick) requestToken("none",true).then(()=>{ Auth.offline=false; showOffline(false); return syncAfterLogin(); }).catch(()=>{});
+      else if(last) requestToken("none").then(afterSignIn).catch(()=>{});
+    }).catch(e=>{ if(!quick) toast(e.message); });
   }
 })();
 </script>
