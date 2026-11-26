@@ -3,20 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#f3f2f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#201e1d" media="(prefers-color-scheme: dark)">
 <title>每日運動紀錄</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/any.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<meta name="apple-mobile-web-app-title" content="運動紀錄">
 <style>
 :root{
   color-scheme: light dark;
-  /* Broadsheet 設計系統：紙白底、灰色塊卡片、直角、青色為主、洋紅為第二強調色 */
+  /* Broadsheet 設計系統：紙白底、灰色塊卡片、直角。
+     強調色跟 App 圖示「心跳雙人」同一組：青綠＝主色與「達成」、珊瑚＝「超過目標／未達成」、暖黃＝提醒。
+     圖示的亮色只當色塊；淺色模式的文字用同色相的深色版（對比 4.5:1 以上），圖形 3:1 以上 */
   --bg:#f3f2f2; --card:#eae9e9; --card2:#e0dcdc; --line:rgba(32,30,29,.14);
   --ink:#201e1d; --ink2:#605d5d; --mut:#646060;        /* 設計稿的 #9b9797 對比不足，次要灰字改用 #646060 */
-  --acc:#006786; --acc-ink:#f3f2f2; --acc-soft:rgba(0,136,176,.14);
-  --acc-fill:#0088b0;                                   /* 色塊與長條用；當文字色對比不夠，文字一律用 --acc */
-  --acc2:#d6006c; --acc2-ink:#b8005c;                   /* 洋紅：只用在少數需要突顯的數值 */
-  --good:#0ca30c; --warn:#d98b00; --crit:#b3261e;
-  --good-ink:#0a6e0a; --warn-ink:#7d5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
-  --bar:#0088b0; --bar-dim:#d7d3d3;
+  --brand:#12B5A6; --brand2:#FF6B57; --brand3:#FFC93C;  /* 圖示原色：只用在大面積色塊 */
+  --acc:#08655E; --acc-ink:#f3f2f2; --acc-soft:rgba(18,181,166,.16);
+  --acc-fill:#0F8579;                                   /* 色塊與長條用；文字一律用 --acc */
+  --acc2:#E2553F; --acc2-ink:#A83322;                   /* 珊瑚：只代表「超過目標／未達成」 */
+  --good:#0F8579; --warn:#FFC93C; --crit:#A83322;       /* 達成＝主色；錯誤與超過同一個珊瑚 */
+  --good-ink:#08655E; --warn-ink:#7D5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
+  --bar:#0F8579; --bar-dim:#d7d3d3;
   --surface:#f3f2f2;                                    /* 底部面板與對話框 */
   --r:2px; --r2:2px; --r3:2px; --r-float:12px;
   --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px; --fs-input:16px;
@@ -31,24 +40,24 @@
   :root:not([data-theme="light"]){
     --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
     --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
-    --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
-    --acc-fill:#0088b0;
-    --acc2:#ff90b1; --acc2-ink:#ff90b1;
-    --bar:#62c5ee; --bar-dim:#444141;
-    --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
-    --good-ink:#5fd35f; --warn-ink:#f0b429;
+    --acc:#3DD6C6; --acc-ink:#201e1d; --acc-soft:rgba(61,214,198,.16);
+    --acc-fill:#12B5A6;
+    --acc2:#FF8A78; --acc2-ink:#FF8A78;
+    --bar:#3DD6C6; --bar-dim:#444141;
+    --good:#3DD6C6; --warn:#FFD166; --crit:#FF8A78;
+    --good-ink:#3DD6C6; --warn-ink:#FFD166;
     --surface:#201e1d;
   }
 }
 :root[data-theme="dark"]{
   --bg:#201e1d; --card:#2d2b2b; --card2:#3a3736; --line:rgba(243,242,242,.13);
   --ink:#f3f2f2; --ink2:#bab6b6; --mut:#a5a1a1;
-  --acc:#62c5ee; --acc-ink:#201e1d; --acc-soft:rgba(98,197,238,.16);
-  --acc-fill:#0088b0;
-  --acc2:#ff90b1; --acc2-ink:#ff90b1;
-  --bar:#62c5ee; --bar-dim:#444141;
-  --good:#2fbf2f; --warn:#f0b429; --crit:#ff8a80;
-  --good-ink:#5fd35f; --warn-ink:#f0b429;
+  --acc:#3DD6C6; --acc-ink:#201e1d; --acc-soft:rgba(61,214,198,.16);
+  --acc-fill:#12B5A6;
+  --acc2:#FF8A78; --acc2-ink:#FF8A78;
+  --bar:#3DD6C6; --bar-dim:#444141;
+  --good:#3DD6C6; --warn:#FFD166; --crit:#FF8A78;
+  --good-ink:#3DD6C6; --warn-ink:#FFD166;
   --surface:#201e1d;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -398,7 +407,7 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .fab{background:var(--acc-fill);color:#f3f2f2}
 .tabbar{background:var(--card);border-top:1px solid var(--line)}
 .race .rd .d,.rp-ratio{font-family:var(--font-num)}
-.vol{color:var(--acc2-ink)}
+.vol{color:var(--acc)}
 
 
 /* ---- m4-beta.13 文字角色與新區塊 ---- */
@@ -618,7 +627,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:false, ver:"m4.2" };
+const APP = { beta:false, ver:"m4.3" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -3964,7 +3973,7 @@ function drawPhotoReview(im){
   pendTag(b);
   if(im) b.appendChild(im);
   b.appendChild(el("div",{class:"sub",style:"margin:4px 0 8px"},"確認每一項和份量，不對的可以取消勾選或改克數。數值是估計，僅供參考。"));
-  if(P.via==="sparky") b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--acc2-ink)"},"這次 Gemini 不接受連線地區，改由 Sparky 辨識，名稱已轉成中文；沒對到食藥署資料的項目請確認一下。"));
+  if(P.via==="sparky") b.appendChild(el("div",{class:"sub",style:"margin:0 0 8px;color:var(--warn-ink)"},"這次 Gemini 不接受連線地區，改由 Sparky 辨識，名稱已轉成中文；沒對到食藥署資料的項目請確認一下。"));
   const nf=el("div",{class:"field"}); nf.appendChild(el("label",{for:"ms-dish"},"這一餐的名稱"));
   const ni=el("input",{id:"ms-dish",type:"text",value:P.dish,maxlength:"40"}); ni.addEventListener("input",()=>P.dish=ni.value); nf.appendChild(ni); b.appendChild(nf);
   const list=el("div"); b.appendChild(list);
@@ -4614,8 +4623,8 @@ function energyBlock(){
     box.appendChild(k);
     box.appendChild(el("div",{class:"sub",style:"margin-top:2px"},
       "休息日 "+kc(D.G.keep)+" ＋ 今天運動 "+kc(D.burned)+" · 階段："+rateName(E.rate)+(D.G.adj?"（"+signKc(D.G.adj)+"／天）":"")));
-    if(E.noProfile) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 個人資料還沒填出生日期或性別，BMR 是估的"));
-    if(!E.ready) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--acc2-ink)"},"Sparky 的熱量目標還沒改成每日計算，請按下方設定"));
+    if(E.noProfile) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--warn-ink)"},"Sparky 個人資料還沒填出生日期或性別，BMR 是估的"));
+    if(!E.ready) box.appendChild(el("div",{class:"sub",style:"margin-top:2px;color:var(--warn-ink)"},"Sparky 的熱量目標還沒改成每日計算，請按下方設定"));
     // 最近 7 天
     const c=el("div",{class:"card",style:"padding:4px 14px;margin-top:10px"});
     days.slice().reverse().forEach(d=>{ const x=dayEnergy(d,E.rate); if(!x) return;
@@ -4675,7 +4684,7 @@ function openEnergySheet(){
         row("碳水化合物",M.carbs+" g（休息日）");
         row("脂肪",M.fat+" g（休息日）");
         pv.appendChild(c);
-        if(Gb.floored) pv.appendChild(el("div",{class:"sub",style:"color:var(--acc2-ink)"},"休息日目標會低於基礎代謝，已經調高到 "+kc(Gb.floor)+" 大卡；運動日的消耗仍會讓你有赤字。"));
+        if(Gb.floored) pv.appendChild(el("div",{class:"sub",style:"color:var(--warn-ink)"},"休息日目標會低於基礎代謝，已經調高到 "+kc(Gb.floor)+" 大卡；運動日的消耗仍會讓你有赤字。"));
       };
       draw();
       btn.addEventListener("click",async()=>{
@@ -5029,7 +5038,8 @@ function renderStats(opt){
   if(statsTab==="body"){ renderBodyStats(v); return; }
   renderTrend(v);
 }
-const SPORT_COLORS=["#0088b0","#7cc2d8","#2f7d4f","#9a6a00","#b8005c","#8fc49f","#e48ab6","#d3b16a","#4a4646","#a19c9c"];
+/* 運動類別色：由圖示的青綠、珊瑚、暖黃與灰推導；淺色與深色背景上都有 3:1 以上 */
+const SPORT_COLORS=["#0F8579","#E2553F","#B07800","#7A7474","#2F7F86","#A86A55","#9C7A1E","#3C8DAD","#BF4E3A","#6B8F8A"];
 /* 顏色依「最常做的運動」排序：最常做的用主色，避免每次換顏色 */
 function sportColor(k){
   const cnt={}; DB.entries.forEach(e=>cnt[e.sport]=(cnt[e.sport]||0)+1);
