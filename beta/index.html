@@ -219,6 +219,13 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .pad{overscroll-behavior:contain}
 .dlgwrap{overscroll-behavior:contain}
 .pad .st .rest{margin-left:0}
+.workout-restpill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + var(--safe-b));z-index:44;display:flex;align-items:center;gap:6px;
+  padding:6px 6px 6px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:calc(100% - 32px)}
+.workout-restpill.padup{display:none}
+.workout-restpill.withtab{bottom:calc(84px + var(--safe-b))}
+body.workout-resting .shell:not(.padopen){padding-bottom:calc(150px + var(--safe-b))}
+.workout-restpill-t{font-size:var(--fs-base);font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap;margin-right:2px}
+.workout-restpill .btn{min-height:36px;white-space:nowrap}
 .pad .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pad .keys button{border:1px solid var(--line);border-radius:var(--r2);padding:14px 0;font-size:var(--fs-xl);font-weight:600;background:var(--card2)}
 .pad .keys button.alt{font-size:var(--fs-md);font-weight:600;color:var(--ink2);background:var(--card)}
@@ -283,6 +290,8 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .setup ol{margin:0 0 10px;padding-left:18px;font-size:var(--fs-sm);color:var(--ink2);line-height:1.8}
 .setup code{background:var(--card2);border-radius:var(--r3);padding:1px 4px;font-size:var(--fs-xs);word-break:break-all}
 /* beta 標示 */
+.sparky-acctbar{background:rgba(255,201,60,.22);color:var(--warn-ink);border-bottom:1px solid var(--line);padding:10px 14px;font-size:var(--fs-sm);line-height:1.5}
+.sparky-acctbar .b{display:flex;gap:8px;margin-top:8px}.sparky-acctbar .btn{flex:1;min-height:44px;color:var(--ink)}
 .offbar{display:block;width:100%;border:0;background:var(--acc-soft);color:var(--acc);font:inherit;font-size:var(--fs-sm);font-weight:600;text-align:center;padding:9px 14px;cursor:pointer}
 .offbar[hidden]{display:none}
 .syncb[data-s="offline"]{color:var(--acc)} .syncb[data-s="offline"] i{background:var(--mut)}
@@ -494,6 +503,10 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
   main{padding:0 40px}
   .shell.padopen{padding-bottom:360px}
   .betabar{margin-left:var(--side)}
+  .workout-restpill,.workout-restpill.withtab{left:auto;right:32px;transform:none;bottom:24px}
+  .sparky-acctbar,.offbar{margin-left:var(--side);width:calc(100% - var(--side))}
+  body.workout-resting .shell:not(.padopen){padding-bottom:110px}
+  .sparky-acctbar .b{max-width:520px}
   /* 左側導覽 */
   .tabbar,#tabbar[hidden]{display:flex!important}
   .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--side);max-width:none;margin:0;flex-direction:column;align-items:stretch;
@@ -627,7 +640,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:true, ver:"m4-beta.28" };
+const APP = { beta:true, ver:"m4-beta.30" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1061,7 +1074,7 @@ function ytSearch(q){ return "https://www.youtube.com/results?search_query="+enc
 const $=(s,r)=>(r||document).querySelector(s);
 const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
 function el(t,a,x){const n=document.createElement(t);
-  if(a) for(const k in a){ if(k==="class")n.className=a[k]; else if(k==="html")n.innerHTML=a[k]; else if(a[k]!=null)n.setAttribute(k,a[k]); }
+  if(a) for(const k in a){ if(k==="class")n.className=a[k]; else if(k==="html")n.innerHTML=a[k]; else if(k==="href"&&!/^(https?:\/\/|blob:|#)/i.test(String(a[k])))n.setAttribute(k,"#"); /* 外部資料的連結只允許 http(s) */ else if(a[k]!=null)n.setAttribute(k,a[k]); }
   if(x!=null)n.textContent=x; return n;}
 const pad2=n=>String(n).padStart(2,"0");
 const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0;};
@@ -1132,7 +1145,7 @@ function applyTheme(){
 /* 導覽 */
 const VIEWS=["home","stats","history","log","tut","tutd","me","races","food"];
 function go(v,opt){
-  view=v;
+  view=v; Awake.set(v==="log"); setTimeout(renderRestPill,0);
   VIEWS.forEach(x=> $("#v-"+x).hidden = x!==v);
   const tabOf = (v==="races"||v==="history") ? "home" : (v==="tut"||v==="tutd") ? "me" : v;   // 子頁停在它的來源分頁
   $$("#tabbar button[data-tab]").forEach(b=> b.setAttribute("aria-selected", String(b.dataset.tab===tabOf)));
@@ -1817,7 +1830,7 @@ function saveLog(){
    數字鍵盤
    ============================================================ */
 let KP={ex:-1,set:-1,f:"w",buf:null};
-let rest={t:null,left:0};
+let rest={t:null,left:0,end:0,beeped:{}};
 function selectCell(xi,si,f){
   KP={ex:xi,set:si,f:f,buf:null};
   renderLog(); openPad(); scrollToCell();
@@ -1889,10 +1902,11 @@ function numPadKey(k){
 function openPad(){ KP.num=null; $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act"));
   $("#pad").hidden=false; $(".shell").classList.add("padopen");
   requestAnimationFrame(()=>$("#pad").classList.add("on")); renderPad(); }
-function closePad(){ const p=$("#pad"); p.classList.remove("on"); setTimeout(()=>p.hidden=true,200);
+function closePad(){ const p=$("#pad"); p.classList.remove("on"); setTimeout(()=>p.hidden=true,200); setTimeout(renderRestPill,0);
   $(".shell").classList.remove("padopen"); KP.ex=-1; KP.num=null;
   $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act")); }
 function renderPad(){
+  renderRestPill();
   const p=$("#pad"); if(p.hidden) return;
   if(KP.num){
     const c=NUMF[KP.num]; p.innerHTML="";
@@ -1966,16 +1980,83 @@ function padKey(k,prev){
   }
   renderLog(); renderPad();
 }
+/* 休息倒數：記「結束時間」，切到別的頁面、App 或鎖定畫面回來都會補算；最後 5 秒有提示音 */
 function startRest(sec){
-  stopRest(); rest.left=sec;
-  rest.t=setInterval(()=>{
-    rest.left--;
-    if(rest.left<=0){ stopRest(); toast("休息結束"); }
-    renderPad();
-  },1000);
-  renderPad();
+  stopRest(); Beep.unlock();
+  rest.end=Date.now()+sec*1000; rest.left=sec; rest.beeped={};
+  rest.t=setInterval(restTick,250);
+  restTick(); renderRestPill(); if(KP.ex>=0) renderPad();
 }
-function stopRest(){ if(rest.t){ clearInterval(rest.t); rest.t=null; } rest.left=0; }
+function restAdd(sec){ if(!rest.t) return; rest.end=Math.max(Date.now()+1000,rest.end+sec*1000); rest.beeped={}; restTick(); }
+function restTick(away){
+  if(!rest.t) return;
+  const ms=rest.end-Date.now(), left=Math.max(0,Math.ceil(ms/1000));
+  const changed=left!==rest.left; rest.left=left;
+  if(ms<=0){
+    const late=-ms>3000;
+    stopRest();
+    if(late) toast("休息已經結束（"+mmss(Math.round(-ms/1000))+" 前）");
+    else { if(Beep.on()) Beep.play("end"); toast("休息結束"); }
+    renderPad(); return;
+  }
+  if(left<=5 && !rest.beeped[left] && -(ms-left*1000)<600 && Beep.on() && !document.hidden){ rest.beeped[left]=1; Beep.play("tick"); }
+  if(changed) { renderRestPill(); if(KP.ex>=0) { const b=$("#pad .st .rest"); if(b) b.textContent="⏱ 休息 "+mmss(left); } }
+}
+function stopRest(){ if(rest.t){ clearInterval(rest.t); rest.t=null; } rest.left=0; rest.end=0; renderRestPill(); }
+/* 休息中的浮動條：鍵盤收起或切到教學頁也看得到 */
+function renderRestPill(){
+  let b=$("#restpill");
+  document.body.classList.toggle("workout-resting",!!rest.t);
+  if(!rest.t){ if(b) b.hidden=true; return; }
+  if(!b){
+    b=el("div",{id:"restpill",class:"workout-restpill",role:"timer","aria-live":"off"});
+    const t=el("span",{class:"workout-restpill-t"});
+    const add=el("button",{type:"button",class:"btn sm"},"+30 秒"); add.addEventListener("click",()=>restAdd(30));
+    const snd=el("button",{type:"button",class:"btn sm workout-restpill-snd"}); snd.addEventListener("click",()=>{ Beep.set(!Beep.on()); if(Beep.on()){ Beep.unlock(); Beep.play("tick"); } renderRestPill(); });
+    const end=el("button",{type:"button",class:"btn sm"},"結束"); end.addEventListener("click",()=>{ stopRest(); renderPad(); });
+    b.appendChild(t); b.appendChild(add); b.appendChild(snd); b.appendChild(end); document.body.appendChild(b);
+  }
+  b.querySelector(".workout-restpill-t").textContent="休息 "+mmss(rest.left);
+  const snd=b.querySelector(".workout-restpill-snd"); snd.textContent=Beep.on()?"🔔":"🔕";
+  snd.setAttribute("aria-label",Beep.on()?"提示音：開，點一下關閉":"提示音：關，點一下開啟");
+  b.classList.toggle("padup", KP.ex>=0); b.classList.toggle("withtab", view!=="log"); b.hidden=false;
+}
+/* 提示音：Web Audio 合成短嗶聲。iOS 17 以上用 audioSession「transient」讓音樂暫時變小聲，播完恢復 */
+const Beep={
+  ctx:null, _t:null,
+  on(){ try{ return localStorage.getItem(KEY+".restBeep")!=="0"; }catch(e){ return true; } },
+  set(v){ try{ localStorage.setItem(KEY+".restBeep",v?"1":"0"); }catch(e){} },
+  unlock(){
+    try{
+      if(!this.ctx){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; this.ctx=new C(); }
+      if(this.ctx.state==="suspended") this.ctx.resume();
+      /* 在使用者點擊時先播一段無聲，iOS 才允許之後自動發聲 */
+      const b=this.ctx.createBuffer(1,1,22050), s=this.ctx.createBufferSource(); s.buffer=b; s.connect(this.ctx.destination); s.start(0);
+    }catch(e){}
+  },
+  session(t){ try{ if(navigator.audioSession) navigator.audioSession.type=t; }catch(e){} },
+  play(kind){
+    try{
+      if(!this.ctx) return; if(this.ctx.state==="suspended") this.ctx.resume();
+      this.session("transient"); clearTimeout(this._t);
+      const c=this.ctx, now=c.currentTime+0.02;
+      const tone=(f,at,dur,vol)=>{ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,at); g.gain.exponentialRampToValueAtTime(vol,at+0.015); g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+        o.connect(g); g.connect(c.destination); o.start(at); o.stop(at+dur+0.02); };
+      if(kind==="end"){ tone(1047,now,0.18,0.5); tone(1319,now+0.22,0.35,0.5); }
+      else tone(880,now,0.12,0.4);
+      this._t=setTimeout(()=>this.session("auto"),kind==="end"?1500:1300);   // 連續嗶聲之間不恢復，避免音樂忽大忽小
+    }catch(e){}
+  }
+};
+/* 訓練紀錄頁：螢幕保持常亮（Daniel 選擇整頁常亮），離開紀錄頁或切到背景就放掉 */
+const Awake={
+  lock:null, want:false,
+  async get(){ if(!this.want||this.lock||document.hidden||!("wakeLock" in navigator)) return;
+    try{ this.lock=await navigator.wakeLock.request("screen"); this.lock.addEventListener("release",()=>{ this.lock=null; }); }catch(e){ this.lock=null; } },
+  set(on){ this.want=on; if(on) this.get(); else if(this.lock){ try{ this.lock.release(); }catch(e){} this.lock=null; } }
+};
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ restTick(); Awake.get(); } });
 
 /* ============================================================
    歷史
@@ -3605,6 +3686,8 @@ Sparky._auth=async function(){
   return j.token;
 };
 Sparky.req=async function(path,o){
+  if(this.acctHold && (o.method||"GET")!=="GET" && /^\/api\//.test(path))
+    throw new Error("Sparky 帳號跟原本的不同，先在畫面上方確認帳號再存");
   for(let i=0;i<2;i++){
     const t=await this.auth(i>0);
     let r;
@@ -3748,9 +3831,49 @@ Sparky.post=async function(path,body,method){
 };
 Sparky.me=async function(){
   const k=this.key(); if(this._me&&this._me.k===k) return this._me.v;
-  const d=await this.get("/api/identity/user"); const v={id:d.activeUserId||d.authenticatedUserId};
+  const d=await this.get("/api/identity/user"); const v={id:d.activeUserId||d.authenticatedUserId,email:d.activeUserEmail||"",name:d.activeUserFullName||""};
   if(!v.id) throw new Error("讀不到 Sparky 帳號"); this._me={k,v}; return v;
 };
+/* ---- 防呆：記住「原本連接的 Sparky 帳號」，換成別的帳號時先擋下寫入並提醒 ----
+   DB.sparkyAcct = {id,email,name,at,ok}，跟著 Google 雲端同步，所以別台裝置連錯帳號也會被提醒 */
+Sparky.acctHold=false;
+Sparky.acctLabel=function(a){ return a?(a.email||a.name||("ID "+String(a.id||"").slice(0,8))):""; };
+Sparky.acctState=null;     // {kind:"ok"|"confirm"|"mismatch", cur, exp}
+Sparky.checkAccount=async function(){
+  if(!this.on()){ this.acctHold=false; this.acctState=null; showAcctBar(); return null; }
+  let cur; try{ cur=await this.me(); }catch(e){ return null; }
+  let exp=DB.sparkyAcct||null, kind="ok";
+  if(!exp){
+    const g=String((Auth.user&&Auth.user.email)||"").toLowerCase();
+    const same=!!(cur.email&&g&&cur.email.toLowerCase()===g);
+    exp=DB.sparkyAcct={id:cur.id,email:cur.email,name:cur.name,at:Date.now(),ok:same}; save();
+    kind=same?"ok":"confirm";
+  } else if(exp.id!==cur.id) kind="mismatch";
+  else { if(!exp.ok) kind="confirm";
+    if(cur.email&&exp.email!==cur.email){ exp.email=cur.email; exp.name=cur.name; save(); } }
+  this.acctHold=(kind==="mismatch");
+  this.acctState={kind,cur,exp}; showAcctBar(); return this.acctState;
+};
+Sparky.adoptAccount=function(){
+  const st=this.acctState; if(!st||!st.cur) return;
+  DB.sparkyAcct={id:st.cur.id,email:st.cur.email,name:st.cur.name,at:Date.now(),ok:true}; save();
+  this.acctHold=false; this.acctState={kind:"ok",cur:st.cur,exp:DB.sparkyAcct}; showAcctBar();
+  toast("之後都以 "+this.acctLabel(st.cur)+" 為準"); if(view==="me") renderMe();
+};
+function showAcctBar(){
+  let b=$("#acctbar"); const st=Sparky.acctState;
+  if(!st||st.kind==="ok"){ if(b) b.hidden=true; return; }
+  if(!b){ b=el("div",{id:"acctbar",class:"sparky-acctbar",role:"alert"}); const a=$("#app"); a.insertBefore(b,a.firstChild); }
+  b.innerHTML="";
+  const msg=st.kind==="mismatch"
+    ? "目前連接的 Sparky 帳號是「"+Sparky.acctLabel(st.cur)+"」，跟原本的「"+Sparky.acctLabel(st.exp)+"」不同。為避免飲食記到別人的帳號，已暫停寫入 Sparky。"
+    : "目前連接的 Sparky 帳號是「"+Sparky.acctLabel(st.cur)+"」，跟 Google 登入的 email 不同，請確認是你自己的帳號。";
+  b.appendChild(el("div",{class:"m"},msg));
+  const row=el("div",{class:"b"});
+  const re=el("button",{type:"button",class:"btn"},"重新連接"); re.addEventListener("click",openSparkySheet);
+  const ok=el("button",{type:"button",class:"btn"},st.kind==="mismatch"?"以後都用這個帳號":"是我的帳號"); ok.addEventListener("click",()=>Sparky.adoptAccount());
+  row.appendChild(re); row.appendChild(ok); b.appendChild(row); b.hidden=false;
+}
 Sparky.mealTypes=async function(){ const d=await this.cached("/api/meal-types"); return Array.isArray(d)?d:[]; };
 Sparky.search=async function(q,limit){
   const d=await this.get("/api/foods/search?name="+encodeURIComponent(q)+"&broadMatch=true&limit="+(limit||25));
@@ -4587,13 +4710,16 @@ function baseGoal(bmr,rate){
   return {keep,adj,base:Math.max(keep+adj,floor),floored:keep+adj<floor,floor};
 }
 /* 一天的熱量帳：TDEE、當天目標、熱量差、有沒有達成 */
+/* 這天 App 裡有沒有訓練紀錄（手動或 Apple 健康帶入）：有就算運動日，不只看 Sparky 的消耗 */
+function workoutOn(ds){ return !!(DB&&DB.entries.some(e=>e&&e.date===ds&&num(e.duration)>0&&!(DB.deleted&&DB.deleted[e.id]))); }
 function dayEnergy(d,rate){
   const bmr=num(d.bmr), burned=num(d.burned), eaten=num(d.eaten);
   if(!(bmr>0)) return null;
   const G=baseGoal(bmr,rate), tdee=G.keep+burned, target=G.base+burned, diff=eaten-tdee;
   let ok=null;
   if(eaten>0) ok = rate<0 ? eaten<=target+50 : rate>0 ? eaten>=target-50 : Math.abs(diff)<=200;
-  return {date:String(d.date).slice(0,10),bmr,burned,eaten,tdee,target,diff,ok,train:burned>=100,G};
+  const ds=String(d.date).slice(0,10);
+  return {date:ds,bmr,burned,eaten,tdee,target,diff,ok,train:burned>=100||workoutOn(ds),G};
 }
 Sparky.energy=async function(){
   const t0=today();
@@ -5431,6 +5557,10 @@ function openSparkySheet(){
       const lines=[]; const end=today(), start=dstr(new Date(Date.now()-6*864e5));
       const step=async(label,fn)=>{ try{ lines.push([label,await fn(),true]); }catch(e){ lines.push([label,"讀取失敗（"+(e.message||e)+"）",false]); } };
       await step("連線",async()=>{ await Sparky.get("/api/health"); return "正常"; });
+      let acctBad=false;
+      await step("帳號",async()=>{ Sparky._me=null; const st=await Sparky.checkAccount(); if(!st) throw new Error("讀不到帳號資料");
+        if(st.kind==="mismatch"){ acctBad=true; throw new Error(Sparky.acctLabel(st.cur)+"，跟原本的 "+Sparky.acctLabel(st.exp)+" 不同"); }
+        return Sparky.acctLabel(st.cur)+(st.kind==="confirm"?"（請在上方確認是你的帳號）":""); });
       await step("今日熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+end+"&endDate="+end);
         const x=(d.days||[])[0]; if(!x) return "沒有資料"; return "吃進 "+Math.round(x.eaten||0)+" / 目標 "+Math.round(x.goal||0)+" 大卡，運動消耗 "+Math.round(x.burned||0); });
       await step("今日紀錄",async()=>{ const d=await Sparky.get("/api/daily-summary?date="+end);
@@ -5446,7 +5576,11 @@ function openSparkySheet(){
       lines.forEach(([k,v,ok])=>{ const r=el("div",{style:"display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-md)"});
         r.appendChild(el("span",{style:"flex:0 0 84px;color:var(--mut)"},k));
         r.appendChild(el("span",{style:"flex:1;color:"+(ok?"var(--ink)":"var(--crit)")},v)); out.appendChild(r); });
-      toast(lines.every(x=>x[2])?"連接成功":"部分項目讀取失敗");
+      if(acctBad){ const box=el("div",{class:"sparky-acctbar",style:"margin-top:10px;border-radius:var(--r2)"});
+        box.appendChild(el("div",{class:"m"},"這把金鑰屬於另一個 Sparky 帳號，已暫停寫入。請貼上你自己帳號的 API 金鑰再按一次「儲存並測試」；如果確定要改用這個帳號，按下面的按鈕。"));
+        const bb=el("div",{class:"b"}), ad=el("button",{type:"button",class:"btn"},"以後都用這個帳號");
+        ad.addEventListener("click",()=>{ Sparky.adoptAccount(); box.remove(); }); bb.appendChild(ad); box.appendChild(bb); out.appendChild(box); }
+      toast(acctBad?"連到的不是原本的 Sparky 帳號":(lines.every(x=>x[2])?"連接成功":"部分項目讀取失敗"));
     });
     row.appendChild(t);
     if(c.site){ row.appendChild(el("a",{class:"btn sm",href:c.site,target:"_blank",rel:"noopener"},"開啟 Sparky ↗")); }
@@ -5510,7 +5644,7 @@ function renderMe(){
   [["動作教學庫","依部位瀏覽內建教學",()=>{ tutBack="me"; go("tut"); }],
    ["課表模板","管理胸日 / 背日 / 腿日等模板",openTemplateSheet],
    ["自訂動作","新增資料庫裡沒有的動作",openCustomSheet],
-   ["飲食與健康數據",Sparky.cfg().relay?"已連接 Sparky，點一下測試或修改":"連接自己的 SparkyFitness，讀取營養、步數與睡眠",openSparkySheet]].forEach(([t,s,fn])=>{
+   ["飲食與健康數據",Sparky.cfg().relay?("已連接 Sparky"+(Sparky.acctState&&Sparky.acctState.cur?"："+Sparky.acctLabel(Sparky.acctState.cur):"")+(Sparky.acctHold?"（跟原本的帳號不同）":"")+"，點一下測試或修改"):"連接自己的 SparkyFitness，讀取營養、步數與睡眠",openSparkySheet]].forEach(([t,s,fn])=>{
     const b=el("button",{class:"rowcard"});
     const r=el("div",{class:"t"}); r.appendChild(el("b",null,t)); r.appendChild(el("span",{class:"dt"},"›"));
     b.appendChild(r); b.appendChild(el("div",{class:"m"},s));
@@ -5883,6 +6017,8 @@ function mergeDB(local,remote){
   out.races=Object.keys(rm).map(k=>rm[k]).filter(r=>!out.deleted[r.id]);
   out.draft=local.draft||null;                 // 草稿屬於這台裝置
   out.theme=local.theme||remote.theme||"system";
+  { const a=local.sparkyAcct, b=remote.sparkyAcct;      // 原本連接的 Sparky 帳號：較新確認的優先
+    out.sparkyAcct=(a&&b)?(((a.at||0)>=(b.at||0))?a:b):(a||b||null); }
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
   return out;
 }
@@ -5923,6 +6059,7 @@ async function syncAfterLogin(){
   rerenderView();
   Pend.purge();
   if(await Sparky.restore()) rerenderView();
+  if(Sparky.on()){ await Sparky.checkAccount(); if(view==="me") renderMe(); }
 }
 /* 先開 App：3 天內登入過，就直接用這台裝置的資料進入，不擋在登入畫面 */
 function startOffline(p){
@@ -5960,7 +6097,7 @@ function clearDeviceData(sub){
   }catch(e){}
   try{ sessionStorage.clear(); }catch(e){}
   try{ Pend.clearSub(sub); }catch(e){}
-  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; SparkyEx.exIds={}; MS=null;
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; Sparky.acctHold=false; Sparky.acctState=null; SparkyEx.exIds={}; MS=null;
 }
 /* 登出：先確認雲端同步完成，再清除這台裝置的資料 */
 async function signOutAndClear(){
@@ -5981,7 +6118,7 @@ function signOut(cleared){
   try{ if(t&&google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(t,()=>{}); }catch(e){}
   try{ localStorage.removeItem(KEY+".lastUser"); }catch(e){}
   DB=normalize({}); cacheKey=KEY; L=null;
-  Sparky.mem={}; Sparky.sess=null; Sparky._me=null;
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; Sparky.acctHold=false; Sparky.acctState=null;
   $("#app").hidden=true; $("#gate").hidden=false; Cloud.badge("idle");
 }
 async function switchAccount(){
