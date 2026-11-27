@@ -1,0 +1,29 @@
+# PR 自動檢查：推到分支、開 PR 到 main 時，依 REVIEW_RULES.md 的紅線檢查，全部通過才合併上線
+name: 依 REVIEW_RULES 檢查
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 檢查紅線
+        env:
+          BASE: origin/${{ github.base_ref }}
+          ALLOW_PROD: ${{ contains(github.event.pull_request.labels.*.name, '正式版更新') && '1' || '0' }}
+        run: node scripts/review-check.mjs
