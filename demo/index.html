@@ -28,8 +28,10 @@
   --good-ink:#08655E; --warn-ink:#7D5200;               /* 當文字色用的深色版，對比 4.5:1 以上 */
   --bar:#0F8579; --bar-dim:#d7d3d3;
   --surface:#f3f2f2;                                    /* 底部面板與對話框 */
+  --scrim:rgba(0,0,0,.5); --scrim-dlg:rgba(0,0,0,.45); /* 面板遮罩／對話框遮罩（深淺色相同） */
   --r:2px; --r2:2px; --r3:2px; --r-float:12px;
   --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-base:15px; --fs-lg:17px; --fs-xl:20px; --fs-2xl:26px; --fs-num:56px; --fs-input:16px;
+  --fs-kpi:28px; --fs-hero:44px;                       /* 統計 KPI 數字／首頁與飲食的熱量主數字 */
   --sans:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --font:var(--sans); --font-num:var(--sans);
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -61,8 +63,9 @@
   --good-ink:#3DD6C6; --warn-ink:#FFD166;
   --surface:#201e1d;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+/* 連點不放大畫面（iPhone 連點兩下預設會縮放）；雙指縮放不受影響 */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{margin:0;padding:0;max-width:100%;overflow-x:clip}
 body{
   background:var(--bg); color:var(--ink); font-size:var(--fs-base); line-height:1.5;
   font-family:var(--font);
@@ -72,23 +75,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* 輸入欄位一律 16px：iPhone 的 Safari 遇到小於 16px 的欄位會自動放大畫面，放大後不會縮回去，整頁就會左右飄移 */
 input,select,textarea{font-size:var(--fs-input)}
 input[type="date"],input[type="time"]{min-width:0;max-width:100%}
-html,body{max-width:100%;overflow-x:clip}
-/* 連點不放大畫面（iPhone 連點兩下預設會縮放）；雙指縮放不受影響 */
-*{touch-action:manipulation}
 /* iPhone 的日期欄位有自己的最小寬度，會把面板撐寬，這裡把它壓回容器寬度 */
 input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none;display:block;width:100%;box-sizing:border-box;min-height:48px}
 input::-webkit-date-and-time-value{text-align:left}
-button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
-h1,h2,.rowcard .t b,.race .ri b{font-family:var(--font)}
+button{background:none;border:0;padding:0;cursor:pointer}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r3)}
 button:disabled,input:disabled,select:disabled,.btn[disabled]{opacity:.45;cursor:not-allowed}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important} }
-.dlgwrap{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}
-.dlgwrap[hidden]{display:none}
+.dlgwrap{position:fixed;inset:0;z-index:80;background:var(--scrim-dlg);display:flex;align-items:center;justify-content:center;padding:20px}
 .dlg{background:var(--surface);border-radius:var(--r-float);padding:20px;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
 .dlg-msg{font-size:var(--fs-lg);font-weight:600;line-height:1.4}
 .dlg-sub{font-size:var(--fs-md);color:var(--ink2);margin-top:6px}
-.dlg input{width:100%;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:12px;font-size:16px}
+.dlg input{width:100%;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:12px;font-size:var(--fs-input)}
 .dlg-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
 .dlg-row .btn{min-height:44px;padding:0 16px}
 .shell{max-width:520px;margin:0 auto;min-height:100dvh;position:relative;padding-bottom:calc(92px + var(--safe-b))}
@@ -108,8 +106,6 @@ button:disabled,input:disabled,select:disabled,.btn[disabled]{opacity:.45;cursor
 @keyframes pls{50%{opacity:.3}}
 /* 版面元件 */
 main{padding:0 18px}
-.lab{font-size:var(--fs-xs);color:var(--ink2);letter-spacing:.18em;margin:24px 0 10px}
-.lab:first-child{margin-top:8px}
 .big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .big .n{font-family:var(--font-num);font-size:var(--fs-num);font-weight:600;letter-spacing:-.03em;line-height:1}
 .big .u{font-size:var(--fs-sm);color:var(--mut);margin-left:-8px}
@@ -119,7 +115,9 @@ main{padding:0 18px}
 a.rowcard{text-decoration:none;color:var(--ink)}
 .rowcard .t{display:flex;align-items:baseline;gap:8px}
 .rowcard .t b{font-size:var(--fs-base);font-weight:600}
-.rowcard .t .tag{font-size:var(--fs-xs);color:var(--mut)}
+.rowcard .t .tag{font-size:var(--fs-xs);color:var(--mut);background:none;padding:0;font-weight:400;border-radius:0}
+/* 狀態標籤（完整教學、自訂）用徽章；英文名、部位等說明資訊維持灰字 */
+.rowcard .t .tag.tag-badge{background:var(--acc-soft);color:var(--acc);padding:2px 8px;font-weight:600;border-radius:999px}
 .rowcard .t .dt{margin-left:auto;font-size:var(--fs-xs);color:var(--mut);font-variant-numeric:tabular-nums}
 .rowcard .m{font-size:var(--fs-sm);color:var(--ink2);margin-top:4px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -127,7 +125,6 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .chip[aria-pressed="true"]{border-color:var(--acc);color:var(--acc);background:var(--acc-soft);font-weight:600}
 .btn{border:1px solid var(--line);border-radius:var(--r2);padding:8px 14px;font-size:var(--fs-md);background:var(--card)}
 .btn.pri{background:var(--acc);border-color:transparent;color:var(--acc-ink);font-weight:600}
-.btn.ghost{background:transparent}
 .btn.dim{color:var(--mut)}
 .btn.crit,.crit{color:var(--crit)}
 .btn.wide{width:100%;text-align:center;padding:12px}
@@ -139,12 +136,6 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .note{background:var(--card);border-left:3px solid var(--acc);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px}
 .note b{display:block;font-size:var(--fs-md);color:var(--acc);margin-bottom:4px}
 .note span{font-size:var(--fs-sm);color:var(--ink2)}
-/* 週長條 */
-.week{display:flex;align-items:flex-end;gap:8px;height:96px;margin-top:4px}
-.week .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-.week .b{width:100%;border-radius:var(--r3) var(--r3) 0 0;background:var(--bar);min-height:3px}
-.week .b.z{background:var(--bar-dim);height:5px}
-.week .k{font-size:var(--fs-xs);color:var(--mut)}
 /* 分頁列 */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
   backdrop-filter:blur(14px);border-top:1px solid var(--line);
@@ -159,7 +150,7 @@ a.rowcard{text-decoration:none;color:var(--ink)}
   font-size:var(--fs-2xl);line-height:1;display:flex;align-items:center;justify-content:center;flex:none;
   box-shadow:0 6px 18px rgba(0,0,0,.22);margin-top:-26px}
 /* 底部抽屜 */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;opacity:0;transition:opacity .18s}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:50;opacity:0;transition:opacity .18s}
 .scrim.on{opacity:1}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--surface);
   border-radius:var(--r-float) var(--r-float) 0 0;padding:18px 18px calc(18px + var(--safe-b));max-width:520px;margin:0 auto;
@@ -180,11 +171,6 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .field textarea{min-height:76px;resize:vertical;font-size:var(--fs-input)}
 .field input[readonly]{color:var(--mut)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bigrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
-  border-radius:var(--r2);padding:12px 14px;margin-bottom:8px}
-.bigrow .k{font-size:var(--fs-sm);color:var(--mut);width:68px;flex:none}
-.bigrow .v{font-size:var(--fs-2xl);font-weight:600;letter-spacing:-.01em;flex:1;border:0;background:none;padding:0;width:100%}
-.bigrow .u{font-size:var(--fs-xs);color:var(--mut)}
 .stepper{display:flex;align-items:center;gap:12px}
 .stepper button{width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r2);font-size:var(--fs-xl);background:var(--card2)}
 .stepper .v{font-size:var(--fs-2xl);font-weight:600;min-width:58px;text-align:center}
@@ -192,7 +178,7 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .exc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
 .exc .h{display:flex;align-items:center;gap:8px;padding:12px 14px 8px}
 .exc .h b{font-size:var(--fs-base);font-weight:600}
-.exc .h .tag{font-size:var(--fs-xs);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.exc .h .tag{font-size:var(--fs-xs);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:1px 8px;background:none;font-weight:400}
 .exc .h .tut{margin-left:auto;font-size:var(--fs-sm);color:var(--acc);font-weight:600;white-space:nowrap}
 .exc .cue{font-size:var(--fs-sm);color:var(--mut);padding:0 14px 8px}
 .set{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--line)}
@@ -207,8 +193,6 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .set .ok[aria-pressed="true"]{background:var(--acc);border-color:transparent;color:var(--acc-ink)}
 .exc .f{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
 .exc .f .vol{margin-left:auto;font-size:var(--fs-xs);color:var(--mut);font-variant-numeric:tabular-nums}
-.exc.fold .h{padding-bottom:12px}
-.exc.fold .sum{margin-left:auto;font-size:var(--fs-xs);color:var(--mut)}
 /* 數字鍵盤 */
 .pad{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--card);border-top:1px solid var(--line);
   padding:10px 12px calc(10px + var(--safe-b));max-width:520px;margin:0 auto;transform:translateY(110%);
@@ -220,6 +204,13 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .pad{overscroll-behavior:contain}
 .dlgwrap{overscroll-behavior:contain}
 .pad .st .rest{margin-left:0}
+.workout-restpill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + var(--safe-b));z-index:44;display:flex;align-items:center;gap:6px;
+  padding:6px 6px 6px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:calc(100% - 32px)}
+.workout-restpill.padup{display:none}
+.workout-restpill.withtab{bottom:calc(84px + var(--safe-b))}
+body.workout-resting .shell:not(.padopen){padding-bottom:calc(150px + var(--safe-b))}
+.workout-restpill-t{font-size:var(--fs-base);font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap;margin-right:2px}
+.workout-restpill .btn{min-height:44px;white-space:nowrap}
 .pad .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pad .keys button{border:1px solid var(--line);border-radius:var(--r2);padding:14px 0;font-size:var(--fs-xl);font-weight:600;background:var(--card2)}
 .pad .keys button.alt{font-size:var(--fs-md);font-weight:600;color:var(--ink2);background:var(--card)}
@@ -232,10 +223,6 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .kpis .n{font-size:var(--fs-num);font-weight:600;letter-spacing:-.02em;line-height:1.05}
 .kpis .n.acc{color:var(--acc)}
 .kpis .k{font-size:var(--fs-xs);color:var(--mut);margin-top:4px}
-.trend{display:flex;align-items:flex-end;gap:4px;height:104px}
-.trend .b{flex:1;background:var(--bar-dim);border-radius:var(--r3) var(--r3) 0 0;min-height:3px}
-.trend .b.hot{background:var(--bar)}
-.axis{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--mut);margin-top:6px}
 .hbar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .hbar .k{font-size:var(--fs-sm);color:var(--ink2);width:76px;flex:none;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hbar .t{flex:1;height:9px;border-radius:var(--r3);background:var(--bar-dim);overflow:hidden}
@@ -263,13 +250,12 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .risk{background:var(--card2);border-radius:var(--r2);padding:12px 12px;font-size:var(--fs-sm);color:var(--ink2);margin-top:10px}
 .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pgrid button{border:1px solid var(--line);border-radius:var(--r2);padding:12px 4px;background:var(--card);text-align:center}
-.pgrid button b{display:block;font-size:var(--fs-md)}
+.pgrid button b{display:block;font-size:var(--fs-md);font-weight:600}
 .pgrid button span{display:block;font-size:var(--fs-xs);color:var(--mut);margin-top:2px}
 .pgrid button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft)}
 /* 登入 */
 .gate{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column;
   padding:0 24px calc(26px + var(--safe-b));overflow:auto}
-.gate[hidden]{display:none}
 .gate .in{max-width:460px;margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column;padding-top:16vh}
 .gate .yr{font-size:var(--fs-xs);color:var(--mut);letter-spacing:.2em;margin-bottom:14px}
 .gate h1{font-family:var(--serif);font-size:var(--fs-num);line-height:1.18;margin:0 0 18px;font-weight:400;letter-spacing:.01em}
@@ -284,10 +270,13 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .setup ol{margin:0 0 10px;padding-left:18px;font-size:var(--fs-sm);color:var(--ink2);line-height:1.8}
 .setup code{background:var(--card2);border-radius:var(--r3);padding:1px 4px;font-size:var(--fs-xs);word-break:break-all}
 /* beta 標示 */
-.offbar{display:block;width:100%;border:0;background:var(--acc-soft);color:var(--acc);font:inherit;font-size:var(--fs-sm);font-weight:600;text-align:center;padding:9px 14px;cursor:pointer}
-.offbar[hidden]{display:none}
-.syncb[data-s="offline"]{color:var(--acc)} .syncb[data-s="offline"] i{background:var(--mut)}
+.sparky-acctbar{background:color-mix(in srgb,var(--brand3) 22%,transparent);color:var(--warn-ink);border-bottom:1px solid var(--line);padding:10px 14px;font-size:var(--fs-sm);line-height:1.5}
+/* 放在設定面板裡的版本（儲存並測試的結果下方） */
+.sparky-acctbar.sparky-acctbar-inline{margin-top:10px;border-radius:var(--r2)}
+.sparky-acctbar .b{display:flex;gap:8px;margin-top:8px}.sparky-acctbar .btn{flex:1;min-height:44px;color:var(--ink)}
 .betabar.demobar{background:var(--acc);color:var(--acc-ink)}
+.offbar{display:block;width:100%;border:0;background:var(--acc-soft);color:var(--acc);font:inherit;font-size:var(--fs-sm);font-weight:600;text-align:center;padding:9px 14px;cursor:pointer}
+.syncb[data-s="offline"]{color:var(--acc)} .syncb[data-s="offline"] i{background:var(--mut)}
 .betabar{background:var(--warn);color:#1a1200;font-size:var(--fs-xs);font-weight:600;text-align:center;padding:4px 10px;
   letter-spacing:.04em}
 /* M2：分段控制、時間輸入、HYROX、間歇、賽事、週報 */
@@ -298,12 +287,11 @@ a.rowcard{text-decoration:none;color:var(--ink)}
 .tin,.nin{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:8px 8px;font-size:var(--fs-input);
   font-variant-numeric:tabular-nums;text-align:right;width:76px;min-width:0}
 .field .tin{width:100%;text-align:left;padding:12px 12px}
-.tin.big{font-size:var(--fs-xl);font-weight:600;width:96px}
+.tin.tin-lg{font-size:var(--fs-xl);font-weight:600;width:96px}
 .nin{width:64px}
 .tin:focus,.nin:focus{outline:2px solid var(--acc);outline-offset:0;border-color:transparent}
 /* 提示文字要淡，避免看起來像已經填好的數值 */
 input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight:400}
-.rp-sub{display:flex;margin:10px 0 0}
 .hxdiv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
 .hxw{font-size:var(--fs-sm);color:var(--ink2);background:var(--card2);border-radius:var(--r2);padding:8px 10px;margin:6px 0 4px}
 .hxtot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:16px 0 8px}
@@ -349,24 +337,11 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .race .cd{font-size:var(--fs-md);font-weight:600;color:var(--acc);white-space:nowrap}
 .race.pub .ri b{font-size:var(--fs-base);font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .race.pub .cd{font-size:var(--fs-sm);font-weight:600;color:var(--mut)}
-.newb{display:inline-block;margin-left:6px;padding:0 6px;border-radius:var(--r2);font-size:var(--fs-xs);font-weight:600;background:var(--acc);color:#fff;vertical-align:1px}
-.fbar{height:10px;border-radius:var(--r3);background:var(--bar-dim);overflow:hidden;margin-top:10px}
-.fbar i{display:block;height:100%;border-radius:var(--r3);background:var(--bar)}
-.fbar i.over{background:var(--acc2)}
-.fnum{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.fnum .n{font-family:var(--font-num);font-size:var(--fs-num);font-weight:600;letter-spacing:-.03em;line-height:1}
-.fnum .u{font-size:var(--fs-sm);color:var(--mut)}
+.newb{display:inline-block;margin-left:6px;padding:0 6px;border-radius:var(--r2);font-size:var(--fs-xs);font-weight:600;background:var(--acc);color:var(--acc-ink);vertical-align:1px}
 .frow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-md)}
 .frow:last-child{border-bottom:0}
 .frow .k{flex:1;min-width:0;color:var(--ink)}
 .frow .v{color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.fweek{display:flex;align-items:flex-end;gap:8px;height:110px;margin-top:6px;position:relative}
-.fweek .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
-.fweek .b{width:100%;border-radius:var(--r3) var(--r3) 0 0;background:var(--bar)}
-.fweek .b.z{height:3px;background:var(--bar-dim)}
-.fweek .b.over{background:var(--acc2)}
-.fweek .k{font-size:var(--fs-xs);color:var(--mut);margin-top:4px}
-.fweek .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--mut);opacity:.6}
 .steps{counter-reset:s;margin:12px 0 0;padding:0;list-style:none}
 .steps li{counter-increment:s;position:relative;padding:0 0 12px 34px;font-size:var(--fs-md);color:var(--ink2)}
 .steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:24px;height:24px;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-size:var(--fs-sm);font-weight:600;display:flex;align-items:center;justify-content:center}
@@ -378,8 +353,6 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .pubf select{font:inherit;font-size:var(--fs-input);padding:8px 10px;border-radius:var(--r2);border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .rp-head{font-size:var(--fs-xl);margin:4px 0 4px;line-height:1.35}
 .rp-head.lv-high{color:var(--crit)} .rp-head.lv-low{color:var(--warn-ink)} .rp-head.lv-ok{color:var(--good-ink)}
-.rp-ratio{font-size:var(--fs-num);font-weight:600;letter-spacing:-.02em}
-.rp-ratio.lv-high{color:var(--crit)} .rp-ratio.lv-ok{color:var(--good-ink)} .rp-ratio.lv-low{color:var(--warn-ink)}
 .gauge{position:relative;height:10px;border-radius:var(--r3);background:var(--bar-dim);margin-top:8px}
 .gauge .band{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--good) 35%,transparent);border-radius:var(--r3)}
 .gauge .mk{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;border-radius:var(--r3);background:var(--ink)}
@@ -406,9 +379,9 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 /* Broadsheet：卡片是色塊不是外框 */
 .card,.rowcard,.race,.empty{border-color:transparent}
 .empty{background:var(--card);border-style:solid}
-.fab{background:var(--acc-fill);color:#f3f2f2}
+.fab{background:var(--acc-fill);color:var(--acc-ink)}
 .tabbar{background:var(--card);border-top:1px solid var(--line)}
-.race .rd .d,.rp-ratio{font-family:var(--font-num)}
+.race .rd .d{font-family:var(--font-num)}
 .vol{color:var(--acc)}
 
 
@@ -419,10 +392,10 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .pgh{font-size:var(--fs-2xl);font-weight:700;margin:4px 0 2px;line-height:1.25;letter-spacing:-.01em}
 .pgsub{font-size:var(--fs-sm);color:var(--mut);margin:0 0 12px}
 .foot{font-size:var(--fs-xs);color:var(--mut);margin-top:28px;padding-top:10px;border-top:1px solid var(--line);line-height:1.7}
-.ok{color:var(--good-ink);font-weight:600}.bad{color:var(--acc2-ink);font-weight:600}
+.is-ok{color:var(--good-ink);font-weight:600}.is-bad{color:var(--acc2-ink);font-weight:600}
 .tcard{display:block;width:100%;text-align:left;color:inherit;margin-top:6px}
 .tcard .row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.tcard .num{font-family:var(--font-num);font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.tcard .num{font-family:var(--font-num);font-size:var(--fs-hero);font-weight:600;letter-spacing:-.03em;line-height:1}
 .tcard .u{font-size:var(--fs-sm);color:var(--mut)}
 .tag{font-size:var(--fs-xs);padding:2px 8px;border-radius:999px;background:var(--acc-soft);color:var(--acc);font-weight:600}
 .tag.rest{background:var(--bar-dim);color:var(--ink2)}
@@ -430,15 +403,15 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .kbar i{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:var(--r3)}
 .kbar i.over{background:var(--acc2)}
 .kbar b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);margin-left:-1px}
-.kbar .lbl{position:absolute;top:17px;font-size:11px;color:var(--mut);transform:translateX(-50%);white-space:nowrap}
+.kbar .lbl{position:absolute;top:17px;font-size:var(--fs-xs);color:var(--mut);transform:translateX(-50%);white-space:nowrap}
 .mac{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px;font-size:var(--fs-xs);color:var(--mut)}
 .mac b{display:block;font-size:var(--fs-base);color:var(--ink);font-weight:600;margin:2px 0 4px;white-space:nowrap}
 .mac s{display:block;height:5px;background:var(--bar-dim);border-radius:var(--r3);position:relative;text-decoration:none;overflow:hidden}
 .mac s i{position:absolute;left:0;top:0;bottom:0;background:var(--bar)}
-.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.pgrid .k{display:block;font-size:var(--fs-xs);color:var(--mut)}.pgrid b{font-size:var(--fs-base);font-weight:600}.pgrid b.miss{color:var(--acc2-ink);font-weight:400}
+.me-pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.me-pgrid .k{display:block;font-size:var(--fs-xs);color:var(--mut)}.me-pgrid b{font-size:var(--fs-base);font-weight:600}.me-pgrid b.miss{color:var(--acc2-ink);font-weight:400}
 .divider{height:1px;background:var(--line);margin:32px 0 0}
 .seg.sm{padding:3px}.seg.sm button{padding:5px 11px;font-size:var(--fs-sm);min-height:32px}
-.kpis.sm{gap:20px;flex-wrap:wrap}.kpis.sm .n{font-size:28px}
+.kpis.sm{gap:20px;flex-wrap:wrap}.kpis.sm .n{font-size:var(--fs-kpi)}
 .kpis .n.ok{color:var(--good-ink)}.kpis .n.bad{color:var(--acc2-ink)}.kpis .n.lv-low{color:var(--warn-ink)}.kpis .n.lv-high{color:var(--crit)}.kpis .n.lv-ok{color:var(--good-ink)}
 .wk7{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:100px;margin-top:8px}
 .wk7 .c{height:100%;display:flex;align-items:flex-end}
@@ -447,13 +420,13 @@ input::placeholder,textarea::placeholder{color:var(--mut);opacity:.5;font-weight
 .wk7 i.t{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
 .wk7x{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;font-size:var(--fs-xs);color:var(--mut);margin-top:6px}
 .wk7x .now{color:var(--ink);font-weight:700}
-.wk7x .dot{display:block;font-size:15px;line-height:1.2;color:var(--mut)}
+.wk7x .dot{display:block;font-size:var(--fs-base);line-height:1.2;color:var(--mut)}
 .wk7x .dot.ok{color:var(--good-ink)}.wk7x .dot.bad{color:var(--acc2-ink)}.wk7x .dot.no{color:var(--bar-dim)}
 .legend{display:flex;gap:6px 14px;font-size:var(--fs-xs);color:var(--mut);margin-top:10px;flex-wrap:wrap;align-items:center}
 .legend .sw:before,.legend .lb:before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c,var(--bar))}
 .legend .ln:before{content:"";display:inline-block;width:14px;height:2px;margin-right:4px;vertical-align:3px;background:var(--ink)}
 .wkstep{display:flex;align-items:center;gap:8px;margin:12px 0 2px}
-.wkstep button{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:20px;color:var(--ink2);flex:none}
+.wkstep button{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:var(--fs-xl);color:var(--ink2);flex:none}
 .wkstep button[disabled]{opacity:.35}
 .wkstep .r{flex:1;text-align:center}.wkstep .r b{display:block;font-size:var(--fs-lg)}.wkstep .r span{font-size:var(--fs-xs);color:var(--mut)}
 details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(--acc);cursor:pointer;min-height:32px;display:flex;align-items:center}
@@ -463,22 +436,22 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
 .meal .m{flex:1;min-width:0;font-size:var(--fs-sm);color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.meal .m.none{color:var(--mut)}
 .meal .k{font-size:var(--fs-md);font-variant-numeric:tabular-nums;width:52px;text-align:right;flex:none}
 .meal .mm{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;color:inherit;min-height:44px}
-.daybtn{width:36px;height:36px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:18px;color:var(--ink2);font-weight:400}
+.daybtn{width:36px;height:36px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:var(--fs-lg);color:var(--ink2);font-weight:400}
 .daybtn[disabled]{opacity:.35}
 .fe{margin-bottom:8px}.fe .t{display:flex;align-items:baseline;gap:8px}.fe .t b{flex:1;font-size:var(--fs-base);font-weight:600}.fe .kc{font-size:var(--fs-sm);color:var(--ink2);white-space:nowrap}
 .fe.del{opacity:.6}.fe.del .t b{text-decoration:line-through}
 .qrow{display:flex;align-items:center;gap:8px;margin-top:10px}.qrow input{width:96px;text-align:center;background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:9px 8px;font-variant-numeric:tabular-nums}
-.qrow .u{font-size:var(--fs-sm);color:var(--mut);flex:1}.qb{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:20px;color:var(--ink)}
+.qrow .u{font-size:var(--fs-sm);color:var(--mut);flex:1}.qb{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:var(--fs-xl);color:var(--ink)}
 .msel{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:8px 10px;color:var(--ink)}
-.meal .p{width:36px;height:36px;border-radius:50%;border:1px solid var(--acc);color:var(--acc);font-size:20px;line-height:1;flex:none;display:grid;place-items:center}
+.meal .p{width:36px;height:36px;border-radius:50%;border:1px solid var(--acc);color:var(--acc);font-size:var(--fs-xl);line-height:1;flex:none;display:grid;place-items:center}
 /* ============================================================
    版面：手機一欄；平板加寬；桌機（≥960px）左側導覽＋兩欄
    ============================================================ */
 .cols{display:flex;flex-direction:column}
 .cols>div{display:contents}
 .hb>.lab:first-child,.fcols>div>.lab:first-child{margin-top:24px}
-.hb.first>.lab:first-child,.fcols>div:first-child>.lab:first-child{margin-top:8px}
-.hb-gap,.hc-gap{height:14px}
+.fcols>div:first-child>.lab:first-child{margin-top:8px}
+.hc-gap{height:14px}
 .fabl{display:none}
 @media (hover:hover){
   .rowcard:hover,.race:hover{background:var(--card2)}
@@ -496,6 +469,11 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
   main{padding:0 40px}
   .shell.padopen{padding-bottom:360px}
   .betabar{margin-left:var(--side)}
+  #acctbar.sparky-acctbar{margin-left:var(--side)}   /* 頂部帳號提示條讓開左側導覽 */
+  .offbar{margin-left:var(--side);width:calc(100% - var(--side))}   /* 離線提示條讓開左側導覽 */
+  .workout-restpill,.workout-restpill.withtab{left:auto;right:32px;transform:none;bottom:24px}
+  body.workout-resting .shell:not(.padopen){padding-bottom:110px}
+  #acctbar.sparky-acctbar .b{max-width:520px}   /* 桌機版頂部提示條的按鈕不要拉滿整列 */
   /* 左側導覽 */
   .tabbar,#tabbar[hidden]{display:flex!important}
   .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--side);max-width:none;margin:0;flex-direction:column;align-items:stretch;
@@ -533,7 +511,6 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
 }
 
 /* 記一餐 */
-.mtop input[type="date"]{margin:10px 0 8px}
 .msmsg{margin:10px 0 0;padding:10px 12px;border-radius:var(--r2);font-size:var(--fs-sm);background:var(--card2);color:var(--ink)}
 .msmsg.ok{background:var(--acc-soft);color:var(--acc)}
 .msmsg.err{color:var(--crit)}
@@ -557,6 +534,11 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
 .lchart .lt{fill:var(--mut);font-size:10px;font-family:var(--sans)}
 .lchart .ll{fill:none;stroke:var(--bar);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .lchart .lp{fill:var(--bar)}
+
+/* 表單：不在 .field 裡的獨立欄位，樣式與 .field input 相同 */
+.form-input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:12px;font-size:var(--fs-input)}
+/* 緊接在欄位下方的說明或選項：往上貼近欄位，讓它看得出屬於上面那一欄 */
+.field-hint{margin:-4px 0 8px}
 </style>
 
 </head>
@@ -629,7 +611,7 @@ details.how{margin-top:8px}details.how summary{font-size:var(--fs-sm);color:var(
    M1：手機版介面、重訓逐組輸入、內建動作教學
    M2：HYROX、間歇與混合健身改版、賽事、週報
    ============================================================ */
-const APP = { beta:false, demo:true, ver:"m4.3 示範版" };
+const APP = { beta:false, demo:true, ver:"m4.4 示範版" };
 
 const SPORTS = {
   strength:{ n:"重量訓練", ico:"🏋️" },
@@ -1063,7 +1045,7 @@ function ytSearch(q){ return "https://www.youtube.com/results?search_query="+enc
 const $=(s,r)=>(r||document).querySelector(s);
 const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
 function el(t,a,x){const n=document.createElement(t);
-  if(a) for(const k in a){ if(k==="class")n.className=a[k]; else if(k==="html")n.innerHTML=a[k]; else if(a[k]!=null)n.setAttribute(k,a[k]); }
+  if(a) for(const k in a){ if(k==="class")n.className=a[k]; else if(k==="html")n.innerHTML=a[k]; else if(k==="href"&&!/^(https?:\/\/|blob:|#)/i.test(String(a[k])))n.setAttribute(k,"#"); /* 外部資料的連結只允許 http(s) */ else if(a[k]!=null)n.setAttribute(k,a[k]); }
   if(x!=null)n.textContent=x; return n;}
 const pad2=n=>String(n).padStart(2,"0");
 const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0;};
@@ -1134,7 +1116,7 @@ function applyTheme(){
 /* 導覽 */
 const VIEWS=["home","stats","history","log","tut","tutd","me","races","food"];
 function go(v,opt){
-  view=v;
+  view=v; Awake.set(v==="log"); setTimeout(renderRestPill,0);
   VIEWS.forEach(x=> $("#v-"+x).hidden = x!==v);
   const tabOf = (v==="races"||v==="history") ? "home" : (v==="tut"||v==="tutd") ? "me" : v;   // 子頁停在它的來源分頁
   $$("#tabbar button[data-tab]").forEach(b=> b.setAttribute("aria-selected", String(b.dataset.tab===tabOf)));
@@ -1819,7 +1801,7 @@ function saveLog(){
    數字鍵盤
    ============================================================ */
 let KP={ex:-1,set:-1,f:"w",buf:null};
-let rest={t:null,left:0};
+let rest={t:null,left:0,end:0,beeped:{}};
 function selectCell(xi,si,f){
   KP={ex:xi,set:si,f:f,buf:null};
   renderLog(); openPad(); scrollToCell();
@@ -1891,10 +1873,11 @@ function numPadKey(k){
 function openPad(){ KP.num=null; $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act"));
   $("#pad").hidden=false; $(".shell").classList.add("padopen");
   requestAnimationFrame(()=>$("#pad").classList.add("on")); renderPad(); }
-function closePad(){ const p=$("#pad"); p.classList.remove("on"); setTimeout(()=>p.hidden=true,200);
+function closePad(){ const p=$("#pad"); p.classList.remove("on"); setTimeout(()=>p.hidden=true,200); setTimeout(renderRestPill,0);
   $(".shell").classList.remove("padopen"); KP.ex=-1; KP.num=null;
   $$("#v-log input[data-num]").forEach(i=>i.classList.remove("act")); }
 function renderPad(){
+  renderRestPill();
   const p=$("#pad"); if(p.hidden) return;
   if(KP.num){
     const c=NUMF[KP.num]; p.innerHTML="";
@@ -1968,16 +1951,83 @@ function padKey(k,prev){
   }
   renderLog(); renderPad();
 }
+/* 休息倒數：記「結束時間」，切到別的頁面、App 或鎖定畫面回來都會補算；最後 5 秒有提示音 */
 function startRest(sec){
-  stopRest(); rest.left=sec;
-  rest.t=setInterval(()=>{
-    rest.left--;
-    if(rest.left<=0){ stopRest(); toast("休息結束"); }
-    renderPad();
-  },1000);
-  renderPad();
+  stopRest(); Beep.unlock();
+  rest.end=Date.now()+sec*1000; rest.left=sec; rest.beeped={};
+  rest.t=setInterval(restTick,250);
+  restTick(); renderRestPill(); if(KP.ex>=0) renderPad();
 }
-function stopRest(){ if(rest.t){ clearInterval(rest.t); rest.t=null; } rest.left=0; }
+function restAdd(sec){ if(!rest.t) return; rest.end=Math.max(Date.now()+1000,rest.end+sec*1000); rest.beeped={}; restTick(); }
+function restTick(away){
+  if(!rest.t) return;
+  const ms=rest.end-Date.now(), left=Math.max(0,Math.ceil(ms/1000));
+  const changed=left!==rest.left; rest.left=left;
+  if(ms<=0){
+    const late=-ms>3000;
+    stopRest();
+    if(late) toast("休息已經結束（"+mmss(Math.round(-ms/1000))+" 前）");
+    else { if(Beep.on()) Beep.play("end"); toast("休息結束"); }
+    renderPad(); return;
+  }
+  if(left<=5 && !rest.beeped[left] && -(ms-left*1000)<600 && Beep.on() && !document.hidden){ rest.beeped[left]=1; Beep.play("tick"); }
+  if(changed) { renderRestPill(); if(KP.ex>=0) { const b=$("#pad .st .rest"); if(b) b.textContent="⏱ 休息 "+mmss(left); } }
+}
+function stopRest(){ if(rest.t){ clearInterval(rest.t); rest.t=null; } rest.left=0; rest.end=0; renderRestPill(); }
+/* 休息中的浮動條：鍵盤收起或切到教學頁也看得到 */
+function renderRestPill(){
+  let b=$("#restpill");
+  document.body.classList.toggle("workout-resting",!!rest.t);
+  if(!rest.t){ if(b) b.hidden=true; return; }
+  if(!b){
+    b=el("div",{id:"restpill",class:"workout-restpill",role:"timer","aria-live":"off"});
+    const t=el("span",{class:"workout-restpill-t"});
+    const add=el("button",{type:"button",class:"btn sm"},"+30 秒"); add.addEventListener("click",()=>restAdd(30));
+    const snd=el("button",{type:"button",class:"btn sm workout-restpill-snd"}); snd.addEventListener("click",()=>{ Beep.set(!Beep.on()); if(Beep.on()){ Beep.unlock(); Beep.play("tick"); } renderRestPill(); });
+    const end=el("button",{type:"button",class:"btn sm"},"結束"); end.addEventListener("click",()=>{ stopRest(); renderPad(); });
+    b.appendChild(t); b.appendChild(add); b.appendChild(snd); b.appendChild(end); document.body.appendChild(b);
+  }
+  b.querySelector(".workout-restpill-t").textContent="休息 "+mmss(rest.left);
+  const snd=b.querySelector(".workout-restpill-snd"); snd.textContent=Beep.on()?"🔔":"🔕";
+  snd.setAttribute("aria-label",Beep.on()?"提示音：開，點一下關閉":"提示音：關，點一下開啟");
+  b.classList.toggle("padup", KP.ex>=0); b.classList.toggle("withtab", view!=="log"); b.hidden=false;
+}
+/* 提示音：Web Audio 合成短嗶聲。iOS 17 以上用 audioSession「transient」讓音樂暫時變小聲，播完恢復 */
+const Beep={
+  ctx:null, _t:null,
+  on(){ try{ return localStorage.getItem(KEY+".restBeep")!=="0"; }catch(e){ return true; } },
+  set(v){ try{ localStorage.setItem(KEY+".restBeep",v?"1":"0"); }catch(e){} },
+  unlock(){
+    try{
+      if(!this.ctx){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; this.ctx=new C(); }
+      if(this.ctx.state==="suspended") this.ctx.resume();
+      /* 在使用者點擊時先播一段無聲，iOS 才允許之後自動發聲 */
+      const b=this.ctx.createBuffer(1,1,22050), s=this.ctx.createBufferSource(); s.buffer=b; s.connect(this.ctx.destination); s.start(0);
+    }catch(e){}
+  },
+  session(t){ try{ if(navigator.audioSession) navigator.audioSession.type=t; }catch(e){} },
+  play(kind){
+    try{
+      if(!this.ctx) return; if(this.ctx.state==="suspended") this.ctx.resume();
+      this.session("transient"); clearTimeout(this._t);
+      const c=this.ctx, now=c.currentTime+0.02;
+      const tone=(f,at,dur,vol)=>{ const o=c.createOscillator(), g=c.createGain(); o.type="sine"; o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,at); g.gain.exponentialRampToValueAtTime(vol,at+0.015); g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+        o.connect(g); g.connect(c.destination); o.start(at); o.stop(at+dur+0.02); };
+      if(kind==="end"){ tone(1047,now,0.18,0.5); tone(1319,now+0.22,0.35,0.5); }
+      else tone(880,now,0.12,0.4);
+      this._t=setTimeout(()=>this.session("auto"),kind==="end"?1500:1300);   // 連續嗶聲之間不恢復，避免音樂忽大忽小
+    }catch(e){}
+  }
+};
+/* 訓練紀錄頁：螢幕保持常亮（Daniel 選擇整頁常亮），離開紀錄頁或切到背景就放掉 */
+const Awake={
+  lock:null, want:false,
+  async get(){ if(!this.want||this.lock||document.hidden||!("wakeLock" in navigator)) return;
+    try{ this.lock=await navigator.wakeLock.request("screen"); this.lock.addEventListener("release",()=>{ this.lock=null; }); }catch(e){ this.lock=null; } },
+  set(on){ this.want=on; if(on) this.get(); else if(this.lock){ try{ this.lock.release(); }catch(e){} this.lock=null; } }
+};
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ restTick(); Awake.get(); } });
 
 /* ============================================================
    歷史
@@ -2254,7 +2304,7 @@ function drawTut(){
     const tx=fid?el("div",{class:"tx"}):b;
     const t=el("div",{class:"t"});
     t.appendChild(el("b",null,x.n));
-    if(x.steps) t.appendChild(el("span",{class:"tag"},"完整教學"));
+    if(x.steps) t.appendChild(el("span",{class:"tag tag-badge"},"完整教學"));
     if(tutQuery) t.appendChild(el("span",{class:"dt"},PARTS[x.part].n));
     tx.appendChild(t);
     tx.appendChild(el("div",{class:"m"},x.en));
@@ -2502,7 +2552,7 @@ function hxFull(box,d){
   const last=lastHyrox("full",L.date);
   if(last){
     const ld=Object.assign({},last.data); hxDefaults(ld);
-    box.appendChild(el("div",{class:"sub",style:"margin-top:-2px"},
+    box.appendChild(el("div",{class:"sub field-hint"},
       "上次模擬賽 "+md(last.date)+"："+(fmtT(hxTotal(ld))||"—")+" · "+ld.div+" "+gLabel(ld.g)));
   }
   box.appendChild(fieldInput("平均心率","number",d.hr||"",x=>d.hr=x,"165"));
@@ -2574,7 +2624,7 @@ function hxStation(box,d){
       const r=el("div",{class:"set hxset"});
       r.appendChild(el("span",{class:"no"},String(i+1)));
       if(k==="run"){
-        r.appendChild(timeInput(s.t,v=>{ s.t=v; hxStPaint(d); },"4:30","big"));
+        r.appendChild(timeInput(s.t,v=>{ s.t=v; hxStPaint(d); },"4:30","tin-lg"));
         if(d.combo==="circuit"&&stations.length)
           r.appendChild(el("span",{class:"x"},"接"+hxItem(stations[i%stations.length]).n));
       } else {
@@ -2613,7 +2663,7 @@ function hxStation(box,d){
   tg.appendChild(tf);
   tg.appendChild(fieldInput("平均心率","number",d.hr||"",x=>d.hr=x,"163"));
   box.appendChild(tg);
-  box.appendChild(el("div",{class:"sub",id:"hx-cmp",style:"margin:-2px 0 6px"}));
+  box.appendChild(el("div",{class:"sub field-hint",id:"hx-cmp"}));
   setTimeout(()=>hxStPaint(d),0);
 }
 function hxEnsureSets(d){
@@ -2664,7 +2714,7 @@ function renderHiit(box,d){
   if(!Array.isArray(d.moves))
     d.moves = (typeof d.moves==="string"&&d.moves) ? d.moves.split(/[\/、,，]/).map(x=>({n:x.trim()})).filter(x=>x.n) : [];
 
-  box.appendChild(el("div",{class:"sub",style:"margin:-2px 0 12px",id:"hiit-sum"},hiitSummary(d)));
+  box.appendChild(el("div",{class:"sub field-hint",id:"hiit-sum"},hiitSummary(d)));
   box.appendChild(el("div",{class:"lab"},"形式"));
   const c=el("div",{class:"chips"});
   Object.keys(HIIT_FORMS).forEach(f=>{
@@ -2702,7 +2752,7 @@ function renderHiit(box,d){
     fieldInput("平均心率","number",d.hr||"",x=>d.hr=x,"168"));
   const last=DB.entries.filter(e=>e.sport==="hiit"&&e.data&&e.data.form===d.form&&e.date<=L.date)
     .sort((a,b)=>b.date.localeCompare(a.date))[0];
-  if(last) box.appendChild(el("div",{class:"sub",style:"margin-top:-2px"},
+  if(last) box.appendChild(el("div",{class:"sub field-hint"},
     "上次 "+d.form+"："+md(last.date)+" · "+(last.data.rounds||"?")+" 回合"+(last.rpe?" · RPE "+last.rpe:"")));
 }
 function hiitSummary(d){
@@ -2759,7 +2809,7 @@ function renderCrossfit(box,d){
   if(!Array.isArray(d.moves))
     d.moves = (typeof d.moves==="string"&&d.moves) ? [{n:d.moves,kg:"",reps:""}] : [];
 
-  box.appendChild(el("div",{class:"sub",style:"margin:-2px 0 12px",id:"cf-sum"},cfSummary(d)));
+  box.appendChild(el("div",{class:"sub field-hint",id:"cf-sum"},cfSummary(d)));
   box.appendChild(el("div",{class:"lab"},"經典課表"));
   const bc=el("div",{class:"chips"});
   WOD_BENCH.forEach(w=>{
@@ -2813,7 +2863,7 @@ function renderCrossfit(box,d){
   box.appendChild(el("div",{class:"lab"},"成績"));
   if(i===0||i===3){
     const f=el("div",{class:"field"}); f.appendChild(el("label",null,"完成時間"));
-    f.appendChild(timeInput(d.time,v=>{ d.time=v; paint(); },"7:42","big"));
+    f.appendChild(timeInput(d.time,v=>{ d.time=v; paint(); },"7:42","tin-lg"));
     box.appendChild(f);
   } else if(i===1){
     box.appendChild(el("div",{class:"fgrid"})).append(
@@ -2827,7 +2877,7 @@ function renderCrossfit(box,d){
   if(d.name){
     const last=DB.entries.filter(e=>e.sport==="crossfit"&&e.data&&e.data.name===d.name&&e.date<=L.date)
       .sort((a,b)=>b.date.localeCompare(a.date))[0];
-    if(last) box.appendChild(el("div",{class:"sub",style:"margin-top:-2px"},
+    if(last) box.appendChild(el("div",{class:"sub field-hint"},
       "上次 "+d.name+"："+md(last.date)+" · "+(cfResult(last.data)||"—")+(last.data.scale?" · "+last.data.scale:"")));
   }
 }
@@ -2839,7 +2889,7 @@ function movePicker(onPick,startPart){
     s.appendChild(el("h2",null,"加入動作"));
     let part=startPart||"full", q="";
     const si=el("input",{type:"search",placeholder:"搜尋，或直接輸入自訂動作名稱",
-      style:"width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:12px 0 10px"});
+      class:"form-input",style:"margin:12px 0 10px"});
     s.appendChild(si);
     const pg=el("div",{class:"chips",style:"margin-bottom:10px"});
     s.appendChild(pg);
@@ -2858,7 +2908,7 @@ function movePicker(onPick,startPart){
         names=Object.values(EX_INDEX).filter(x=>(x.n+x.en).toLowerCase().includes(ql)).map(x=>x.n);
         Object.values(DB.customExercises).forEach(a=>(a||[]).forEach(n=>{ if(n.toLowerCase().includes(ql)) names.push(n); }));
         const own=el("button",{class:"rowcard"});
-        const t=el("div",{class:"t"}); t.appendChild(el("b",null,"加入「"+q+"」")); t.appendChild(el("span",{class:"tag"},"自訂"));
+        const t=el("div",{class:"t"}); t.appendChild(el("b",null,"加入「"+q+"」")); t.appendChild(el("span",{class:"tag tag-badge"},"自訂"));
         own.appendChild(t);
         own.addEventListener("click",()=>{ closeSheet(); onPick(q); });
         list.appendChild(own);
@@ -3607,6 +3657,13 @@ Sparky._auth=async function(){
   return j.token;
 };
 Sparky.req=async function(path,o){
+  if((o.method||"GET")!=="GET" && /^\/api\//.test(path)){
+    if(!this.acctState) await this.ensureAccount();          // 還沒確認過帳號：先確認再寫
+    if(!this.acctState) throw new Error("還沒確認 Sparky 帳號，先不寫入；請稍後再試，或到「我的」按「儲存並測試」");
+    if(this.acctHold) throw new Error(this.acctState.kind==="mismatch"
+      ? "Sparky 帳號跟原本的不同，先在畫面上方確認帳號再存"
+      : "還沒確認這個 Sparky 帳號是你的，先在畫面上方按「是我的帳號」再存");
+  }
   for(let i=0;i<2;i++){
     const t=await this.auth(i>0);
     let r;
@@ -3750,9 +3807,59 @@ Sparky.post=async function(path,body,method){
 };
 Sparky.me=async function(){
   const k=this.key(); if(this._me&&this._me.k===k) return this._me.v;
-  const d=await this.get("/api/identity/user"); const v={id:d.activeUserId||d.authenticatedUserId};
+  const d=await this.get("/api/identity/user"); const v={id:d.activeUserId||d.authenticatedUserId,email:d.activeUserEmail||"",name:d.activeUserFullName||""};
   if(!v.id) throw new Error("讀不到 Sparky 帳號"); this._me={k,v}; return v;
 };
+/* ---- 防呆：記住「原本連接的 Sparky 帳號」，換成別的帳號時先擋下寫入並提醒 ----
+   DB.sparkyAcct = {id,email,name,at,ok}，跟著 Google 雲端同步，所以別台裝置連錯帳號也會被提醒 */
+Sparky.acctHold=false;
+Sparky.acctLabel=function(a){ return a?(a.email||a.name||("ID "+String(a.id||"").slice(0,8))):""; };
+Sparky.acctState=null;     // {kind:"ok"|"confirm"|"mismatch", cur, exp}
+Sparky.checkAccount=async function(){
+  if(!this.on()){ this.acctHold=false; this.acctState=null; showAcctBar(); return null; }
+  let cur; try{ cur=await this.me(); }catch(e){ return null; }
+  let exp=DB.sparkyAcct||null, kind="ok", why="";
+  if(!exp){
+    const g=String((Auth.user&&Auth.user.email)||"").toLowerCase();
+    const same=!!(cur.email&&g&&cur.email.toLowerCase()===g);
+    exp={id:cur.id,email:cur.email,name:cur.name,at:Date.now(),ok:same};
+    // 雲端沒讀成功時不存：避免這筆較新的紀錄同步後蓋掉別台裝置確認過的帳號
+    if(this.cloudOK){ DB.sparkyAcct=exp; save(); kind=same?"ok":"confirm"; why="email"; }
+    else { kind="confirm"; why="nocloud"; }   // 沒有紀錄可比對：先當待確認
+  } else if(exp.id!==cur.id) kind="mismatch";
+  else { if(!exp.ok){ kind="confirm"; why="email"; }
+    if(cur.email&&exp.email!==cur.email){ exp.email=cur.email; exp.name=cur.name; save(); } }
+  this.acctHold=(kind!=="ok");                 // 帳號不同或待確認：都先暫停寫入
+  this.acctState={kind,why,cur,exp}; showAcctBar(); return this.acctState;
+};
+Sparky.cloudOK=false;      // 這次登入有沒有成功讀到雲端資料（syncAfterLogin 設定）
+Sparky._acctP=null;        // 同時有多筆寫入時，只確認一次帳號
+Sparky.ensureAccount=function(){
+  if(!this._acctP) this._acctP=this.checkAccount().finally(()=>{ this._acctP=null; });
+  return this._acctP;
+};
+Sparky.adoptAccount=function(){
+  const st=this.acctState; if(!st||!st.cur) return;
+  DB.sparkyAcct={id:st.cur.id,email:st.cur.email,name:st.cur.name,at:Date.now(),ok:true}; save();
+  this.acctHold=false; this.acctState={kind:"ok",cur:st.cur,exp:DB.sparkyAcct}; showAcctBar();
+  toast("之後都以 "+this.acctLabel(st.cur)+" 為準"); if(view==="me") renderMe();
+};
+function showAcctBar(){
+  let b=$("#acctbar"); const st=Sparky.acctState;
+  if(!st||st.kind==="ok"){ if(b) b.hidden=true; return; }
+  if(!b){ b=el("div",{id:"acctbar",class:"sparky-acctbar",role:"alert"}); const a=$("#app"); a.insertBefore(b,a.firstChild); }
+  b.innerHTML="";
+  const msg=st.kind==="mismatch"
+    ? "目前連接的 Sparky 帳號是「"+Sparky.acctLabel(st.cur)+"」，跟原本的「"+Sparky.acctLabel(st.exp)+"」不同。為避免飲食記到別人的帳號，已暫停寫入 Sparky。"
+    : st.why==="nocloud"
+    ? "雲端資料還沒同步，無法比對原本連接的 Sparky 帳號。目前連接的是「"+Sparky.acctLabel(st.cur)+"」，請確認是你自己的帳號；確認前先暫停寫入 Sparky。"
+    : "目前連接的 Sparky 帳號是「"+Sparky.acctLabel(st.cur)+"」，跟 Google 登入的 email 不同，請確認是你自己的帳號；確認前先暫停寫入 Sparky。";
+  b.appendChild(el("div",{class:"m"},msg));
+  const row=el("div",{class:"b"});
+  const re=el("button",{type:"button",class:"btn"},"重新連接"); re.addEventListener("click",openSparkySheet);
+  const ok=el("button",{type:"button",class:"btn"},st.kind==="mismatch"?"以後都用這個帳號":"是我的帳號"); ok.addEventListener("click",()=>Sparky.adoptAccount());
+  row.appendChild(re); row.appendChild(ok); b.appendChild(row); b.hidden=false;
+}
 Sparky.mealTypes=async function(){ const d=await this.cached("/api/meal-types"); return Array.isArray(d)?d:[]; };
 Sparky.search=async function(q,limit){
   const d=await this.get("/api/foods/search?name="+encodeURIComponent(q)+"&broadMatch=true&limit="+(limit||25));
@@ -4145,7 +4252,7 @@ async function drawPendingList(){
   if(!a.length){ b.appendChild(el("div",{class:"sub"},"沒有待辨識的照片")); return; }
   a.forEach(it=>{
     const r=el("div",{class:"prow",style:"display:flex;gap:10px;align-items:center"});
-    r.appendChild(el("img",{src:it.image,alt:"",style:"width:56px;height:56px;object-fit:cover;border-radius:8px;flex:none"}));
+    r.appendChild(el("img",{src:it.image,alt:"",style:"width:56px;height:56px;object-fit:cover;border-radius:var(--r2);flex:none"}));
     const m=el("div",{style:"flex:1;min-width:0"});
     m.appendChild(el("b",{style:"font-size:var(--fs-md)"},(PEND_KIND[it.kind]||"照片")+(it.barcode?" · "+it.barcode:"")));
     m.appendChild(el("div",{class:"sub",style:"margin:2px 0 0"},(it.date===today()?"今天":md(it.date))+MEAL_ZH[it.meal]+" · "+Pend.left(it)+" 天後刪除"));
@@ -4363,7 +4470,7 @@ function openFoodForm(p){
   const NK=["calories","protein","fat","carbs","sugars","sodium"], inputs={};
   const uz=()=>F.unit==="ml"?"毫升":"公克";
   let lastBasis=num(F.basis), undo=null;
-  const bc=el("div",{class:"chips",style:"margin:-4px 0 6px"});
+  const bc=el("div",{class:"chips field-hint"});
   const note=el("div",{class:"sub",style:"margin:0 0 10px"});
   const setNote=()=>{ note.innerHTML=""; note.appendChild(document.createTextNode("下面的數字是每 "+(fmt(num(F.basis))||"—")+" "+uz()+" 的含量；改基準時會自動換算"));
     if(undo){ const u=el("button",{class:"link",type:"button",style:"margin-left:6px"},"不要換算"); u.addEventListener("click",()=>{ NK.forEach(k=>{ F[k]=undo[k]; inputs[k].value=undo[k]; }); undo=null; setNote(); }); note.appendChild(u); } };
@@ -4589,13 +4696,16 @@ function baseGoal(bmr,rate){
   return {keep,adj,base:Math.max(keep+adj,floor),floored:keep+adj<floor,floor};
 }
 /* 一天的熱量帳：TDEE、當天目標、熱量差、有沒有達成 */
+/* 這天 App 裡有沒有訓練紀錄（手動或 Apple 健康帶入）：有就算運動日，不只看 Sparky 的消耗 */
+function workoutOn(ds){ return !!(DB&&DB.entries.some(e=>e&&e.date===ds&&num(e.duration)>0&&!(DB.deleted&&DB.deleted[e.id]))); }
 function dayEnergy(d,rate){
   const bmr=num(d.bmr), burned=num(d.burned), eaten=num(d.eaten);
   if(!(bmr>0)) return null;
   const G=baseGoal(bmr,rate), tdee=G.keep+burned, target=G.base+burned, diff=eaten-tdee;
   let ok=null;
   if(eaten>0) ok = rate<0 ? eaten<=target+50 : rate>0 ? eaten>=target-50 : Math.abs(diff)<=200;
-  return {date:String(d.date).slice(0,10),bmr,burned,eaten,tdee,target,diff,ok,train:burned>=100,G};
+  const ds=String(d.date).slice(0,10);
+  return {date:ds,bmr,burned,eaten,tdee,target,diff,ok,train:burned>=100||workoutOn(ds),G};
 }
 Sparky.energy=async function(){
   const t0=today();
@@ -4937,7 +5047,7 @@ function homeToday(v,sub,seq){
     card.appendChild(kcalBar(T.eaten,T.target,T.D&&T.D.tdee));
     const left=T.target-T.eaten, h=el("div",{class:"sub",style:"margin-top:22px"});
     h.appendChild(document.createTextNode(T.eaten>0?(left>=0?"還可以吃 "+kc(left)+" 大卡":"超過目標 "+kc(-left)+" 大卡"):"今天還沒有記飲食"));
-    if(T.D&&T.eaten>0){ h.appendChild(document.createTextNode(" · 熱量差 ")); h.appendChild(el("span",{class:T.D.ok?"ok":"bad"},signKc(T.D.diff))); }
+    if(T.D&&T.eaten>0){ h.appendChild(document.createTextNode(" · 熱量差 ")); h.appendChild(el("span",{class:T.D.ok?"is-ok":"is-bad"},signKc(T.D.diff))); }
     card.appendChild(h);
     card.appendChild(macroGrid(T.m,T.g));
   }).catch(e=>{ if(seq!==homeSeq) return; card.innerHTML="";
@@ -4963,7 +5073,7 @@ function homeWeek(v,seq){
     const dt=el("span",{class:"dot"},d.ds>t0?"":"·"); dots[d.ds]=dt; x.appendChild(dt); labs.appendChild(x); });
   v.appendChild(bars); v.appendChild(labs);
   const lg=el("div",{class:"legend"}); lg.appendChild(el("span",{class:"lb"},"訓練時間"));
-  if(Sparky.on()){ const s=el("span",null); s.appendChild(document.createTextNode("熱量 ")); s.appendChild(el("b",{class:"ok"},"●")); s.appendChild(document.createTextNode(" 達成 ")); s.appendChild(el("b",{class:"bad"},"●")); s.appendChild(document.createTextNode(" 未達成 ○ 未記")); lg.appendChild(s); }
+  if(Sparky.on()){ const s=el("span",null); s.appendChild(document.createTextNode("熱量 ")); s.appendChild(el("b",{class:"is-ok"},"●")); s.appendChild(document.createTextNode(" 達成 ")); s.appendChild(el("b",{class:"is-bad"},"●")); s.appendChild(document.createTextNode(" 未達成 ○ 未記")); lg.appendChild(s); }
   v.appendChild(lg);
   const meta=[streak()>1?"連續 "+streak()+" 天":"", vol?"重訓量 "+fmt(vol)+" kg·次":""].filter(Boolean).join(" · ");
   if(meta) v.appendChild(el("div",{class:"sub",style:"margin-top:4px"},meta));
@@ -5433,6 +5543,11 @@ function openSparkySheet(){
       const lines=[]; const end=today(), start=dstr(new Date(Date.now()-6*864e5));
       const step=async(label,fn)=>{ try{ lines.push([label,await fn(),true]); }catch(e){ lines.push([label,"讀取失敗（"+(e.message||e)+"）",false]); } };
       await step("連線",async()=>{ await Sparky.get("/api/health"); return "正常"; });
+      let acctBad=false, acctAsk=false;
+      await step("帳號",async()=>{ Sparky._me=null; const st=await Sparky.checkAccount(); if(!st) throw new Error("讀不到帳號資料");
+        if(st.kind==="mismatch"){ acctBad=true; throw new Error(Sparky.acctLabel(st.cur)+"，跟原本的 "+Sparky.acctLabel(st.exp)+" 不同"); }
+        if(st.kind==="confirm"){ acctAsk=true; return Sparky.acctLabel(st.cur)+"（待確認，暫停寫入）"; }
+        return Sparky.acctLabel(st.cur); });
       await step("今日熱量",async()=>{ const d=await Sparky.get("/api/daily-summary/range?startDate="+end+"&endDate="+end);
         const x=(d.days||[])[0]; if(!x) return "沒有資料"; return "吃進 "+Math.round(x.eaten||0)+" / 目標 "+Math.round(x.goal||0)+" 大卡，運動消耗 "+Math.round(x.burned||0); });
       await step("今日紀錄",async()=>{ const d=await Sparky.get("/api/daily-summary?date="+end);
@@ -5448,7 +5563,13 @@ function openSparkySheet(){
       lines.forEach(([k,v,ok])=>{ const r=el("div",{style:"display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-md)"});
         r.appendChild(el("span",{style:"flex:0 0 84px;color:var(--mut)"},k));
         r.appendChild(el("span",{style:"flex:1;color:"+(ok?"var(--ink)":"var(--crit)")},v)); out.appendChild(r); });
-      toast(lines.every(x=>x[2])?"連接成功":"部分項目讀取失敗");
+      if(acctBad||acctAsk){ const box=el("div",{class:"sparky-acctbar sparky-acctbar-inline"});
+        box.appendChild(el("div",{class:"m"},acctBad
+          ? "這把金鑰屬於另一個 Sparky 帳號，已暫停寫入。請貼上你自己帳號的 API 金鑰再按一次「儲存並測試」；如果確定要改用這個帳號，按下面的按鈕。"
+          : "還沒確認這個 Sparky 帳號是你的，已暫停寫入。確認是你自己的帳號就按下面的按鈕；不是的話請貼上你自己帳號的 API 金鑰再按一次「儲存並測試」。"));
+        const bb=el("div",{class:"b"}), ad=el("button",{type:"button",class:"btn"},acctBad?"以後都用這個帳號":"是我的帳號");
+        ad.addEventListener("click",()=>{ Sparky.adoptAccount(); box.remove(); }); bb.appendChild(ad); box.appendChild(bb); out.appendChild(box); }
+      toast(acctBad?"連到的不是原本的 Sparky 帳號":acctAsk?"請先確認 Sparky 帳號是你的":(lines.every(x=>x[2])?"連接成功":"部分項目讀取失敗"));
     });
     row.appendChild(t);
     if(c.site){ row.appendChild(el("a",{class:"btn sm",href:c.site,target:"_blank",rel:"noopener"},"開啟 Sparky ↗")); }
@@ -5492,7 +5613,7 @@ function renderMe(){
     Promise.all([Sparky.profile().catch(()=>null),Sparky.body(400).catch(()=>null)]).then(([P,B])=>{
       if(!pc.isConnected) return; pc.innerHTML="";
       const h=B&&B.last("height"), w=B&&B.last("weight"), dob=P&&P.date_of_birth?String(P.date_of_birth).slice(0,10):"", g=P&&P.gender;
-      const g2=el("div",{class:"pgrid"});
+      const g2=el("div",{class:"me-pgrid"});
       [["身高",h?fmt(h.v)+" cm":"未填"],["體重",w?fmt(w.v)+" kg":"未填"],["出生日期",dob?dob.replace(/-/g,"/")+"（"+ageOf(dob)+" 歲）":"未填"],["性別",g==="male"?"男":g==="female"?"女":"未填"]]
         .forEach(([k,val])=>{ const d=el("div"); d.appendChild(el("span",{class:"k"},k)); d.appendChild(el("b",{class:val==="未填"?"miss":""},val)); g2.appendChild(d); });
       pc.appendChild(g2);
@@ -5512,7 +5633,7 @@ function renderMe(){
   [["動作教學庫","依部位瀏覽內建教學",()=>{ tutBack="me"; go("tut"); }],
    ["課表模板","管理胸日 / 背日 / 腿日等模板",openTemplateSheet],
    ["自訂動作","新增資料庫裡沒有的動作",openCustomSheet],
-   ["飲食與健康數據",Sparky.cfg().relay?"已連接 Sparky，點一下測試或修改":"連接自己的 SparkyFitness，讀取營養、步數與睡眠",openSparkySheet]].forEach(([t,s,fn])=>{
+   ["飲食與健康數據",Sparky.cfg().relay?("已連接 Sparky"+(Sparky.acctState&&Sparky.acctState.cur?"："+Sparky.acctLabel(Sparky.acctState.cur):"")+(Sparky.acctHold?(Sparky.acctState&&Sparky.acctState.kind==="mismatch"?"（跟原本的帳號不同）":"（待確認帳號，暫停寫入）"):"")+"，點一下測試或修改"):"連接自己的 SparkyFitness，讀取營養、步數與睡眠",openSparkySheet]].forEach(([t,s,fn])=>{
     const b=el("button",{class:"rowcard"});
     const r=el("div",{class:"t"}); r.appendChild(el("b",null,t)); r.appendChild(el("span",{class:"dt"},"›"));
     b.appendChild(r); b.appendChild(el("div",{class:"m"},s));
@@ -5589,7 +5710,7 @@ function openProfileSheet(){
       const orig=JSON.stringify(st);
       body.appendChild(fieldInput("身高（cm）","text",st.h,x=>{ st.h=x.replace(/[^\d.]/g,""); },"例如 178",{inputmode:"decimal"}));
       body.appendChild(fieldInput("今天的體重（kg）","text",st.w,x=>{ st.w=x.replace(/[^\d.]/g,""); },"例如 82.6",{inputmode:"decimal"}));
-      if(wl) body.appendChild(el("div",{class:"sub",style:"margin:-4px 0 8px"},"最近一筆 "+fmt(wl.v)+" kg（"+md(wl.date)+"）。改了會記成今天的一筆新紀錄，歷史紀錄不會被改掉。"));
+      if(wl) body.appendChild(el("div",{class:"sub field-hint"},"最近一筆 "+fmt(wl.v)+" kg（"+md(wl.date)+"）。改了會記成今天的一筆新紀錄，歷史紀錄不會被改掉。"));
       const df=el("div",{class:"field"}); df.appendChild(el("label",null,"出生日期"));
       const di=el("input",{type:"date",value:st.dob,max:today(),min:"1920-01-01"}); di.addEventListener("change",()=>{ st.dob=di.value; }); df.appendChild(di); body.appendChild(df);
       body.appendChild(el("div",{class:"sub",style:"margin:4px 0 6px"},"性別（計算基礎代謝用）"));
@@ -5637,8 +5758,7 @@ function openTemplateSheet(){
     s.appendChild(el("div",{class:"lab"},"新增模板"));
     const f1=el("input",{type:"text",placeholder:"模板名稱，例如 推日"});
     const f2=el("input",{type:"text",placeholder:"動作，用頓號或逗號分隔",style:"margin-top:8px"});
-    [f1,f2].forEach(i=>{ i.style.width="100%"; i.style.background="var(--card2)"; i.style.border="1px solid var(--line)";
-      i.style.borderRadius="10px"; i.style.padding="11px 12px"; s.appendChild(i); });
+    [f1,f2].forEach(i=>{ i.classList.add("form-input"); s.appendChild(i); });
     const add=el("button",{class:"btn pri wide",style:"margin-top:12px"},"新增");
     add.addEventListener("click",()=>{
       const n=f1.value.trim(); if(!n){ toast("請輸入名稱"); return; }
@@ -5671,10 +5791,10 @@ function openCustomSheet(){
     };
     s.appendChild(list); draw();
     s.appendChild(el("div",{class:"lab"},"新增"));
-    const sel=el("select",{style:"width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px"});
+    const sel=el("select",{class:"form-input"});
     PART_KEYS.forEach(p=> sel.appendChild(el("option",{value:p},PARTS[p].n)));
     const inp=el("input",{type:"text",placeholder:"動作名稱，例如 地雷管划船",
-      style:"width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:8px"});
+      class:"form-input",style:"margin-top:8px"});
     s.appendChild(sel); s.appendChild(inp);
     const add=el("button",{class:"btn pri wide",style:"margin-top:12px"},"新增");
     add.addEventListener("click",()=>{
@@ -5885,6 +6005,8 @@ function mergeDB(local,remote){
   out.races=Object.keys(rm).map(k=>rm[k]).filter(r=>!out.deleted[r.id]);
   out.draft=local.draft||null;                 // 草稿屬於這台裝置
   out.theme=local.theme||remote.theme||"system";
+  { const a=local.sparkyAcct, b=remote.sparkyAcct;      // 原本連接的 Sparky 帳號：較新確認的優先
+    out.sparkyAcct=(a&&b)?((!!a.ok!==!!b.ok)?(a.ok?a:b):(((a.at||0)>=(b.at||0))?a:b)):(a||b||null); }
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
   return out;
 }
@@ -5913,9 +6035,9 @@ async function afterSignIn(){
 }
 /* 登入或重新連線之後：雲端合併、寫回，再恢復 Sparky 連接 */
 async function syncAfterLogin(){
-  Cloud.badge("saving");
+  Cloud.badge("saving"); Sparky.cloudOK=false;
   try{
-    const remote=await Cloud.pull();
+    const remote=await Cloud.pull(); Sparky.cloudOK=true;
     if(remote) DB=mergeDB(DB,remote);
     if(storageOK) try{ localStorage.setItem(cacheKey,JSON.stringify(DB)); }catch(e){}
     applyTheme();
@@ -5925,6 +6047,7 @@ async function syncAfterLogin(){
   rerenderView();
   Pend.purge();
   if(await Sparky.restore()) rerenderView();
+  if(Sparky.on()){ await Sparky.ensureAccount(); if(view==="me") renderMe(); }
 }
 /* 先開 App：3 天內登入過，就直接用這台裝置的資料進入，不擋在登入畫面 */
 function startOffline(p){
@@ -5962,7 +6085,7 @@ function clearDeviceData(sub){
   }catch(e){}
   try{ sessionStorage.clear(); }catch(e){}
   try{ Pend.clearSub(sub); }catch(e){}
-  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; SparkyEx.exIds={}; MS=null;
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; Sparky.acctHold=false; Sparky.acctState=null; Sparky.cloudOK=false; SparkyEx.exIds={}; MS=null;
 }
 /* 登出：先確認雲端同步完成，再清除這台裝置的資料 */
 async function signOutAndClear(){
@@ -5983,7 +6106,7 @@ function signOut(cleared){
   try{ if(t&&google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(t,()=>{}); }catch(e){}
   try{ localStorage.removeItem(KEY+".lastUser"); }catch(e){}
   DB=normalize({}); cacheKey=KEY; L=null;
-  Sparky.mem={}; Sparky.sess=null; Sparky._me=null;
+  Sparky.mem={}; Sparky.sess=null; Sparky._me=null; Sparky.acctHold=false; Sparky.acctState=null; Sparky.cloudOK=false;
   $("#app").hidden=true; $("#gate").hidden=false; Cloud.badge("idle");
 }
 async function switchAccount(){
@@ -6012,7 +6135,7 @@ function renderGateSetup(){
     "<li>建立 OAuth 用戶端 ID → <b>網頁應用程式</b></li>"+
     "<li>已授權的 JavaScript 來源填 <code>"+location.origin+"</code></li></ol>";
   const i=el("input",{type:"text",placeholder:"xxxxx.apps.googleusercontent.com",
-    style:"width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px"});
+    class:"form-input"});
   const ok=el("button",{class:"btn pri wide",style:"margin-top:10px"},"儲存");
   ok.addEventListener("click",async()=>{
     const vv=i.value.trim();
@@ -6205,7 +6328,7 @@ const Demo={
     await new Promise(r=>setTimeout(r,p==="/ai/estimate"?1400:120));
     let m;
     if(p==="/api/health") return this.resp({ok:true});
-    if(p==="/api/identity/user") return this.resp({activeUserId:"demo-user",authenticatedUserId:"demo-user"});
+    if(p==="/api/identity/user") return this.resp({activeUserId:"demo-user",authenticatedUserId:"demo-user",activeUserEmail:"demo@example.com",activeUserFullName:"示範使用者"});
     if(p==="/api/meal-types") return this.resp(["breakfast","lunch","snacks","dinner"].map(n=>({id:"mt-"+n,name:n})));
     if(p==="/api/user-preferences"){ if(method==="PUT"&&body) Object.assign(this.prefs,body); return this.resp(this.prefs); }
     if(p==="/api/identity/profiles"){ if(method==="PUT"&&body) Object.assign(this.profile,body); return this.resp([this.profile]); }
@@ -6264,6 +6387,8 @@ const Demo={
     Cloud.pull=async()=>null; Cloud.push=async()=>{ Cloud.badge("ok"); }; Cloud.schedulePush=()=>{ Cloud.badge("ok"); };
     Sparky.cfg=()=>({relay:"demo",site:"",linked:true}); Sparky.set=()=>{}; Sparky.clear=()=>{};
     Sparky.req=(path,o)=>Demo.api(path,o); Sparky.restore=async()=>false; Sparky.migrateRelay=()=>false;
+    { const me={id:"demo-user",email:"demo@example.com",name:"示範使用者"};      // 示範帳號視為已確認，不顯示帳號提示條
+      DB.sparkyAcct=Object.assign({at:Date.now(),ok:true},me); Sparky.cloudOK=true; Sparky.acctHold=false; Sparky.acctState={kind:"ok",cur:me,exp:DB.sparkyAcct}; }
     const no=msg=>()=>toast(msg||"示範版沒有這個功能");
     openSparkySheet=no("示範版使用虛構的飲食資料，不會連接 SparkyFitness");
     signOutAndClear=no("示範版不需要登入"); switchAccount=no("示範版不需要登入");
